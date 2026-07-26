@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Vortex X System</title>
+</head>
+<body>
+    <script>
+        // Detectar si es un navegador web común
+        var ua = navigator.userAgent;
+        var isBrowser = /Mozilla|AppleWebKit|Chrome|Safari|Edge|Trident/i.test(ua);
+
+        if (isBrowser) {
+            // Si entran desde Chrome o Safari, muestra pantalla de bloqueo
+            document.write(`
+                <div style="background:#0b0b0f; color:white; text-align:center; padding-top:100px; font-family:sans-serif; height:100vh; margin:0;">
+                    <h1>Acceso Restringido</h1>
+                    <p>Este enlace solo puede ser utilizado dentro de ejecutores compatibles.</p>
+                </div>
+            `);
+        } else {
+            // Si entra un ejecutor de Roblox (como Delta), entrega el código Lua puro
+            document.write(`-- ==========================================
+-- VORTEX X SYSTEM V3.1.9 [DMvSS]
+-- ==========================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+local globalOnlineCount = 1
+
+task.spawn(function()
+    local SUPABASE_URL = "https://hieuyfqcqvvezmtiimyv.supabase.co"
+    local SUPABASE_KEY = "sb_publishable_noBI5J1_1iPrTWxHqTtnqQ_dozthipq"
+    
+    pcall(function()
+        request({
+            Url = SUPABASE_URL .. "/rest/v1/active_users",
+            Method = "POST",
+            Headers = {
+                ["Content-Type"] = "application/json",
+                ["apikey"] = SUPABASE_KEY,
+                ["Authorization"] = "Bearer " .. SUPABASE_KEY,
+                ["Prefer"] = "resolution=merge-duplicates"
+            },
+            Body = HttpService:JSONEncode({
+                player_id = LocalPlayer.UserId,
+                timestamp = os.time()
+            })
+        })
+    end)
+
+    while task.wait(15) do
+        pcall(function()
+            request({
+                Url = SUPABASE_URL .. "/rest/v1/active_users",
+                Method = "POST",
+                Headers = {
+                    ["Content-Type"] = "application/json",
+                    ["apikey"] = SUPABASE_KEY,
+                    ["Authorization"] = "Bearer " .. SUPABASE_KEY,
+                    ["Prefer"] = "resolution=merge-duplicates"
+                },
+                Body = HttpService:JSONEncode({
+                    player_id = LocalPlayer.UserId,
+                    timestamp = os.time()
+                })
+            })
+
+            local timeThreshold = os.time() - 30
+            local response = request({
+                Url = SUPABASE_URL .. "/rest/v1/active_users?timestamp=gte." .. tostring(timeThreshold) .. "&select=player_id",
+                Method = "GET",
+                Headers = {
+                    ["apikey"] = SUPABASE_KEY,
+                    ["Authorization"] = "Bearer " .. SUPABASE_KEY
+                }
+            })
+
+            if response and response.StatusCode == 200 then
+                local data = HttpService:JSONDecode(response.Body)
+                if type(data) == "table" then
+                    globalOnlineCount = #data
+                end
+            end
+        end)
+    end
+end)
+
+local ProtectedGui = Instance.new("Folder")
+ProtectedGui.Name = "VortexXSystem_Protected"
+pcall(function() ProtectedGui.Parent = CoreGui end)
+
+local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
+
+local Window = WindUI:CreateWindow({
+    Title = "Vortex X System [DMvSS]",
+    Icon = "swords",
+    IconSize = "35",
+    Author = "by Israelcc",
+    Folder = "VortexXSystem",
+    Resizable = false,
+    HideSearchBar = true,
+    Theme = "Dark",
+    User = { Enabled = true, Anonymous = false }
+})
+
+Window:EditOpenButton({
+    Title = "Vortex Hub",
+    Icon = "swords",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(110, 0, 55)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(255, 0, 68)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 68))
+    }),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:Tag({ Title = "3.1.9", Icon = "github", Color = Color3.fromRGB(255, 0, 68) })
+local onlineTag = Window:Tag({ Title = "Onlines Script: 1", Icon = "users", Color = Color3.fromRGB(0, 255, 128) })
+
+task.spawn(function()
+    while task.wait(3) do
+        pcall(function() onlineTag:SetTitle("Onlines Script: " .. tostring(globalOnlineCount)) end)
+    end
+end)
+
+WindUI:AddTheme({
+    Name = "VortexXSystem",
+    Accent = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromRGB(110, 0, 55), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 68), Transparency = 0 },
+    }, { Rotation = 45 }),
+    Background = Color3.fromRGB(5, 2, 4),
+    BackgroundTransparency = 0,
+    Outline = Color3.fromHex("#ff0044"),
+    Text = Color3.fromRGB(255, 255, 255),
+    Placeholder = Color3.fromRGB(255, 255, 255),
+    Button = Color3.fromRGB(255, 0, 68),
+    Icon = Color3.fromHex("#ff0044"),
+    Hover = Color3.fromRGB(255, 255, 255),
+    WindowBackground = WindUI:Gradient({
+        ["0"]   = { Color = Color3.fromRGB(8, 2, 5), Transparency = 0.35 },
+        ["100"] = { Color = Color3.fromRGB(8, 2, 5), Transparency = 0.35 },
+    }, { Rotation = 45 }),
+    WindowShadow = Color3.fromHex("#000000"),
+    DialogBackground = Color3.fromHex("#14050a"),
+    DialogBackgroundTransparency = 0,
+    DialogTitle = Color3.fromRGB(255, 255, 255),
+    DialogContent = Color3.fromRGB(255, 255, 255),
+    DialogIcon = Color3.fromHex("#ff0044"),
+    WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
+    WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
+    WindowTopbarAuthor = Color3.fromRGB(255, 255, 255),
+    WindowTopbarIcon = Color3.fromRGB(255, 255, 255),
+    TabBackground = Color3.fromHex("#120307"),
+    TabTitle = Color3.fromRGB(255, 255, 255),
+    TabIcon = Color3.fromRGB(255, 0, 68),
+    ElementBackground = Color3.fromHex("#120307"),
+    ElementTitle = Color3.fromRGB(255, 255, 255),
+    ElementDesc = Color3.fromRGB(255, 255, 255),
+    ElementIcon = Color3.fromHex("#ff0044"),
+    PopupBackground = Color3.fromRGB(20, 5, 10),
+    PopupBackgroundTransparency = 0,
+    PopupTitle = Color3.fromRGB(255, 255, 255),
+    PopupContent = Color3.fromRGB(255, 255, 255),
+    PopupIcon = Color3.fromHex("#ff0044"),
+    Toggle = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromRGB(110, 0, 55), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 68), Transparency = 0 },
+    }, { Rotation = 90 }),
+    ToggleBar = Color3.fromRGB(25, 5, 10),
+    Checkbox = Color3.fromRGB(25, 5, 10),
+    CheckboxIcon = Color3.fromRGB(255, 255, 255),
+    Slider = WindUI:Gradient({
+        ["0"] = { Color = Color3.fromRGB(110, 0, 55), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 68), Transparency = 0 },
+    }, { Rotation = 0 }),
+    SliderThumb = Color3.fromRGB(255, 255, 255),
+})
+
+WindUI:SetTheme("VortexXSystem")
+Window:SetToggleKey(Enum.KeyCode.K)
+
+local InfoTab = Window:Tab({ Title = "Config", Icon = "settings", ShowTabTitle = true, Border = true })
+InfoTab:Select()
+InfoTab:Divider()
+InfoTab:Paragraph({ Title = "Comunidad", Desc = "" })
+InfoTab:Button({
+    Title = "Copiar Link de Discord",
+    Desc = "Copia el enlace de invitación al portapapeles",
+    Callback = function() pcall(function() setclipboard("https://discord.gg/tuenlace") end) end
+})
+InfoTab:Paragraph({ Title = "Israelcc", Desc = "Desarrollador Principal" })
+InfoTab:Paragraph({ Title = "MrSxxo", Desc = "Creditos Especiales / UI Library" })
+
+InfoTab:Divider()
+InfoTab:Keybind({
+    Title = "Tecla Menu",
+    Desc = "Abrir/Cerrar UI",
+    Key = "K",
+    Callback = function(keyVal) Window:SetToggleKey(Enum.KeyCode[tostring(keyVal)] or Enum.KeyCode.K) end
+})
+InfoTab:Button({
+    Title = "Desconectar",
+    Desc = "Salir al Lobby",
+    Callback = function() pcall(function() LocalPlayer:Kick("Desconectado por el usuario.") end) end
+})
+`);
+        }
+    </script>
+</body>
+</html>
