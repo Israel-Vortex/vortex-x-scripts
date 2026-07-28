@@ -96,7 +96,7 @@ local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/release
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex X System [DMvSS]",
-    Icon = "wind",
+    Icon = "rbxassetid://136777157214137",
     IconSize = "35",
     Author = "by Israelcc",
     Folder = "VortexXSystem",
@@ -111,7 +111,7 @@ local Window = WindUI:CreateWindow({
 
 Window:EditOpenButton({
     Title = "VortexHub",
-    Icon = "wind",
+    Icon = "rbxassetid://136777157214137",
     CornerRadius = UDim.new(0,16),
     StrokeThickness = 2,
     Color = ColorSequence.new({
