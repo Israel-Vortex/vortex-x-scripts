@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEXHUB v3.3.37 [MM2] - AUTO-REFRESH & MOBILE FIX
+-- VORTEX X SYSTEM v3.3.37 [MM2] - AUTO-REFRESH & MOBILE FIX
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -211,10 +211,10 @@ local gunEspColor = Color3.fromRGB(255, 215, 0)
 local trapEspColor = Color3.fromRGB(255, 100, 0)
 
 local AttackAnimations = {
-    "rbxassetid://2467567750";
-    "rbxassetid://1957618848";
-    "rbxassetid://2470501967";
-    "rbxassetid://2467577524";
+    "rbxassetid://2467567750",
+    "rbxassetid://1957618848",
+    "rbxassetid://2470501967",
+    "rbxassetid://2467577524",
 }
 
 -- ==========================================
@@ -1955,6 +1955,20 @@ pcTab:Keybind({
 -- 7. MISC / FUN TAB
 --------------------------------------------------
 local miscTab = Window:Tab({ Title = "Misc / Fun", Icon = "sparkles", ShowTabTitle = true, Border = true })
+
+miscTab:Divider()
+miscTab:Paragraph({ Title = "Emotes & Animations", Desc = "Carga el script universal de emotes" })
+
+miscTab:Button({
+    Title = "AFEM Max (Emotes)",
+    Desc = "Abre el menú completo de animaciones y emotes.",
+    Callback = function()
+        pcall(function()
+            loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AFEM-Max-Open-Alpha-50210"))()
+            WindUI:Notify({ Title = "Vortex x System", Content = "Cargando AFEM Max Emotes...", Duration = 3 })
+        end)
+    end
+})
 
 miscTab:Divider()
 miscTab:Paragraph({ Title = "Trade Exploits", Desc = "Force trade interaction tools" })
