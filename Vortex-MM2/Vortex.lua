@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEXHUB v3.3.35 [MM2] - MOBILE SAFE
+-- VORTEXHUB v3.3.36 [MM2] - MOBILE SAFE & RELIABLE
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -174,7 +174,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.35", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.36", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -433,6 +433,9 @@ local function getSheriff()
     return nil
 end
 
+-- ==========================================
+-- SHOOT MURDERER (ULTRA-FIXED FOR MOBILE)
+-- ==========================================
 local function shootAtMurderer()
     pcall(function()
         local murderer = getMurderer()
@@ -450,30 +453,36 @@ local function shootAtMurderer()
             return
         end
 
-        -- Predicción exacta de posición del Murderer
-        local velocity = mHrp.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
-        local mPos = mHrp.Position + (velocity * 0.12)
+        -- Predicción de posición del objetivo
+        local vel = mHrp.AssemblyLinearVelocity or Vector3.new(0,0,0)
+        local targetPos = mHrp.Position + (vel * 0.1)
 
-        -- Disparo directo por RemoteEvent de MM2 (Dispara invisible al instante sin trabar la cámara)
+        -- Intento 1: Remote Event Directo de MM2
         local fired = false
         pcall(function()
-            if gun:FindFirstChild("Shoot") then
-                gun.Shoot:FireServer(mPos)
-                fired = true
-            elseif ReplicatedStorage:FindFirstChild("Shoot") then
-                ReplicatedStorage.Shoot:FireServer(mPos)
+            local shootRemote = gun:FindFirstChild("Shoot") or ReplicatedStorage:FindFirstChild("Shoot") or (ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Shoot"))
+            if shootRemote then
+                shootRemote:FireServer(targetPos)
                 fired = true
             end
         end)
 
-        if not fired then
-            -- Fallback: activar herramienta si el remote está oculto
-            pcall(function()
+        -- Intento 2 (Fallback): Disparo físico con rotación de herramienta sin tocar cámara
+        if not fired or gun.Parent ~= LocalPlayer.Character then
+            local char = LocalPlayer.Character
+            local handle = gun:FindFirstChild("Handle") or gun:FindFirstChildOfClass("BasePart")
+            if char and handle then
+                local oldCFrame = handle.CFrame
+                handle.CFrame = CFrame.new(handle.Position, targetPos)
                 gun:Activate()
-            end)
+                task.wait(0.05)
+                handle.CFrame = oldCFrame
+            else
+                gun:Activate()
+            end
         end
 
-        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado al Murderer!", Duration = 2 })
+        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo enviado al Murderer!", Duration = 2 })
     end)
 end
 
@@ -1082,11 +1091,23 @@ local function getPlayerNames()
     return names
 end
 
-combatTab:Dropdown({
+local flingDropdown = combatTab:Dropdown({
     Title = "Select Player to Fling",
     Values = getPlayerNames(),
     Callback = function(selected)
         selectedFlingPlayer = selected
+    end
+})
+
+combatTab:Button({
+    Title = "Refresh Player List 🔄",
+    Desc = "Actualiza la lista de jugadores del servidor.",
+    Callback = function()
+        pcall(function()
+            local updatedNames = getPlayerNames()
+            flingDropdown:SetValues(updatedNames)
+            WindUI:Notify({ Title = "Vortex x System", Content = "Lista de jugadores actualizada.", Duration = 2 })
+        end)
     end
 })
 
