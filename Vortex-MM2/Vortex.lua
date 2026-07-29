@@ -180,7 +180,7 @@ WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
 
 -- ==========================================
--- LOGICAS Y ESTADOS INTEGRADOS
+-- INTEGRATED LOGIC AND STATES
 -- ==========================================
 local isFlingingActive = false
 local touchFlingEnabled = false
@@ -369,13 +369,13 @@ local function executeKillAll()
         local char = LocalPlayer.Character
         local hrp = char and char:FindFirstChild("HumanoidRootPart")
         if not hrp then 
-            WindUI:Notify({ Title = "Kill All", Content = "Tu personaje no está disponible.", Duration = 3 })
+            WindUI:Notify({ Title = "Kill All", Content = "Your character is not available.", Duration = 3 })
             return 
         end
 
         local knife = getAndEquipKnife()
         if not knife then 
-            WindUI:Notify({ Title = "Kill All", Content = "No tienes un cuchillo en tu inventario.", Duration = 3 })
+            WindUI:Notify({ Title = "Kill All", Content = "You do not have a knife in your inventory.", Duration = 3 })
             return 
         end
 
@@ -402,9 +402,9 @@ local function executeKillAll()
         hrp.CFrame = oldPos
 
         if targetsKilled > 0 then
-            WindUI:Notify({ Title = "Vortex x System", Content = "¡Kill All ejecutado con éxito!", Duration = 2 })
+            WindUI:Notify({ Title = "Vortex x System", Content = "Kill All successfully executed!", Duration = 2 })
         else
-            WindUI:Notify({ Title = "Kill All", Content = "No hay jugadores vivos para eliminar.", Duration = 3 })
+            WindUI:Notify({ Title = "Kill All", Content = "There are no living players to eliminate.", Duration = 3 })
         end
     end)
 end
@@ -440,7 +440,7 @@ local function shootAtMurderer()
     pcall(function()
         local murderer = getMurderer()
         if not murderer or not murderer.Character then
-            WindUI:Notify({ Title = "Gun Shoot", Content = "Murderer no encontrado o muerto.", Duration = 3 })
+            WindUI:Notify({ Title = "Gun Shoot", Content = "Murderer not found or dead.", Duration = 3 })
             return
         end
         
@@ -449,7 +449,7 @@ local function shootAtMurderer()
 
         local gun = getAndEquipGun()
         if not gun then
-            WindUI:Notify({ Title = "Gun Shoot", Content = "No tienes una pistola en tu inventario.", Duration = 3 })
+            WindUI:Notify({ Title = "Gun Shoot", Content = "You do not have a gun in your inventory.", Duration = 3 })
             return
         end
 
@@ -479,7 +479,7 @@ local function shootAtMurderer()
             end
         end
 
-        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo enviado al Murderer!", Duration = 2 })
+        WindUI:Notify({ Title = "Vortex x System", Content = "Shot sent to the Murderer!", Duration = 2 })
     end)
 end
 
@@ -658,7 +658,7 @@ local function sendChatMessage(msg)
 end
 
 -- ==========================================
--- BUCLES Y EVENTOS DE SERVICIO
+-- SERVICE LOOPS AND EVENTS
 -- ==========================================
 RunService.RenderStepped:Connect(function()
     if gunAimbotEnabled then
@@ -985,7 +985,7 @@ combatTab:Button({
 
 combatTab:Toggle({
     Title = "Floating Kill All Bubble (Mobile)",
-    Desc = "Crea un botón flotante cian y movible para ejecutar Kill All.",
+    Desc = "Creates a floating movable cyan button to execute Kill All.",
     Default = false,
     Callback = function(val)
         createFloatingKillButton(val)
@@ -1021,7 +1021,7 @@ combatTab:Paragraph({ Title = "Sheriff & Gun Utilities", Desc = "Aimbot, auto-sh
 
 combatTab:Toggle({
     Title = "Gun Aimbot",
-    Desc = "Apunta automáticamente la cámara hacia el Murderer al sostener la pistola.",
+    Desc = "Automatically aims the camera towards the Murderer when holding the gun.",
     Default = false,
     Callback = function(val)
         gunAimbotEnabled = val
@@ -1030,7 +1030,7 @@ combatTab:Toggle({
 
 combatTab:Button({
     Title = "Shoot Murderer (Instant)",
-    Desc = "Dispara automáticamente al Asesino sin bloquear la cámara.",
+    Desc = "Automatically shoots the Murderer without locking the camera.",
     Callback = function()
         shootAtMurderer()
     end
@@ -1038,7 +1038,7 @@ combatTab:Button({
 
 combatTab:Toggle({
     Title = "Floating Shoot Button (Mobile)",
-    Desc = "Crea un botón flotante cian para dispararle al Murderer con un toque.",
+    Desc = "Creates a floating cyan button to shoot the Murderer with a tap.",
     Default = false,
     Callback = function(val)
         createFloatingShootButton(val)
@@ -1056,7 +1056,7 @@ combatTab:Button({
             if target then 
                 flingTarget(target) 
             else
-                WindUI:Notify({ Title = "Fling", Content = "Murderer no encontrado.", Duration = 3 })
+                WindUI:Notify({ Title = "Fling", Content = "Murderer not found.", Duration = 3 })
             end 
         end) 
     end 
@@ -1070,7 +1070,7 @@ combatTab:Button({
             if target then 
                 flingTarget(target) 
             else
-                WindUI:Notify({ Title = "Fling", Content = "Sheriff no encontrado.", Duration = 3 })
+                WindUI:Notify({ Title = "Fling", Content = "Sheriff not found.", Duration = 3 })
             end 
         end) 
     end 
@@ -1103,7 +1103,6 @@ local function updateFlingDropdown()
     end)
 end
 
--- Detección en Tiempo Real (Auto Refresh)
 Players.PlayerAdded:Connect(function(p)
     task.wait(1)
     updateFlingDropdown()
@@ -1115,10 +1114,10 @@ end)
 
 combatTab:Button({
     Title = "Refresh Player List 🔄",
-    Desc = "Actualiza manualmente la lista de jugadores del servidor.",
+    Desc = "Manually updates the server player list.",
     Callback = function()
         updateFlingDropdown()
-        WindUI:Notify({ Title = "Vortex x System", Content = "Lista de jugadores actualizada.", Duration = 2 })
+        WindUI:Notify({ Title = "Vortex x System", Content = "Player list updated.", Duration = 2 })
     end
 })
 
@@ -1130,17 +1129,17 @@ combatTab:Button({
             if target then
                 flingTarget(target)
             else
-                WindUI:Notify({ Title = "Fling", Content = "Jugador no encontrado.", Duration = 3 })
+                WindUI:Notify({ Title = "Fling", Content = "Player not found.", Duration = 3 })
             end
         else
-            WindUI:Notify({ Title = "Fling", Content = "Selecciona un jugador primero.", Duration = 3 })
+            WindUI:Notify({ Title = "Fling", Content = "Select a player first.", Duration = 3 })
         end
     end
 })
 
 combatTab:Toggle({
     Title = "Touch Fling",
-    Desc = "Gira a velocidad extrema lanzando por los aires a cualquiera que te toque.",
+    Desc = "Spins at extreme speed, launching anyone who touches you.",
     Default = false,
     Callback = function(val)
         touchFlingEnabled = val
@@ -1149,7 +1148,7 @@ combatTab:Toggle({
 
 combatTab:Toggle({
     Title = "Anti-Fling",
-    Desc = "Anula colisiones y fuerzas físicas externas impidiendo que te hagan Fling.",
+    Desc = "Cancels collisions and external physical forces to prevent flinging.",
     Default = false,
     Callback = function(val)
         antiFlingEnabled = val
@@ -1575,7 +1574,7 @@ teleportsTab:Button({
             if lobbyCFrame then 
                 hrp.CFrame = lobbyCFrame 
             else
-                WindUI:Notify({ Title = "Teleport", Content = "Lobby no encontrado.", Duration = 3 })
+                WindUI:Notify({ Title = "Teleport", Content = "Lobby not found.", Duration = 3 })
             end
         end)
     end 
@@ -1594,24 +1593,24 @@ teleportsTab:Button({
                 
                 if spawnPart and spawnPart:IsA("BasePart") then
                     hrp.CFrame = spawnPart.CFrame + Vector3.new(0, 3, 0)
-                    WindUI:Notify({ Title = "Vortex x System", Content = "¡Teletransportado al mapa con éxito!", Duration = 3 })
+                    WindUI:Notify({ Title = "Vortex x System", Content = "Successfully teleported to the map!", Duration = 3 })
                 else
                     local success, pivot = pcall(function() return mapFound:GetPivot() end)
                     if success and pivot then
                         hrp.CFrame = pivot + Vector3.new(0, 5, 0)
-                        WindUI:Notify({ Title = "Vortex x System", Content = "Teletransportado al centro del mapa.", Duration = 3 })
+                        WindUI:Notify({ Title = "Vortex x System", Content = "Teleported to map center.", Duration = 3 })
                     else
                         local foundPart = mapFound:FindFirstChildOfClass("BasePart")
                         if foundPart then
                             hrp.CFrame = foundPart.CFrame + Vector3.new(0, 5, 0)
-                            WindUI:Notify({ Title = "Vortex x System", Content = "Teletransportado al mapa.", Duration = 3 })
+                            WindUI:Notify({ Title = "Vortex x System", Content = "Teleported to map.", Duration = 3 })
                         else
-                            WindUI:Notify({ Title = "Teleport", Content = "El mapa no tiene partes válidas para teletransporte.", Duration = 3 })
+                            WindUI:Notify({ Title = "Teleport", Content = "Map has no valid parts for teleporting.", Duration = 3 })
                         end
                     end
                 end
             else
-                WindUI:Notify({ Title = "Teleport", Content = "Mapa no activo (Espera a que empiece la ronda).", Duration = 3 })
+                WindUI:Notify({ Title = "Teleport", Content = "Map not active (Wait for round to start).", Duration = 3 })
             end
         end)
     end 
@@ -1700,7 +1699,7 @@ task.spawn(function()
                 if isBagFullPaused then
                     if currentCoinsNum == 0 then
                         isBagFullPaused = false
-                        WindUI:Notify({ Title = "Vortex x System", Content = "Bolsa vacía. Reanudando Auto Collect.", Duration = 3 })
+                        WindUI:Notify({ Title = "Vortex x System", Content = "Bag empty. Resuming Auto Collect.", Duration = 3 })
                     else
                         task.wait(1)
                         return
@@ -1709,7 +1708,7 @@ task.spawn(function()
 
                 if currentCoinsNum >= 40 then
                     isBagFullPaused = true
-                    WindUI:Notify({ Title = "Vortex x System", Content = "Bolsa llena (40/40). Pausando...", Duration = 4 })
+                    WindUI:Notify({ Title = "Vortex x System", Content = "Bag full (40/40). Pausing...", Duration = 4 })
                     task.wait(1.5)
                     return
                 end
@@ -1830,7 +1829,7 @@ end)
 local pcTab = Window:Tab({ Title = "PC Keybinds", Icon = "keyboard", ShowTabTitle = true, Border = true })
 
 pcTab:Divider()
-pcTab:Paragraph({ Title = "Keyboard Shortcuts", Desc = "Asigna teclas para activar opciones rápidamente en PC" })
+pcTab:Paragraph({ Title = "Keyboard Shortcuts", Desc = "Assign keys to quickly activate options on PC" })
 
 pcTab:Keybind({
     Title = "Kill All Keybind",
@@ -1957,15 +1956,15 @@ pcTab:Keybind({
 local miscTab = Window:Tab({ Title = "Misc / Fun", Icon = "sparkles", ShowTabTitle = true, Border = true })
 
 miscTab:Divider()
-miscTab:Paragraph({ Title = "Emotes & Animations", Desc = "Carga el script universal de emotes" })
+miscTab:Paragraph({ Title = "Emotes & Animations", Desc = "Loads the universal emotes script" })
 
 miscTab:Button({
     Title = "AFEM Max (Emotes)",
-    Desc = "Abre el menú completo de animaciones y emotes.",
+    Desc = "Opens the full animation and emote menu.",
     Callback = function()
         pcall(function()
             loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AFEM-Max-Open-Alpha-50210"))()
-            WindUI:Notify({ Title = "Vortex x System", Content = "Cargando AFEM Max Emotes...", Duration = 3 })
+            WindUI:Notify({ Title = "Vortex x System", Content = "Loading AFEM Max Emotes...", Duration = 3 })
         end)
     end
 })
@@ -1998,7 +1997,7 @@ miscTab:Button({
                     local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
                     if sendReq then sendReq:InvokeServer(target) end
                     if acceptReq then acceptReq:FireServer() end
-                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " .. target.Name, Duration = 3 })
+                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
                 end
             else
                 WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 })
