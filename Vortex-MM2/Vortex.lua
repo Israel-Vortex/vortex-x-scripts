@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM v3.3.39 [MM2] - AUTO-REFRESH & ROUND TIMER
+-- VORTEX X SYSTEM v3.3.40 [MM2] - AUTO-REFRESH & ROUND TIMER
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -101,19 +101,19 @@ vortexTimerUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local timerFrame = Instance.new("Frame")
 timerFrame.Name = "TimerFrame"
-timerFrame.Position = UDim2.new(0.5, 0, 0, 15) 
-timerFrame.Size = UDim2.new(0, 150, 0, 24)
+timerFrame.Position = UDim2.new(0.5, 0, 0, 8) 
+timerFrame.Size = UDim2.new(0, 110, 0, 20)
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
 timerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = vortexTimerUI
 
 local uiCornerTimer = Instance.new("UICorner")
-uiCornerTimer.CornerRadius = UDim.new(0, 5)
+uiCornerTimer.CornerRadius = UDim.new(0, 4)
 uiCornerTimer.Parent = timerFrame
 
 local uiStrokeTimer = Instance.new("UIStroke")
-uiStrokeTimer.Thickness = 1.5
+uiStrokeTimer.Thickness = 1.2
 uiStrokeTimer.Color = Color3.fromRGB(255, 255, 255)
 uiStrokeTimer.Parent = timerFrame
 
@@ -131,7 +131,7 @@ timerText.BackgroundTransparency = 1
 timerText.Font = Enum.Font.GothamBold
 timerText.Text = "TIME: 00:00"
 timerText.TextColor3 = Color3.fromRGB(255, 255, 255)
-timerText.TextSize = 12
+timerText.TextSize = 10
 timerText.Parent = timerFrame
 
 local timerConnection
@@ -156,7 +156,6 @@ local function ToggleTimerDisplay(state)
                     end
                 end
                 
-                -- Fallback to PlayerGui timers if workspace search fails
                 if not foundVal then
                     local pGui = LocalPlayer:FindFirstChild("PlayerGui")
                     if pGui then
@@ -165,7 +164,7 @@ local function ToggleTimerDisplay(state)
                                 local gName = gui.Name:lower()
                                 local gText = gui.Text or ""
                                 if gName:find("timer") or gName:find("time") or gText:match("^%d+$") or gText:match("^%d+:%d+$") then
-                                    if gText ~= "" and not gText:lowerFilt and #gText < 15 then
+                                    if gText ~= "" and #gText < 15 then
                                         foundVal = gText
                                         break
                                     end
@@ -176,10 +175,10 @@ local function ToggleTimerDisplay(state)
                 end
             end)
             
-            if foundVal ~= nil and tostring(foundVal) ~= "" then
+            if foundVal ~= nil and tostring(foundVal) ~= "" and tostring(foundVal):lower() ~= "waiting..." and tostring(foundVal):lower() ~= "esperando..." and tostring(foundVal):lower() ~= "waiting" then
                 timerText.Text = "TIME: " .. tostring(foundVal)
             else
-                timerText.Text = "TIME: Waiting..."
+                timerText.Text = "TIME: --:--"
             end
         end)
     else
@@ -274,7 +273,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.39", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.40", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -533,9 +532,6 @@ local function getSheriff()
     return nil
 end
 
--- ==========================================
--- SHOOT MURDERER (RELIABLE DISPATCH)
--- ==========================================
 local function shootAtMurderer()
     pcall(function()
         local murderer = getMurderer()
@@ -757,9 +753,6 @@ local function sendChatMessage(msg)
     end)
 end
 
--- ==========================================
--- SERVICE LOOPS AND EVENTS
--- ==========================================
 RunService.RenderStepped:Connect(function()
     if gunAimbotEnabled then
         pcall(function()
@@ -818,9 +811,6 @@ RunService.Heartbeat:Connect(function()
     end
 end)
 
--- ==========================================
--- FLOATING BUTTONS FOR MOBILE
--- ==========================================
 local floatingBubbleGui = nil
 local bubbleButton = nil
 local floatingShootGui = nil
@@ -984,9 +974,9 @@ local function createFloatingShootButton(enabled)
     end
 end
 
--- ==========================================
+--------------------------------------------------
 -- TABS SYSTEM
--- ==========================================
+--------------------------------------------------
 
 --------------------------------------------------
 -- 1. CONFIG TAB
@@ -2091,8 +2081,7 @@ miscTab:Input({
 
 miscTab:Button({
     Title = "Force Trade Request",
-    Callback = function(
-    )
+    Callback = function()
         pcall(function()
             if tradeTargetName == "" then 
                 WindUI:Notify({ Title = "Trade", Content = "Enter a valid username.", Duration = 3 })
@@ -2106,7 +2095,7 @@ miscTab:Button({
                     local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
                     if sendReq then sendReq:InvokeServer(target) end
                     if acceptReq then acceptReq:FireServer() end
-                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
+                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " .. target.Name, Duration = 3 })
                 end
             else
                 WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 })
@@ -2126,7 +2115,7 @@ miscTab:Button({
     Callback = function()
         pcall(function()
             local murderer = getMurderer()
-            local sheriff = getSheriff()
+    local sheriff = getSheriff()
             if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
             if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIFF: " .. sheriff.Name) end
             if not murderer and not sheriff then
