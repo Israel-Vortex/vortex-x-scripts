@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM v3.3.37 [MM2] - AUTO-REFRESH & MOBILE FIX
+-- VORTEX X SYSTEM v3.3.38 [MM2] - AUTO-REFRESH & ROUND TIMER
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -90,6 +90,81 @@ if ProtectedGui.Parent ~= CoreGui then
     pcall(function() ProtectedGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end)
 end
 
+-- ==========================================
+-- ROUND TIMER UI CREATION
+-- ==========================================
+local vortexTimerUI = Instance.new("ScreenGui")
+vortexTimerUI.Name = "VortexTimerUI"
+vortexTimerUI.Parent = CoreGui
+vortexTimerUI.Enabled = false
+vortexTimerUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local timerFrame = Instance.new("Frame")
+timerFrame.Name = "TimerFrame"
+timerFrame.Position = UDim2.new(0.5, 0, 0, 60) 
+timerFrame.Size = UDim2.new(0, 220, 0, 35)
+timerFrame.AnchorPoint = Vector2.new(0.5, 0)
+timerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+timerFrame.BorderSizePixel = 0
+timerFrame.Parent = vortexTimerUI
+
+local uiCornerTimer = Instance.new("UICorner")
+uiCornerTimer.CornerRadius = UDim.new(0, 6)
+uiCornerTimer.Parent = timerFrame
+
+local uiStrokeTimer = Instance.new("UIStroke")
+uiStrokeTimer.Thickness = 2
+uiStrokeTimer.Color = Color3.fromRGB(255, 255, 255)
+uiStrokeTimer.Parent = timerFrame
+
+local strokeGradient = Instance.new("UIGradient")
+strokeGradient.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 85, 255))
+})
+strokeGradient.Parent = uiStrokeTimer
+
+local timerText = Instance.new("TextLabel")
+timerText.Name = "TimeText"
+timerText.Size = UDim2.new(1, 0, 1, 0)
+timerText.BackgroundTransparency = 1
+timerText.Font = Enum.Font.GothamBold
+timerText.Text = "TIEMPO: 00:00"
+timerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+timerText.TextSize = 15
+timerText.Parent = timerFrame
+
+local timerConnection
+local function ToggleTimerDisplay(state)
+    vortexTimerUI.Enabled = state
+    if state then
+        timerConnection = RunService.RenderStepped:Connect(function()
+            local foundVal = nil
+            pcall(function()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    if v.Name == "RoundTime" or v.Name == "Time" or v.Name == "Timer" then
+                        if v:IsA("IntValue") or v:IsA("NumberValue") or v:IsA("StringValue") then
+                            foundVal = v.Value
+                            break
+                        end
+                    end
+                end
+            end)
+            
+            if foundVal then
+                timerText.Text = "TIEMPO: " .. tostring(foundVal)
+            else
+                timerText.Text = "TIEMPO: Esperando..."
+            end
+        end)
+    else
+        if timerConnection then
+            timerConnection:Disconnect()
+            timerConnection = nil
+        end
+    end
+end
+
 local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
 
 WindUI:AddTheme({
@@ -174,7 +249,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.37", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.38", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -1279,6 +1354,14 @@ visualsTab:Paragraph({ Title = "World & Item ESP", Desc = "Detect weapons and ma
 
 visualsTab:Toggle({ Title = "Enable Gun ESP", Default = false, Callback = function(val) gunEspEnabled = val end })
 visualsTab:Toggle({ Title = "Traps & Hazards ESP", Default = false, Callback = function(val) trapsEspEnabled = val end })
+
+visualsTab:Toggle({ 
+    Title = "Mostrar Temporizador", 
+    Default = false, 
+    Callback = function(Value) 
+        ToggleTimerDisplay(Value) 
+    end 
+})
 
 visualsTab:Toggle({ 
     Title = "X-Ray", 
