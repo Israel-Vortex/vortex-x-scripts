@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEXHUB v3.3.34 [MM2] - MOBILE SAFE
+-- VORTEXHUB v3.3.35 [MM2] - MOBILE SAFE
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -174,7 +174,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.34", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.35", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -450,33 +450,30 @@ local function shootAtMurderer()
             return
         end
 
-        -- 1. Predicción y alineación de cámara
+        -- Predicción exacta de posición del Murderer
         local velocity = mHrp.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
         local mPos = mHrp.Position + (velocity * 0.12)
-        
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, mPos)
-        task.wait(0.05)
 
-        -- 2. Disparo por RemoteEvent nativo de MM2
+        -- Disparo directo por RemoteEvent de MM2 (Dispara invisible al instante sin trabar la cámara)
+        local fired = false
         pcall(function()
             if gun:FindFirstChild("Shoot") then
                 gun.Shoot:FireServer(mPos)
+                fired = true
             elseif ReplicatedStorage:FindFirstChild("Shoot") then
                 ReplicatedStorage.Shoot:FireServer(mPos)
+                fired = true
             end
         end)
 
-        -- 3. Simulación de toque Touch (NUNCA Ratón para evitar cambio a modo PC)
-        pcall(function()
-            gun:Activate()
-            
-            local touchPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            VirtualInputManager:SendTouchEvent(1, 0, touchPos.X, touchPos.Y)
-            task.wait(0.03)
-            VirtualInputManager:SendTouchEvent(1, 1, touchPos.X, touchPos.Y)
-        end)
+        if not fired then
+            -- Fallback: activar herramienta si el remote está oculto
+            pcall(function()
+                gun:Activate()
+            end)
+        end
 
-        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado!", Duration = 2 })
+        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado al Murderer!", Duration = 2 })
     end)
 end
 
@@ -1027,7 +1024,7 @@ combatTab:Toggle({
 
 combatTab:Button({
     Title = "Shoot Murderer (Instant)",
-    Desc = "Equipa la pistola, apunta y le dispara al Asesino automáticamente.",
+    Desc = "Dispara automáticamente al Asesino sin bloquear la cámara.",
     Callback = function()
         shootAtMurderer()
     end
@@ -1955,7 +1952,7 @@ miscTab:Button({
                     local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
                     if sendReq then sendReq:InvokeServer(target) end
                     if acceptReq then acceptReq:FireServer() end
-                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " .. target.Name, Duration = 3 })
+                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
                 end
             else
                 WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 })
