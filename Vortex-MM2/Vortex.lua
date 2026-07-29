@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEXHUB v3.3.33 [MM2] - PC & MOBILE PRO
+-- VORTEXHUB v3.3.34 [MM2] - MOBILE SAFE
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -174,7 +174,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.33", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.34", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -319,7 +319,6 @@ local function getAndEquipGun()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum then return nil end
 
-    -- 1. Si la pistola ya está en la mano
     for _, tool in ipairs(char:GetChildren()) do
         if tool:IsA("Tool") then
             local name = tool.Name:lower()
@@ -329,7 +328,6 @@ local function getAndEquipGun()
         end
     end
 
-    -- 2. Si la pistola está en la mochila
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if backpack then
         for _, tool in ipairs(backpack:GetChildren()) do
@@ -452,32 +450,14 @@ local function shootAtMurderer()
             return
         end
 
-        -- 1. Predicción exacta y enfoque de cámara
+        -- 1. Predicción y alineación de cámara
         local velocity = mHrp.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
         local mPos = mHrp.Position + (velocity * 0.12)
         
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, mPos)
-        task.wait(0.06)
+        task.wait(0.05)
 
-        -- 2. Activar la herramienta directamente en el juego
-        pcall(function()
-            gun:Activate()
-        end)
-
-        -- 3. Simular clic de mouse real en el centro de la pantalla (Disparo nativo de MM2)
-        pcall(function()
-            if mouse1click then
-                mouse1click()
-            else
-                local vpSize = Camera.ViewportSize
-                local cx, cy = vpSize.X / 2, vpSize.Y / 2
-                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true, game, 0)
-                task.wait(0.05)
-                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
-            end
-        end)
-
-        -- 4. Disparo por respaldo (RemoteEvent directo)
+        -- 2. Disparo por RemoteEvent nativo de MM2
         pcall(function()
             if gun:FindFirstChild("Shoot") then
                 gun.Shoot:FireServer(mPos)
@@ -486,7 +466,17 @@ local function shootAtMurderer()
             end
         end)
 
-        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado al Murderer!", Duration = 2 })
+        -- 3. Simulación de toque Touch (NUNCA Ratón para evitar cambio a modo PC)
+        pcall(function()
+            gun:Activate()
+            
+            local touchPos = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            VirtualInputManager:SendTouchEvent(1, 0, touchPos.X, touchPos.Y)
+            task.wait(0.03)
+            VirtualInputManager:SendTouchEvent(1, 1, touchPos.X, touchPos.Y)
+        end)
+
+        WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado!", Duration = 2 })
     end)
 end
 
