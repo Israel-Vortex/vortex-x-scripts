@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEXHUB v3.3.36 [MM2] - MOBILE SAFE & RELIABLE
+-- VORTEXHUB v3.3.37 [MM2] - AUTO-REFRESH & MOBILE FIX
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -174,7 +174,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.36", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.37", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -434,7 +434,7 @@ local function getSheriff()
 end
 
 -- ==========================================
--- SHOOT MURDERER (ULTRA-FIXED FOR MOBILE)
+-- SHOOT MURDERER (RELIABLE DISPATCH)
 -- ==========================================
 local function shootAtMurderer()
     pcall(function()
@@ -453,11 +453,9 @@ local function shootAtMurderer()
             return
         end
 
-        -- Predicción de posición del objetivo
         local vel = mHrp.AssemblyLinearVelocity or Vector3.new(0,0,0)
         local targetPos = mHrp.Position + (vel * 0.1)
 
-        -- Intento 1: Remote Event Directo de MM2
         local fired = false
         pcall(function()
             local shootRemote = gun:FindFirstChild("Shoot") or ReplicatedStorage:FindFirstChild("Shoot") or (ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Shoot"))
@@ -467,7 +465,6 @@ local function shootAtMurderer()
             end
         end)
 
-        -- Intento 2 (Fallback): Disparo físico con rotación de herramienta sin tocar cámara
         if not fired or gun.Parent ~= LocalPlayer.Character then
             local char = LocalPlayer.Character
             local handle = gun:FindFirstChild("Handle") or gun:FindFirstChildOfClass("BasePart")
@@ -523,7 +520,7 @@ local function flingTarget(TargetPlayer)
         env.OldPos = Root.CFrame
 
         pcall(function()
-            Workspace.CurrentCamera.CameraSubject = THead or Handle or THumanoid
+            workspace.CurrentCamera.CameraSubject = THead or Handle or THumanoid
         end)
 
         local function FPos(BasePart, Pos, Ang)
@@ -569,7 +566,7 @@ local function flingTarget(TargetPlayer)
         pcall(function()
             BV:Destroy()
             Hum:SetStateEnabled(Enum.HumanoidStateType.Seated, true)
-            Workspace.CurrentCamera.CameraSubject = Hum
+            workspace.CurrentCamera.CameraSubject = Hum
         end)
 
         repeat
@@ -942,7 +939,7 @@ configTab:Button({
         pcall(function()
             for _, gui in ipairs(LocalPlayer.PlayerGui:GetDescendants()) do
                 if gui:IsA("TextLabel") or gui:IsA("TextButton") then
-                    if gui.Text:find("MURDER") or gui.Text:find("SHERIFT") or gui.Text:find("Asesino") then
+                    if gui.Text:find("MURDER") or gui.Text:find("SHERIFF") or gui.Text:find("Asesino") then
                         if gui.Visible then
                             gui.Visible = false
                         end
@@ -1099,15 +1096,29 @@ local flingDropdown = combatTab:Dropdown({
     end
 })
 
+local function updateFlingDropdown()
+    pcall(function()
+        local updatedNames = getPlayerNames()
+        flingDropdown:SetValues(updatedNames)
+    end)
+end
+
+-- Detección en Tiempo Real (Auto Refresh)
+Players.PlayerAdded:Connect(function(p)
+    task.wait(1)
+    updateFlingDropdown()
+end)
+
+Players.PlayerRemoving:Connect(function(p)
+    updateFlingDropdown()
+end)
+
 combatTab:Button({
     Title = "Refresh Player List 🔄",
-    Desc = "Actualiza la lista de jugadores del servidor.",
+    Desc = "Actualiza manualmente la lista de jugadores del servidor.",
     Callback = function()
-        pcall(function()
-            local updatedNames = getPlayerNames()
-            flingDropdown:SetValues(updatedNames)
-            WindUI:Notify({ Title = "Vortex x System", Content = "Lista de jugadores actualizada.", Duration = 2 })
-        end)
+        updateFlingDropdown()
+        WindUI:Notify({ Title = "Vortex x System", Content = "Lista de jugadores actualizada.", Duration = 2 })
     end
 })
 
@@ -1234,7 +1245,7 @@ local function updateMM2ESP()
                                     label.Text = "[MURDER] " .. dist .. " studs"
                                     label.TextColor3 = murdererColor
                                 elseif role == "Sheriff" then
-                                    label.Text = "[SHERIFT] " .. dist .. " studs"
+                                    label.Text = "[SHERIFF] " .. dist .. " studs"
                                     label.TextColor3 = sheriffColor
                                 end
                             end
@@ -1973,7 +1984,7 @@ miscTab:Button({
                     local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
                     if sendReq then sendReq:InvokeServer(target) end
                     if acceptReq then acceptReq:FireServer() end
-                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
+                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " .. target.Name, Duration = 3 })
                 end
             else
                 WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 })
@@ -1995,7 +2006,7 @@ miscTab:Button({
             local murderer = getMurderer()
             local sheriff = getSheriff()
             if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
-            if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFT: " .. sheriff.Name) end
+            if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFF: " .. sheriff.Name) end
             if not murderer and not sheriff then
                 WindUI:Notify({ Title = "Role Revealer", Content = "No active roles detected yet.", Duration = 3 })
             end
@@ -2023,7 +2034,7 @@ task.spawn(function()
                 if (murderer or sheriff) then
                     if not rolesExposedThisRound then
                         if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
-                        if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFT: " .. sheriff.Name) end
+                        if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFF: " .. sheriff.Name) end
                         rolesExposedThisRound = true
                     end
                 else
