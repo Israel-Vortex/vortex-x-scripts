@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local HttpService = game:GetService("HttpService")
 local TweenService = game:GetService("TweenService")
 local TextChatService = game:GetService("TextChatService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
 
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
@@ -328,7 +329,7 @@ local function getAndEquipGun()
         end
     end
 
-    -- 2. Si la pistola está en la mochila (Mueve a la mano y espera el registro)
+    -- 2. Si la pistola está en la mochila
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if backpack then
         for _, tool in ipairs(backpack:GetChildren()) do
@@ -336,7 +337,7 @@ local function getAndEquipGun()
                 local name = tool.Name:lower()
                 if tool:FindFirstChild("GunServer") or tool:FindFirstChild("Shoot") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
                     hum:EquipTool(tool)
-                    task.wait(0.15) -- Retardo crítico para que Roblox valide el arma equipada
+                    task.wait(0.15)
                     return char:FindFirstChild(tool.Name) or tool
                 end
             end
@@ -451,35 +452,38 @@ local function shootAtMurderer()
             return
         end
 
-        -- Calcular vector con predicción de movimiento
+        -- 1. Predicción exacta y enfoque de cámara
         local velocity = mHrp.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
         local mPos = mHrp.Position + (velocity * 0.12)
         
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, mPos)
-        task.wait(0.05)
+        task.wait(0.06)
 
-        local fired = false
-
-        -- 1. Disparo directo mediante RemoteEvent del arma (Método MM2 estándar)
-        if gun:FindFirstChild("Shoot") then
-            gun.Shoot:FireServer(mPos)
-            fired = true
-        elseif gun:FindFirstChild("KnifeServer") and gun.KnifeServer:FindFirstChild("Shoot") then
-            gun.KnifeServer.Shoot:FireServer(mPos)
-            fired = true
-        else
-            -- Buscar cualquier RemoteEvent interno en la herramienta
-            for _, v in ipairs(gun:GetDescendants()) do
-                if v:IsA("RemoteEvent") then
-                    v:FireServer(mPos)
-                    fired = true
-                end
-            end
-        end
-
-        -- 2. Activación nativa de la herramienta como fallback
+        -- 2. Activar la herramienta directamente en el juego
         pcall(function()
             gun:Activate()
+        end)
+
+        -- 3. Simular clic de mouse real en el centro de la pantalla (Disparo nativo de MM2)
+        pcall(function()
+            if mouse1click then
+                mouse1click()
+            else
+                local vpSize = Camera.ViewportSize
+                local cx, cy = vpSize.X / 2, vpSize.Y / 2
+                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, true, game, 0)
+                task.wait(0.05)
+                VirtualInputManager:SendMouseButtonEvent(cx, cy, 0, false, game, 0)
+            end
+        end)
+
+        -- 4. Disparo por respaldo (RemoteEvent directo)
+        pcall(function()
+            if gun:FindFirstChild("Shoot") then
+                gun.Shoot:FireServer(mPos)
+            elseif ReplicatedStorage:FindFirstChild("Shoot") then
+                ReplicatedStorage.Shoot:FireServer(mPos)
+            end
         end)
 
         WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado al Murderer!", Duration = 2 })
@@ -888,7 +892,7 @@ local function createFloatingShootButton(enabled)
 end
 
 -- ==========================================
--- WELL-ORGANIZED TABS SYSTEM
+-- TABS SYSTEM
 -- ==========================================
 
 --------------------------------------------------
