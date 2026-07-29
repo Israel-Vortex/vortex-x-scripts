@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM v3.3.38 [MM2] - AUTO-REFRESH & ROUND TIMER
+-- VORTEX X SYSTEM v3.3.39 [MM2] - AUTO-REFRESH & ROUND TIMER
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -91,7 +91,7 @@ if ProtectedGui.Parent ~= CoreGui then
 end
 
 -- ==========================================
--- ROUND TIMER UI CREATION
+-- ROUND TIMER UI CREATION (SMALLER & HIGHER)
 -- ==========================================
 local vortexTimerUI = Instance.new("ScreenGui")
 vortexTimerUI.Name = "VortexTimerUI"
@@ -101,19 +101,19 @@ vortexTimerUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local timerFrame = Instance.new("Frame")
 timerFrame.Name = "TimerFrame"
-timerFrame.Position = UDim2.new(0.5, 0, 0, 60) 
-timerFrame.Size = UDim2.new(0, 220, 0, 35)
+timerFrame.Position = UDim2.new(0.5, 0, 0, 15) 
+timerFrame.Size = UDim2.new(0, 150, 0, 24)
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
 timerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = vortexTimerUI
 
 local uiCornerTimer = Instance.new("UICorner")
-uiCornerTimer.CornerRadius = UDim.new(0, 6)
+uiCornerTimer.CornerRadius = UDim.new(0, 5)
 uiCornerTimer.Parent = timerFrame
 
 local uiStrokeTimer = Instance.new("UIStroke")
-uiStrokeTimer.Thickness = 2
+uiStrokeTimer.Thickness = 1.5
 uiStrokeTimer.Color = Color3.fromRGB(255, 255, 255)
 uiStrokeTimer.Parent = timerFrame
 
@@ -129,9 +129,9 @@ timerText.Name = "TimeText"
 timerText.Size = UDim2.new(1, 0, 1, 0)
 timerText.BackgroundTransparency = 1
 timerText.Font = Enum.Font.GothamBold
-timerText.Text = "TIEMPO: 00:00"
+timerText.Text = "TIME: 00:00"
 timerText.TextColor3 = Color3.fromRGB(255, 255, 255)
-timerText.TextSize = 15
+timerText.TextSize = 12
 timerText.Parent = timerFrame
 
 local timerConnection
@@ -142,19 +142,44 @@ local function ToggleTimerDisplay(state)
             local foundVal = nil
             pcall(function()
                 for _, v in ipairs(workspace:GetDescendants()) do
-                    if v.Name == "RoundTime" or v.Name == "Time" or v.Name == "Timer" then
+                    local nLower = v.Name:lower()
+                    if nLower:find("roundtime") or nLower:find("time") or nLower:find("timer") then
                         if v:IsA("IntValue") or v:IsA("NumberValue") or v:IsA("StringValue") then
                             foundVal = v.Value
                             break
+                        elseif v:IsA("TextLabel") or v:IsA("TextBox") then
+                            if v.Text and v.Text ~= "" then
+                                foundVal = v.Text
+                                break
+                            end
+                        end
+                    end
+                end
+                
+                -- Fallback to PlayerGui timers if workspace search fails
+                if not foundVal then
+                    local pGui = LocalPlayer:FindFirstChild("PlayerGui")
+                    if pGui then
+                        for _, gui in ipairs(pGui:GetDescendants()) do
+                            if gui:IsA("TextLabel") then
+                                local gName = gui.Name:lower()
+                                local gText = gui.Text or ""
+                                if gName:find("timer") or gName:find("time") or gText:match("^%d+$") or gText:match("^%d+:%d+$") then
+                                    if gText ~= "" and not gText:lowerFilt and #gText < 15 then
+                                        foundVal = gText
+                                        break
+                                    end
+                                end
+                            end
                         end
                     end
                 end
             end)
             
-            if foundVal then
-                timerText.Text = "TIEMPO: " .. tostring(foundVal)
+            if foundVal ~= nil and tostring(foundVal) ~= "" then
+                timerText.Text = "TIME: " .. tostring(foundVal)
             else
-                timerText.Text = "TIEMPO: Esperando..."
+                timerText.Text = "TIME: Waiting..."
             end
         end)
     else
@@ -249,7 +274,7 @@ Window:EditOpenButton({
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.38", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.39", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -1356,7 +1381,7 @@ visualsTab:Toggle({ Title = "Enable Gun ESP", Default = false, Callback = functi
 visualsTab:Toggle({ Title = "Traps & Hazards ESP", Default = false, Callback = function(val) trapsEspEnabled = val end })
 
 visualsTab:Toggle({ 
-    Title = "Mostrar Temporizador", 
+    Title = "Round Timer", 
     Default = false, 
     Callback = function(Value) 
         ToggleTimerDisplay(Value) 
@@ -2066,7 +2091,8 @@ miscTab:Input({
 
 miscTab:Button({
     Title = "Force Trade Request",
-    Callback = function()
+    Callback = function(
+    )
         pcall(function()
             if tradeTargetName == "" then 
                 WindUI:Notify({ Title = "Trade", Content = "Enter a valid username.", Duration = 3 })
@@ -2102,7 +2128,7 @@ miscTab:Button({
             local murderer = getMurderer()
             local sheriff = getSheriff()
             if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
-            if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFF: " .. sheriff.Name) end
+            if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIFF: " .. sheriff.Name) end
             if not murderer and not sheriff then
                 WindUI:Notify({ Title = "Role Revealer", Content = "No active roles detected yet.", Duration = 3 })
             end
@@ -2130,7 +2156,7 @@ task.spawn(function()
                 if (murderer or sheriff) then
                     if not rolesExposedThisRound then
                         if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
-                        if sheriff then sendChatMessage("[VORTEX] 🔫 SHERIFF: " .. sheriff.Name) end
+                        if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIFF: " .. sheriff.Name) end
                         rolesExposedThisRound = true
                     end
                 else
