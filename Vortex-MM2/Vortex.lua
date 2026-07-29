@@ -303,7 +303,8 @@ local function getAndEquipKnife()
                 local name = tool.Name:lower()
                 if tool:FindFirstChild("KnifeServer") or tool:FindFirstChild("Blade") or name:find("knife") or name:find("dagger") or name:find("cuchillo") or name:find("murderer") or (not name:find("gun") and not name:find("revolver") and not name:find("pistola") and not name:find("sheriff") and not name:find("perk") and not name:find("emote")) then
                     hum:EquipTool(tool)
-                    return tool
+                    task.wait(0.12)
+                    return char:FindFirstChild(tool.Name) or tool
                 end
             end
         end
@@ -317,23 +318,26 @@ local function getAndEquipGun()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hum then return nil end
 
+    -- 1. Si la pistola ya está en la mano
     for _, tool in ipairs(char:GetChildren()) do
         if tool:IsA("Tool") then
             local name = tool.Name:lower()
-            if tool:FindFirstChild("GunServer") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
+            if tool:FindFirstChild("GunServer") or tool:FindFirstChild("Shoot") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
                 return tool
             end
         end
     end
 
+    -- 2. Si la pistola está en la mochila (Mueve a la mano y espera el registro)
     local backpack = LocalPlayer:FindFirstChild("Backpack")
     if backpack then
         for _, tool in ipairs(backpack:GetChildren()) do
             if tool:IsA("Tool") then
                 local name = tool.Name:lower()
-                if tool:FindFirstChild("GunServer") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
+                if tool:FindFirstChild("GunServer") or tool:FindFirstChild("Shoot") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
                     hum:EquipTool(tool)
-                    return tool
+                    task.wait(0.15) -- Retardo crítico para que Roblox valide el arma equipada
+                    return char:FindFirstChild(tool.Name) or tool
                 end
             end
         end
@@ -437,7 +441,8 @@ local function shootAtMurderer()
             WindUI:Notify({ Title = "Gun Shoot", Content = "Murderer no encontrado o muerto.", Duration = 3 })
             return
         end
-        local mHrp = murderer.Character:FindFirstChild("HumanoidRootPart") or murderer.Character:FindFirstChild("Head")
+        
+        local mHrp = murderer.Character:FindFirstChild("HumanoidRootPart") or murderer.Character:FindFirstChild("UpperTorso") or murderer.Character:FindFirstChild("Head")
         if not mHrp then return end
 
         local gun = getAndEquipGun()
@@ -446,37 +451,35 @@ local function shootAtMurderer()
             return
         end
 
-        local mPos = mHrp.Position + (mHrp.AssemblyLinearVelocity * 0.12)
+        -- Calcular vector con predicción de movimiento
+        local velocity = mHrp.AssemblyLinearVelocity or Vector3.new(0, 0, 0)
+        local mPos = mHrp.Position + (velocity * 0.12)
+        
         Camera.CFrame = CFrame.new(Camera.CFrame.Position, mPos)
         task.wait(0.05)
 
-        -- 1. Activar la herramienta de forma nativa
-        pcall(function()
-            gun:Activate()
-        end)
-
-        -- 2. Buscar y disparar por RemoteEvent en ReplicatedStorage
         local fired = false
-        pcall(function()
-            for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
-                if v:IsA("RemoteEvent") then
-                    local name = v.Name:lower()
-                    if name == "shoot" or name == "shootgun" or name == "firegun" or name == "gun" then
-                        v:FireServer(mPos)
-                        fired = true
-                    end
-                end
-            end
-        end)
 
-        -- 3. Buscar remotos específicos dentro de la pistola
-        pcall(function()
+        -- 1. Disparo directo mediante RemoteEvent del arma (Método MM2 estándar)
+        if gun:FindFirstChild("Shoot") then
+            gun.Shoot:FireServer(mPos)
+            fired = true
+        elseif gun:FindFirstChild("KnifeServer") and gun.KnifeServer:FindFirstChild("Shoot") then
+            gun.KnifeServer.Shoot:FireServer(mPos)
+            fired = true
+        else
+            -- Buscar cualquier RemoteEvent interno en la herramienta
             for _, v in ipairs(gun:GetDescendants()) do
                 if v:IsA("RemoteEvent") then
                     v:FireServer(mPos)
                     fired = true
                 end
             end
+        end
+
+        -- 2. Activación nativa de la herramienta como fallback
+        pcall(function()
+            gun:Activate()
         end)
 
         WindUI:Notify({ Title = "Vortex x System", Content = "¡Disparo ejecutado al Murderer!", Duration = 2 })
