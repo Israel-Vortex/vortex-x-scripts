@@ -1109,6 +1109,8 @@ externalScriptsTab:Button({
 
 getgenv().Config = getgenv().Config or {}
 getgenv().Config.autoCollect = false
+getgenv().Config.autoBuyCrates = false
+getgenv().Config.selectedCrate = "Knife Box #1"
 
 local eventBoxesTab = Window:Tab({
     Title = "Event & Boxes",
@@ -1129,6 +1131,37 @@ eventBoxesTab:Toggle({
     end
 })
 
+eventBoxesTab:Divider()
+eventBoxesTab:Paragraph({ Title = "Auto Buy Crates", Desc = "" })
+
+eventBoxesTab:Dropdown({
+    Title = "Seleccionar Crate",
+    Desc = "Elige qué caja deseas comprar automáticamente",
+    Values = {
+        "Knife Box #1",
+        "Knife Box #2",
+        "Gun Box #1",
+        "Gun Box #2",
+        "Mythic Box #1",
+        "Mythic Box #2",
+        "Mythic Box #3",
+        "Mythic Box #4"
+    },
+    Default = "Knife Box #1",
+    Callback = function(option)
+        getgenv().Config.selectedCrate = option
+    end
+})
+
+eventBoxesTab:Toggle({
+    Title = "Compra Automática de Crates",
+    Desc = "Compra la caja seleccionada en bucle",
+    Default = false,
+    Callback = function(val)
+        getgenv().Config.autoBuyCrates = val
+    end
+})
+
 task.spawn(function()
     while task.wait(0.5) do
         if getgenv().Config and getgenv().Config.autoCollect then
@@ -1136,6 +1169,25 @@ task.spawn(function()
                 local Networking = ReplicatedStorage:FindFirstChild("Packages") and ReplicatedStorage.Packages:FindFirstChild("Networking")
                 if Networking and Networking:FindFirstChild("RE/Events/CollectEventSpawnable") then
                     Networking["RE/Events/CollectEventSpawnable"]:FireServer()
+                end
+            end)
+        end
+    end
+end)
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if getgenv().Config and getgenv().Config.autoBuyCrates then
+            pcall(function()
+                local args = {
+                    [1] = getgenv().Config.selectedCrate
+                }
+                local buyRemote = ReplicatedStorage:FindFirstChild("Packages") 
+                    and ReplicatedStorage.Packages:FindFirstChild("Networking") 
+                    and ReplicatedStorage.Packages.Networking:FindFirstChild("RF/Shop/BuyCase")
+                
+                if buyRemote then
+                    buyRemote:InvokeServer(unpack(args))
                 end
             end)
         end
@@ -1172,10 +1224,12 @@ RunService.Stepped:Connect(function()
     end)
 end)
 
-UserInputService.JumpRequest:Connect(function()
-    pcall(function()
-        if playerSettings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end)
+UserInputService.UserInputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == Enum.KeyCode.Space then
+        pcall(function()
+            if playerSettings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
+        end)
+    end
 end)
