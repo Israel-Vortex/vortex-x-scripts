@@ -22,7 +22,6 @@ task.spawn(function()
     local SUPABASE_URL = "https://hieuyfqcqvvezmtiimyv.supabase.co"
     local SUPABASE_KEY = "sb_publishable_noBI5J1_1iPrTWxHqTtnqQ_dozthipq"
     
-    -- Registrar al usuario actual al iniciar
     pcall(function()
         request({
             Url = SUPABASE_URL .. "/rest/v1/active_users",
@@ -40,10 +39,8 @@ task.spawn(function()
         })
     end)
 
-    -- Bucle para mantener la sesión activa y consultar el total global de usuarios usando el script
     while task.wait(15) do
         pcall(function()
-            -- Enviar ping de actividad
             request({
                 Url = SUPABASE_URL .. "/rest/v1/active_users",
                 Method = "POST",
@@ -59,7 +56,6 @@ task.spawn(function()
                 })
             })
 
-            -- Consultar usuarios activos en los últimos 30 segundos (evita fantasmas por desconexiones repentinas)
             local timeThreshold = os.time() - 30
             local response = request({
                 Url = SUPABASE_URL .. "/rest/v1/active_users?timestamp=gte." .. tostring(timeThreshold) .. "&select=player_id",
@@ -80,7 +76,6 @@ task.spawn(function()
     end
 end)
 
--- Contenedor seguro aislado para evitar detección de instancias
 local ProtectedGui = Instance.new("Folder")
 ProtectedGui.Name = "VortexXSystem_Protected"
 pcall(function()
@@ -96,7 +91,7 @@ local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/release
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex X System [DMvSS]",
-    Icon = "rbxassetid://136777157214137",
+    Icon = "rbxassetid://134730158740955",
     IconSize = "35",
     Author = "by Israelcc",
     Folder = "VortexXSystem",
@@ -111,13 +106,13 @@ local Window = WindUI:CreateWindow({
 
 Window:EditOpenButton({
     Title = "VortexHub",
-    Icon = "rbxassetid://136777157214137",
+    Icon = "rbxassetid://134730158740955",
     CornerRadius = UDim.new(0,16),
-    StrokeThickness = 2,
+    StrokeThickness = 2.5,
     Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 55, 110)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(0, 162, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 240, 255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 0, 20)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 20, 60)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 70, 100))
     }),
     OnlyMobile = true,
     Enabled = true,
@@ -127,72 +122,69 @@ Window:EditOpenButton({
 Window:Tag({
     Title = "3.1.9",
     Icon = "github",
-    Color = Color3.fromRGB(0, 162, 255)
+    Color = Color3.fromRGB(220, 20, 60)
 })
 
 WindUI:AddTheme({
-    Name = "VortexXSystem",
+    Name = "VortexCrimson",
     Accent = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 55, 110), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 162, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
     }, { Rotation = 45 }),
-    Background = Color3.fromRGB(2, 4, 8),
+    Background = Color3.fromRGB(8, 2, 3),
     BackgroundTransparency = 0,
-    Outline = Color3.fromHex("#00a2ff"),
+    Outline = Color3.fromHex("#dc143c"),
     Text = Color3.fromRGB(255, 255, 255),
     Placeholder = Color3.fromRGB(255, 255, 255),
-    Button = Color3.fromRGB(0, 162, 255),
-    Icon = Color3.fromHex("#00a2ff"),
+    Button = Color3.fromRGB(220, 20, 60),
+    Icon = Color3.fromHex("#dc143c"),
     Hover = Color3.fromRGB(255, 255, 255),
     WindowBackground = WindUI:Gradient({
-        ["0"]   = { Color = Color3.fromRGB(2, 5, 10), Transparency = 0.35 },
-        ["100"] = { Color = Color3.fromRGB(2, 5, 10), Transparency = 0.35 },
+        ["0"]   = { Color = Color3.fromRGB(10, 2, 4), Transparency = 0.35 },
+        ["100"] = { Color = Color3.fromRGB(10, 2, 4), Transparency = 0.35 },
     }, { Rotation = 45 }),
     WindowShadow = Color3.fromHex("#000000"),
-    DialogBackground = Color3.fromHex("#051220"),
+    DialogBackground = Color3.fromHex("#1a0509"),
     DialogBackgroundTransparency = 0,
     DialogTitle = Color3.fromRGB(255, 255, 255),
     DialogContent = Color3.fromRGB(255, 255, 255),
-    DialogIcon = Color3.fromHex("#00a2ff"),
+    DialogIcon = Color3.fromHex("#dc143c"),
     WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
     WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
     WindowTopbarAuthor = Color3.fromRGB(255, 255, 255),
     WindowTopbarIcon = Color3.fromRGB(255, 255, 255),
-    TabBackground = Color3.fromHex("#030d1a"),
+    TabBackground = Color3.fromHex("#160307"),
     TabTitle = Color3.fromRGB(255, 255, 255),
-    TabIcon = Color3.fromRGB(0, 162, 255),
-    ElementBackground = Color3.fromHex("#030d1a"),
+    TabIcon = Color3.fromRGB(220, 20, 60),
+    ElementBackground = Color3.fromHex("#160307"),
     ElementTitle = Color3.fromRGB(255, 255, 255),
     ElementDesc = Color3.fromRGB(255, 255, 255),
-    ElementIcon = Color3.fromHex("#00a2ff"),
-    PopupBackground = Color3.fromRGB(5, 15, 25),
+    ElementIcon = Color3.fromHex("#dc143c"),
+    PopupBackground = Color3.fromRGB(20, 4, 8),
     PopupBackgroundTransparency = 0,
     PopupTitle = Color3.fromRGB(255, 255, 255),
     PopupContent = Color3.fromRGB(255, 255, 255),
-    PopupIcon = Color3.fromHex("#00a2ff"),
+    PopupIcon = Color3.fromHex("#dc143c"),
     Toggle = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 55, 110), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 162, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
     }, { Rotation = 90 }),
-    ToggleBar = Color3.fromRGB(5, 12, 25),
-    Checkbox = Color3.fromRGB(5, 12, 25),
+    ToggleBar = Color3.fromRGB(15, 3, 5),
+    Checkbox = Color3.fromRGB(15, 3, 5),
     CheckboxIcon = Color3.fromRGB(255, 255, 255),
     Slider = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 55, 110), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 162, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
     }, { Rotation = 0 }),
     SliderThumb = Color3.fromRGB(255, 255, 255),
 })
 
-WindUI:SetTheme("VortexXSystem")
+WindUI:SetTheme("VortexCrimson")
 Window:SetToggleKey(Enum.KeyCode.K)
 
 Window:OnClose(function()
 end)
 
--- ==========================================
--- SISTEMA DE DETECCIÓN DE ATRIBUTOS
--- ==========================================
 local myGame = nil
 local myTeam = nil
 
@@ -237,8 +229,7 @@ task.spawn(function()
     end
 end)
 
--- PESTAÑA CONFIG
-local InfoTab = Window:Tab({ Title = "Config", Icon = "settings", ShowTabTitle = true, Border = true })
+local InfoTab = Window:Tab({ Title = "Config", Icon = "info", ShowTabTitle = true, Border = true })
 InfoTab:Select()
 
 InfoTab:Divider()
@@ -294,7 +285,6 @@ InfoTab:Button({
 
 Window:Divider()
 
--- CONFIGURACIÓN DE COMBATE Y AIMBOT
 local aimCamState = false
 local cameraConn = nil
 local wallCheckEnabled = false
@@ -371,7 +361,7 @@ local function disconnectAimbotLoop()
 end
 
 local silentaim = Window:Tab({
-    Title = "Aim Assist",
+    Title = "Combate",
     Icon = "crosshair",
     ShowTabTitle = true,
     Border = true
@@ -495,7 +485,7 @@ silentaim:Divider()
 silentaim:Paragraph({ Title = "Crosshair", Desc = "" })
 
 local crosshairGui = nil
-local crosshairColor = Color3.fromRGB(0, 162, 255)
+local crosshairColor = Color3.fromRGB(220, 20, 60)
 local crosshairSizeVal = 6
 local crosshairGapVal = 4
 
@@ -613,7 +603,7 @@ silentaim:Slider({
 silentaim:Colorpicker({
     Title = "Color Crosshair",
     Desc = "Cambiar color de la cruz",
-    Default = Color3.fromRGB(0, 162, 255),
+    Default = Color3.fromRGB(220, 20, 60),
     Callback = function(colorVal)
         crosshairColor = colorVal
         if crosshairGui then
@@ -645,7 +635,7 @@ local function applyStealthHitbox()
                     hrp.CanCollide = false
                     if visibleState then
                         hrp.Transparency = 0.5
-                        hrp.Color = Color3.fromRGB(0, 162, 255)
+                        hrp.Color = Color3.fromRGB(220, 20, 60)
                         hrp.Material = Enum.Material.Neon
                     else
                         hrp.Transparency = 1
@@ -734,7 +724,7 @@ end)
 local espEnabled = false
 local allyEspEnabled = false
 local outlineEnabled = true
-local enemyOutlineColor = Color3.fromRGB(0, 162, 255)
+local enemyOutlineColor = Color3.fromRGB(220, 20, 60)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 
 local function addEnemyESP(char)
@@ -855,8 +845,8 @@ local function applyShaders()
     Lighting.ClockTime = 1
     Lighting.Brightness = 1
     Lighting.ExposureCompensation = 0.1
-    Lighting.Ambient = Color3.fromRGB(15, 25, 45)
-    Lighting.OutdoorAmbient = Color3.fromRGB(25, 35, 60)
+    Lighting.Ambient = Color3.fromRGB(35, 10, 15)
+    Lighting.OutdoorAmbient = Color3.fromRGB(50, 15, 25)
     Lighting.FogEnd = 100000
 
     local Sky = Instance.new("Sky")
@@ -872,14 +862,14 @@ local function applyShaders()
 
     local Atmosphere = Instance.new("Atmosphere")
     Atmosphere.Parent = Lighting
-    Atmosphere.Color = Color3.fromRGB(100, 180, 255)
-    Atmosphere.Decay = Color3.fromRGB(10, 40, 90)
+    Atmosphere.Color = Color3.fromRGB(255, 100, 120)
+    Atmosphere.Decay = Color3.fromRGB(80, 10, 20)
     Atmosphere.Density = 0.21
     Atmosphere.Haze = 1.5
 
     local CC = Instance.new("ColorCorrectionEffect")
     CC.Parent = Lighting
-    CC.TintColor = Color3.fromRGB(170, 220, 255)
+    CC.TintColor = Color3.fromRGB(255, 180, 190)
     CC.Contrast = 0.1
     CC.Saturation = 0.2
     CC.Brightness = 0.06
@@ -949,7 +939,7 @@ visuals:Keybind({
 visuals:Colorpicker({
     Title = "Color Outline",
     Desc = "Color del contorno del ESP de enemigos",
-    Default = Color3.fromRGB(0, 162, 255),
+    Default = Color3.fromRGB(220, 20, 60),
     Callback = function(colorVal)
         enemyOutlineColor = colorVal
     end
@@ -1171,7 +1161,7 @@ task.spawn(function()
 end)
 
 RunService.Stepped:Connect(function()
-    pcall(function()
+    pcall(value, function()
         if playerSettings.Noclip and LocalPlayer.Character then
             for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then
