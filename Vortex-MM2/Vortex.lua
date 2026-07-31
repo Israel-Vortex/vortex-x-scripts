@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM v3.3.40 [MM2] - AUTO-REFRESH & ROUND TIMER
+-- VORTEX X SYSTEM v3.3.41 [MM2] - AUTO-REFRESH & ROUND TIMER
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -104,7 +104,7 @@ timerFrame.Name = "TimerFrame"
 timerFrame.Position = UDim2.new(0.5, 0, 0, 8) 
 timerFrame.Size = UDim2.new(0, 110, 0, 20)
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
-timerFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+timerFrame.BackgroundColor3 = Color3.fromRGB(15, 8, 10)
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = vortexTimerUI
 
@@ -119,8 +119,8 @@ uiStrokeTimer.Parent = timerFrame
 
 local strokeGradient = Instance.new("UIGradient")
 strokeGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 255, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 85, 255))
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(220, 20, 60)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
 })
 strokeGradient.Parent = uiStrokeTimer
 
@@ -194,60 +194,60 @@ local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/release
 WindUI:AddTheme({
     Name = "VortexXSystem",
     Accent = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 60, 150), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 220, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(180, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 85), Transparency = 0 },
     }, { Rotation = 45 }),
-    Background = Color3.fromRGB(3, 7, 14),
+    Background = Color3.fromRGB(12, 6, 8),
     BackgroundTransparency = 0,
-    Outline = Color3.fromHex("#00d2ff"),
+    Outline = Color3.fromHex("#ff0055"),
     Text = Color3.fromRGB(255, 255, 255),
     Placeholder = Color3.fromRGB(255, 255, 255),
-    Button = Color3.fromRGB(0, 130, 255),
-    Icon = Color3.fromHex("#00d2ff"),
+    Button = Color3.fromRGB(200, 0, 40),
+    Icon = Color3.fromHex("#ff0055"),
     Hover = Color3.fromRGB(255, 255, 255),
     WindowBackground = WindUI:Gradient({
-        ["0"]   = { Color = Color3.fromRGB(5, 12, 22), Transparency = 0.35 },
-        ["100"] = { Color = Color3.fromRGB(5, 12, 22), Transparency = 0.35 },
+        ["0"]   = { Color = Color3.fromRGB(16, 8, 10), Transparency = 0.35 },
+        ["100"] = { Color = Color3.fromRGB(16, 8, 10), Transparency = 0.35 },
     }, { Rotation = 45 }),
     WindowShadow = Color3.fromHex("#000000"),
-    DialogBackground = Color3.fromHex("#081220"),
+    DialogBackground = Color3.fromHex("#16080a"),
     DialogBackgroundTransparency = 0,
     DialogTitle = Color3.fromRGB(255, 255, 255),
     DialogContent = Color3.fromRGB(255, 255, 255),
-    DialogIcon = Color3.fromHex("#00d2ff"),
+    DialogIcon = Color3.fromHex("#ff0055"),
     WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
     WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
     WindowTopbarAuthor = Color3.fromRGB(255, 255, 255),
     WindowTopbarIcon = Color3.fromRGB(255, 255, 255),
-    TabBackground = Color3.fromHex("#06101c"),
+    TabBackground = Color3.fromHex("#140608"),
     TabTitle = Color3.fromRGB(255, 255, 255),
-    TabIcon = Color3.fromRGB(0, 200, 255),
-    ElementBackground = Color3.fromHex("#06101c"),
+    TabIcon = Color3.fromRGB(255, 0, 85),
+    ElementBackground = Color3.fromHex("#140608"),
     ElementTitle = Color3.fromRGB(255, 255, 255),
     ElementDesc = Color3.fromRGB(255, 255, 255),
-    ElementIcon = Color3.fromHex("#00d2ff"),
-    PopupBackground = Color3.fromRGB(8, 16, 28),
+    ElementIcon = Color3.fromHex("#ff0055"),
+    PopupBackground = Color3.fromRGB(22, 10, 12),
     PopupBackgroundTransparency = 0,
     PopupTitle = Color3.fromRGB(255, 255, 255),
     PopupContent = Color3.fromRGB(255, 255, 255),
-    PopupIcon = Color3.fromHex("#00d2ff"),
+    PopupIcon = Color3.fromHex("#ff0055"),
     Toggle = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 60, 150), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 220, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(180, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 85), Transparency = 0 },
     }, { Rotation = 90 }),
-    ToggleBar = Color3.fromRGB(8, 16, 28),
-    Checkbox = Color3.fromRGB(8, 16, 28),
+    ToggleBar = Color3.fromRGB(22, 10, 12),
+    Checkbox = Color3.fromRGB(22, 10, 12),
     CheckboxIcon = Color3.fromRGB(255, 255, 255),
     Slider = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(0, 60, 150), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(0, 220, 255), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(180, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 0, 85), Transparency = 0 },
     }, { Rotation = 0 }),
     SliderThumb = Color3.fromRGB(255, 255, 255),
 })
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex x System [MM2]",
-    Icon = "rbxassetid://136777157214137",
+    Icon = "rbxassetid://134730158740955",
     IconSize = "35",
     Author = "by ISRAEL CC",
     Folder = "VortexXSystemMM2",
@@ -259,21 +259,21 @@ local Window = WindUI:CreateWindow({
 
 Window:EditOpenButton({
     Title = "VortexHub",
-    Icon = "rbxassetid://136777157214137",
+    Icon = "rbxassetid://134730158740955",
     CornerRadius = UDim.new(0, 16),
     StrokeThickness = 1,
-    StrokeColor = Color3.fromHex("#00d2ff"),
+    StrokeColor = Color3.fromHex("#ff0055"),
     Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 60, 150)),
-        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 180, 255)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 220, 255))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 30)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(220, 0, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
     }),
     OnlyMobile = true,
     Enabled = true,
     Draggable = true,
 })
 
-Window:Tag({ Title = "v3.3.40", Icon = "github", Color = Color3.fromRGB(0, 220, 255) })
+Window:Tag({ Title = "v3.3.41", Icon = "github", Color = Color3.fromRGB(255, 0, 85) })
 
 WindUI:SetTheme("VortexXSystem")
 Window:SetToggleKey(Enum.KeyCode.K)
@@ -832,7 +832,7 @@ local function createFloatingKillButton(enabled)
         bubbleButton.Name = "KillAllBubble"
         bubbleButton.Size = UDim2.new(0, 110, 0, 42)
         bubbleButton.Position = UDim2.new(0.82, 0, 0.6, 0)
-        bubbleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+        bubbleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 40)
         bubbleButton.Text = "Kill All"
         bubbleButton.TextSize = 14
         bubbleButton.Font = Enum.Font.GothamBold
@@ -848,8 +848,8 @@ local function createFloatingKillButton(enabled)
         
         local uigradient = Instance.new("UIGradient")
         uigradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 220, 255))
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 30)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
         })
         uigradient.Rotation = 45
         uigradient.Parent = bubbleButton
@@ -911,7 +911,7 @@ local function createFloatingShootButton(enabled)
         shootBubbleButton.Name = "ShootMurdererBubble"
         shootBubbleButton.Size = UDim2.new(0, 110, 0, 42)
         shootBubbleButton.Position = UDim2.new(0.82, 0, 0.48, 0)
-        shootBubbleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 255)
+        shootBubbleButton.BackgroundColor3 = Color3.fromRGB(200, 0, 40)
         shootBubbleButton.Text = "Shoot Murder"
         shootBubbleButton.TextSize = 13
         shootBubbleButton.Font = Enum.Font.GothamBold
@@ -927,8 +927,8 @@ local function createFloatingShootButton(enabled)
         
         local uigradient = Instance.new("UIGradient")
         uigradient.Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 100, 255)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(0, 220, 255))
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 30)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
         })
         uigradient.Rotation = 45
         uigradient.Parent = shootBubbleButton
@@ -1075,7 +1075,7 @@ combatTab:Button({
 
 combatTab:Toggle({
     Title = "Floating Kill All Bubble (Mobile)",
-    Desc = "Creates a floating movable cyan button to execute Kill All.",
+    Desc = "Creates a floating movable crimson button to execute Kill All.",
     Default = false,
     Callback = function(val)
         createFloatingKillButton(val)
@@ -1128,7 +1128,7 @@ combatTab:Button({
 
 combatTab:Toggle({
     Title = "Floating Shoot Button (Mobile)",
-    Desc = "Creates a floating cyan button to shoot the Murderer with a tap.",
+    Desc = "Creates a floating crimson button to shoot the Murderer with a tap.",
     Default = false,
     Callback = function(val)
         createFloatingShootButton(val)
@@ -1264,7 +1264,7 @@ local function updateMM2ESP()
             local root = char:FindFirstChild("HumanoidRootPart")
             local hum = char:FindFirstChild("Humanoid")
             
-            if root and hum and hum.Health > 0 then
+            if espEnabled and root and hum and hum.Health > 0 then
                 local isLocal = (plr == LocalPlayer)
                 if isLocal and not espSelf then
                     local hl = root:FindFirstChild("MM2_ESP")
@@ -1278,7 +1278,7 @@ local function updateMM2ESP()
                 local bgui = root:FindFirstChild("MM2_DistText")
                 local role = getRole(plr)
 
-                local shouldShow = espEnabled and (
+                local shouldShow = (
                     (role == "Murderer" and espMurderer) or
                     (role == "Sheriff" and espSheriff) or
                     (role == "Innocent" and espInnocent)
@@ -1348,17 +1348,34 @@ local function updateMM2ESP()
                     if hl then hl:Destroy() end
                     if bgui then bgui:Destroy() end
                 end
-            elseif root then
-                local hl = root:FindFirstChild("MM2_ESP")
-                local bgui = root:FindFirstChild("MM2_DistText")
-                if hl then hl:Destroy() end
-                if bgui then bgui:Destroy() end
+            else
+                if root then
+                    local hl = root:FindFirstChild("MM2_ESP")
+                    local bgui = root:FindFirstChild("MM2_DistText")
+                    if hl then hl:Destroy() end
+                    if bgui then bgui:Destroy() end
+                end
             end
         end
     end
 end
 
-visualsTab:Toggle({ Title = "Master Role ESP", Default = false, Callback = function(val) espEnabled = val end })
+visualsTab:Toggle({ Title = "Master Role ESP", Default = false, Callback = function(val) 
+    espEnabled = val 
+    if not val then
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr.Character then
+                local root = plr.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    local hl = root:FindFirstChild("MM2_ESP")
+                    local bgui = root:FindFirstChild("MM2_DistText")
+                    if hl then hl:Destroy() end
+                    if bgui then bgui:Destroy() end
+                end
+            end
+        end
+    end
+end })
 visualsTab:Toggle({ Title = "ESP Murderer", Default = true, Callback = function(val) espMurderer = val end })
 visualsTab:Toggle({ Title = "ESP Sheriff", Default = true, Callback = function(val) espSheriff = val end })
 visualsTab:Toggle({ Title = "ESP Innocent", Default = true, Callback = function(val) espInnocent = val end })
@@ -1427,8 +1444,8 @@ local function setupAttackListener(player)
                             local hl = root and root:FindFirstChild("MM2_ESP")
                             if hl then
                                 hl:SetAttribute("IsAttacking", true)
-                                hl.FillColor = Color3.fromRGB(255, 0, 255)
-                                hl.OutlineColor = Color3.fromRGB(255, 0, 255)
+                                hl.FillColor = Color3.fromRGB(255, 0, 150)
+                                hl.OutlineColor = Color3.fromRGB(255, 0, 150)
                                 
                                 task.spawn(function()
                                     while true do
@@ -1550,7 +1567,7 @@ end)
 
 task.spawn(function()
     while true do
-        if espEnabled then updateMM2ESP() end
+        updateMM2ESP()
         task.wait(0.6)
     end
 end)
@@ -1951,6 +1968,19 @@ pcTab:Keybind({
     Callback = function()
         pcall(function()
             espEnabled = not espEnabled
+            if not espEnabled then
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr.Character then
+                        local root = plr.Character:FindFirstChild("HumanoidRootPart")
+                        if root then
+                            local hl = root:FindFirstChild("MM2_ESP")
+                            local bgui = root:FindFirstChild("MM2_DistText")
+                            if hl then hl:Destroy() end
+                            if bgui then bgui:Destroy() end
+                        end
+                    end
+                end
+            end
             WindUI:Notify({ Title = "Vortex x System", Content = "Master ESP: " .. (espEnabled and "ON" or "OFF"), Duration = 2 })
         end)
     end
@@ -2095,7 +2125,7 @@ miscTab:Button({
                     local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
                     if sendReq then sendReq:InvokeServer(target) end
                     if acceptReq then acceptReq:FireServer() end
-                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " .. target.Name, Duration = 3 })
+                    WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
                 end
             else
                 WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 })
@@ -2145,7 +2175,7 @@ task.spawn(function()
                 if (murderer or sheriff) then
                     if not rolesExposedThisRound then
                         if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
-                        if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIFF: " .. sheriff.Name) end
+                        if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIPP: " .. sheriff.Name) end
                         rolesExposedThisRound = true
                     end
                 else
