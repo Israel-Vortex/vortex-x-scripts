@@ -24,6 +24,7 @@ local globalOnlineCount = 1
 local httpRequest = (syn and syn.request) or (http and http.request) or http_request or request or (fluxus and fluxus.request)
 
 task.spawn(function()
+    task.wait(1) -- Espera a que el juego cargue para evitar bloqueos del launcher
     local SUPABASE_URL = "https://hieuyfqcqvvezmtiimyv.supabase.co"
     local SUPABASE_KEY = "sb_publishable_noBI5J1_1iPrTWxHqTtnqQ_dozthipq"
     
