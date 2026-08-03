@@ -560,6 +560,7 @@ local function toggleCrosshairFunc(crosshairVal)
                 line.Position = pos
                 line.BackgroundColor3 = crosshairColor
                 line.BorderSizePixel = 0
+                outline.Parent = centerFrame
                 line.Parent = centerFrame
 
                 return line
@@ -723,11 +724,14 @@ end)
 
 local espEnabled = false
 local allyEspEnabled = false
+local professionalEspEnabled = false
 local outlineEnabled = true
 local enemyOutlineColor = Color3.fromRGB(220, 20, 60)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 
-local function addEnemyESP(char)
+local professionalEspDrawings = {}
+
+local function addEnemyESP(char, plr)
 	if not char or not char.Parent then return end
 	local root = char:FindFirstChild("HumanoidRootPart")
 	if not root or root:FindFirstChild("ESPAura") then return end
@@ -763,16 +767,154 @@ local function clearAllEnemyESP()
 	end
 end
 
+local function clearProfessionalESP()
+    for plr, drawings in pairs(professionalEspDrawings) do
+        if drawings then
+            if drawings.box then
+                for _, line in ipairs(drawings.box) do
+                    if line then line:Remove() end
+                end
+            end
+            if drawings.tracer then
+                drawings.tracer:Remove()
+            end
+            if drawings.nameText then
+                drawings.nameText:Remove()
+            end
+        end
+    end
+    professionalEspDrawings = {}
+end
+
 local function refreshEnemyESP()
-	if not espEnabled then return end
+	if not espEnabled then 
+        clearAllEnemyESP()
+        return 
+    end
+
 	for _, plr in ipairs(Players:GetPlayers()) do
 		if plr ~= LocalPlayer and plr.Character then
 			local char = plr.Character
 			if char.Parent and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-				if isEnemy(plr) then addEnemyESP(char) end
+				if isEnemy(plr) then 
+                    addEnemyESP(char, plr) 
+                else
+                    removeEnemyESP(char)
+                end
 			end
 		end
 	end
+end
+
+local function refreshProfessionalESP()
+    if not professionalEspEnabled then
+        clearProfessionalESP()
+        return
+    end
+
+    local currentActive = {}
+
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and isEnemy(plr) and plr.Character then
+            local char = plr.Character
+            local root = char:FindFirstChild("HumanoidRootPart")
+            local head = char:FindFirstChild("Head")
+            local hum = char:FindFirstChild("Humanoid")
+            
+            if root and head and hum and hum.Health > 0 then
+                currentActive[plr] = true
+                
+                if not professionalEspDrawings[plr] then
+                    local bLines = {}
+                    for i = 1, 4 do
+                        local l = Drawing.new("Line")
+                        l.Thickness = 1.5
+                        l.Color = enemyOutlineColor
+                        l.Transparency = 0.8
+                        bLines[i] = l
+                    end
+                    
+                    local tracer = Drawing.new("Line")
+                    tracer.Thickness = 1.5
+                    tracer.Color = enemyOutlineColor
+                    tracer.Transparency = 0.8
+
+                    local nameText = Drawing.new("Text")
+                    nameText.Text = plr.Name
+                    nameText.Size = 13
+                    nameText.Center = true
+                    nameText.Outline = true
+                    nameText.Color = enemyOutlineColor
+                    nameText.Transparency = 0.9
+                    
+                    professionalEspDrawings[plr] = { box = bLines, tracer = tracer, nameText = nameText }
+                end
+
+                local drawings = professionalEspDrawings[plr]
+                local bLines = drawings.box
+                local tracer = drawings.tracer
+                local nameText = drawings.nameText
+
+                local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
+                local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                local legPos, legOnScreen = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+
+                -- Actualizar Tracer (Línea)
+                if onScreen then
+                    tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                    tracer.To = Vector2.new(vector.X, vector.Y)
+                    tracer.Visible = true
+                else
+                    tracer.Visible = false
+                end
+
+                -- Actualizar Box y Nombre de usuario encima
+                if headOnScreen and legOnScreen then
+                    local height = math.abs(headPos.Y - legPos.Y)
+                    local width = height / 2
+                    local boxPos = Vector2.new(headPos.X - width / 2, headPos.Y)
+
+                    bLines[1].From = boxPos
+                    bLines[1].To = Vector2.new(boxPos.X + width, boxPos.Y)
+                    
+                    bLines[2].From = Vector2.new(boxPos.X + width, boxPos.Y)
+                    bLines[2].To = Vector2.new(boxPos.X + width, boxPos.Y + height)
+                    
+                    bLines[3].From = Vector2.new(boxPos.X + width, boxPos.Y + height)
+                    bLines[3].To = Vector2.new(boxPos.X, boxPos.Y + height)
+                    
+                    bLines[4].From = Vector2.new(boxPos.X, boxPos.Y + height)
+                    bLines[4].To = boxPos
+
+                    for i = 1, 4 do bLines[i].Visible = true end
+
+                    -- Posicionar el nombre de usuario justo arriba de la caja
+                    nameText.Position = Vector2.new(boxPos.X + (width / 2), boxPos.Y - 16)
+                    nameText.Visible = true
+                else
+                    for _, l in ipairs(bLines) do l.Visible = false end
+                    nameText.Visible = false
+                end
+            end
+        end
+    end
+
+    for plr, drawings in pairs(professionalEspDrawings) do
+        if not currentActive[plr] or not professionalEspEnabled then
+            if drawings then
+                if drawings.box then
+                    for _, l in ipairs(drawings.box) do l:Remove() end
+                end
+                if drawings.tracer then
+                    drawings.tracer:Remove()
+                end
+                if drawings.nameText then
+                    drawings.nameText:Remove()
+                end
+            end
+            professionalEspDrawings[plr] = nil
+        end
+    end
 end
 
 local function addAllyESP(char)
@@ -845,8 +987,8 @@ local function applyShaders()
     Lighting.ClockTime = 1
     Lighting.Brightness = 1
     Lighting.ExposureCompensation = 0.1
-    Lighting.Ambient = Color3.fromRGB(35, 10, 15)
-    Lighting.OutdoorAmbient = Color3.fromRGB(50, 15, 25)
+    Lighting.Ambient = Color3.fromRGB(15, 25, 45)
+    Lighting.OutdoorAmbient = Color3.fromRGB(25, 35, 60)
     Lighting.FogEnd = 100000
 
     local Sky = Instance.new("Sky")
@@ -862,14 +1004,14 @@ local function applyShaders()
 
     local Atmosphere = Instance.new("Atmosphere")
     Atmosphere.Parent = Lighting
-    Atmosphere.Color = Color3.fromRGB(255, 100, 120)
-    Atmosphere.Decay = Color3.fromRGB(80, 10, 20)
+    Atmosphere.Color = Color3.fromRGB(100, 180, 255)
+    Atmosphere.Decay = Color3.fromRGB(10, 40, 90)
     Atmosphere.Density = 0.21
     Atmosphere.Haze = 1.5
 
     local CC = Instance.new("ColorCorrectionEffect")
     CC.Parent = Lighting
-    CC.TintColor = Color3.fromRGB(255, 180, 190)
+    CC.TintColor = Color3.fromRGB(170, 220, 255)
     CC.Contrast = 0.1
     CC.Saturation = 0.2
     CC.Brightness = 0.06
@@ -903,7 +1045,7 @@ end
 
 visuals:Toggle({
     Title = "Shaders Modo Noche",
-    Desc = "Activa la galaxia oscura y efectos visuales",
+    Desc = "Activa galaxia oscura, profunda y cristalina",
     Default = false,
     Callback = shadersCallback
 })
@@ -936,12 +1078,63 @@ visuals:Keybind({
     end
 })
 
+local profEspToggleRef = visuals:Toggle({
+    Title = "Professional ESP",
+    Desc = "ESP Unificado (Caja 2D + Líneas / Tracers + Nombre de Usuario)",
+    Default = false,
+    Callback = function(val)
+        professionalEspEnabled = val
+        if not val then
+            clearProfessionalESP()
+        end
+    end
+})
+
+visuals:Keybind({
+    Title = "Tecla de Professional ESP",
+    Desc = "Activa o desactiva el Professional ESP",
+    Key = "B",
+    Callback = function()
+        professionalEspEnabled = not professionalEspEnabled
+        if not professionalEspEnabled then
+            clearProfessionalESP()
+        end
+        pcall(function() profEspToggleRef:SetValue(professionalEspEnabled) end)
+    end
+})
+
 visuals:Colorpicker({
-    Title = "Color Outline",
-    Desc = "Color del contorno del ESP de enemigos",
+    Title = "Color Outline y Elementos",
+    Desc = "Color del contorno (Highlight), líneas, cajas y nombre del ESP",
     Default = Color3.fromRGB(220, 20, 60),
     Callback = function(colorVal)
         enemyOutlineColor = colorVal
+        
+        -- Actualizar Highlight (ESP Enemigos normal)
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p.Character then
+                local root = p.Character:FindFirstChild("HumanoidRootPart")
+                if root then
+                    local hl = root:FindFirstChild("ESPAura")
+                    if hl then
+                        hl.OutlineColor = colorVal
+                    end
+                end
+            end
+        end
+
+        -- Actualizar Dibujos (Professional ESP: Box, Tracers y Nombres)
+        for _, drawings in pairs(professionalEspDrawings) do
+            if drawings then
+                if drawings.tracer then drawings.tracer.Color = colorVal end
+                if drawings.nameText then drawings.nameText.Color = colorVal end
+                if drawings.box then
+                    for i = 1, #drawings.box do
+                        if drawings.box[i] then drawings.box[i].Color = colorVal end
+                    end
+                end
+            end
+        end
     end
 })
 
@@ -974,10 +1167,13 @@ task.spawn(function()
         if espEnabled then
             refreshEnemyESP()
         end
+        if professionalEspEnabled then
+            refreshProfessionalESP()
+        end
         if allyEspEnabled then
             refreshAllyESP()
         end
-        task.wait(0.5)
+        task.wait(0.1)
     end
 end)
 
@@ -1213,7 +1409,7 @@ task.spawn(function()
 end)
 
 RunService.Stepped:Connect(function()
-    pcall(value, function()
+    pcall(function()
         if playerSettings.Noclip and LocalPlayer.Character then
             for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
                 if part:IsA("BasePart") and part.CanCollide then
