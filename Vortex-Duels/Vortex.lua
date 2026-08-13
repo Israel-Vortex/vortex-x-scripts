@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM V3.1.9 [DMvSS] - CONTADOR GLOBAL EN TIEMPO REAL
+-- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -12,6 +12,93 @@ local HttpService = game:GetService("HttpService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
+
+-- ==========================================
+-- PROTECCIÓN Y ANTI-DETECCIÓN (HOOKS & UI CLOAKING)
+-- ==========================================
+local spoofedSizes = {}
+local spoofedCanCollide = {}
+
+pcall(function()
+    local gm = getrawmetatable(game)
+    local oldIndex = gm.__index
+    local oldNamecall = gm.__namecall
+
+    setreadonly(gm, false)
+
+    local hiddenUINames = {
+        "VortexXSystem",
+        "VortexXSystem_Protected",
+        "VortexXSystemCrosshair",
+        "WindUI",
+        "Luna",
+        "Luna-Interface"
+    }
+
+    local function isHiddenUI(name)
+        if type(name) ~= "string" then return false end
+        for _, hiddenName in ipairs(hiddenUINames) do
+            if string.find(name, hiddenName) then return true end
+        end
+        return false
+    end
+
+    gm.__index = newcclosure(function(self, key)
+        if not checkcaller() then
+            if self:IsA("Humanoid") then
+                if key == "WalkSpeed" then return 16 end
+                if key == "JumpPower" then return 50 end
+            end
+            
+            if self:IsA("BasePart") then
+                if key == "Size" and spoofedSizes[self] then
+                    return spoofedSizes[self]
+                end
+                if key == "CanCollide" and spoofedCanCollide[self] ~= nil then
+                    return spoofedCanCollide[self]
+                end
+            end
+            
+            if type(key) == "string" and isHiddenUI(key) then
+                return nil
+            end
+        end
+        return oldIndex(self, key)
+    end)
+
+    gm.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        
+        if not checkcaller() then
+            if (method == "Kick" or method == "kick") and self == LocalPlayer then
+                return nil 
+            end
+
+            if method == "FindFirstChild" or method == "WaitForChild" then
+                local result = oldNamecall(self, ...)
+                if result and typeof(result) == "Instance" and isHiddenUI(result.Name) then
+                    return nil
+                end
+                return result
+            end
+
+            if method == "GetChildren" or method == "GetDescendants" then
+                local result = oldNamecall(self, ...)
+                local spoofedTable = {}
+                for _, v in ipairs(result) do
+                    if typeof(v) == "Instance" and not isHiddenUI(v.Name) then
+                        table.insert(spoofedTable, v)
+                    end
+                end
+                return spoofedTable
+            end
+        end
+
+        return oldNamecall(self, ...)
+    end)
+
+    setreadonly(gm, true)
+end)
 
 -- ==========================================
 -- SISTEMA DE CONEXIÓN WEB (SUPABASE)
@@ -79,14 +166,17 @@ end)
 local ProtectedGui = Instance.new("Folder")
 ProtectedGui.Name = "VortexXSystem_Protected"
 pcall(function()
-    ProtectedGui.Parent = CoreGui
+    ProtectedGui.Parent = (gethui and gethui()) or CoreGui
 end)
-if ProtectedGui.Parent ~= CoreGui then
+if ProtectedGui.Parent ~= CoreGui and not gethui then
     pcall(function()
         ProtectedGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     end)
 end
 
+-- ==========================================
+-- WIND UI SETUP
+-- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
 
 local Window = WindUI:CreateWindow({
@@ -120,7 +210,7 @@ Window:EditOpenButton({
 })
 
 Window:Tag({
-    Title = "3.1.9",
+    Title = "3.2.2",
     Icon = "github",
     Color = Color3.fromRGB(220, 20, 60)
 })
@@ -185,12 +275,15 @@ Window:SetToggleKey(Enum.KeyCode.K)
 Window:OnClose(function()
 end)
 
+-- ==========================================
+-- LOGICA BASE
+-- ==========================================
 local myGame = nil
 local myTeam = nil
 
 local function refreshIdentity()
-	myGame = LocalPlayer:GetAttribute("Game")
-	myTeam = LocalPlayer:GetAttribute("Team")
+    myGame = LocalPlayer:GetAttribute("Game")
+    myTeam = LocalPlayer:GetAttribute("Team")
 end
 
 local function isIgnored(plr)
@@ -201,25 +294,25 @@ local function isIgnored(plr)
 end
 
 local function isEnemy(plr)
-	if not plr or isIgnored(plr) then
-		return false
-	end
-	if not myGame or not myTeam then
-		return false
-	end
-	local g = plr:GetAttribute("Game")
-	local t = plr:GetAttribute("Team")
-	return g == myGame and t ~= nil and t ~= myTeam
+    if not plr or isIgnored(plr) then
+        return false
+    end
+    if not myGame or not myTeam then
+        return false
+    end
+    local g = plr:GetAttribute("Game")
+    local t = plr:GetAttribute("Team")
+    return g == myGame and t ~= nil and t ~= myTeam
 end
 
 local function isAlly(plr)
-	if not plr or plr == LocalPlayer then
-		return false
-	end
-	if not myGame or not myTeam then
-		return false
-	end
-	return plr:GetAttribute("Game") == myGame and plr:GetAttribute("Team") == myTeam
+    if not plr or plr == LocalPlayer then
+        return false
+    end
+    if not myGame or not myTeam then
+        return false
+    end
+    return plr:GetAttribute("Game") == myGame and plr:GetAttribute("Team") == myTeam
 end
 
 task.spawn(function()
@@ -229,6 +322,9 @@ task.spawn(function()
     end
 end)
 
+-- ==========================================
+-- CONFIG TAB
+-- ==========================================
 local InfoTab = Window:Tab({ Title = "Config", Icon = "info", ShowTabTitle = true, Border = true })
 InfoTab:Select()
 
@@ -285,6 +381,9 @@ InfoTab:Button({
 
 Window:Divider()
 
+-- ==========================================
+-- COMBATE LOGIC & TAB
+-- ==========================================
 local aimCamState = false
 local cameraConn = nil
 local wallCheckEnabled = false
@@ -318,33 +417,48 @@ local function isTargetVisibleLocal(targetPart)
     return true
 end
 
+-- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos
+local function getClosestEnemy()
+    local target = nil
+    local shortestDistance = fovRadius
+    local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+    
+    local closestHrp = nil
+    local closestDist = math.huge
+
+    -- Paso 1: Buscar el más cercano en pantalla (sin raycast, muy ligero)
+    for _, v in pairs(Players:GetPlayers()) do
+        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+            if isEnemy(v) then
+                local hrp = v.Character.HumanoidRootPart
+                local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                if onScreen then
+                    local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
+                    if distance < closestDist then
+                        closestHrp = hrp
+                        closestDist = distance
+                    end
+                end
+            end
+        end
+    end
+
+    -- Paso 2: Si encontramos a alguien, hacer el raycast SOLO a él para comprobar paredes
+    if closestHrp and closestDist < shortestDistance then
+        if isTargetVisibleLocal(closestHrp) then
+            target = closestHrp
+            shortestDistance = closestDist
+        end
+    end
+    return target
+end
+
 local function setupAimbotLoop()
     if cameraConn then return end
     cameraConn = RunService.RenderStepped:Connect(function()
         if not aimCamState then return end
         pcall(function()
-            local target = nil
-            local shortestDistance = fovRadius
-            local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            
-            for _, v in pairs(Players:GetPlayers()) do
-                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
-                    if isEnemy(v) then
-                        local hrp = v.Character.HumanoidRootPart
-                        local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                        if onScreen then
-                            local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
-                            if distance < shortestDistance then
-                                if isTargetVisibleLocal(hrp) then
-                                    target = hrp
-                                    shortestDistance = distance
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            
+            local target = getClosestEnemy()
             if target then
                 local currentCamCFrame = Camera.CFrame
                 Camera.CFrame = CFrame.new(currentCamCFrame.Position, target.Position)
@@ -443,6 +557,7 @@ silentaim:Toggle({
     end
 })
 
+-- LÓGICA ORIGINAL DE SILENT AIM
 pcall(function()
     local mt = getrawmetatable(Mouse)
     local oldIndex = mt.__index
@@ -620,20 +735,30 @@ silentaim:Colorpicker({
     end
 })
 
+-- ==========================================
+-- HITBOX TAB (SPOOFED - ANTI KICK)
+-- ==========================================
 local hitboxState = false
 local visibleState = false
-local hitboxSizeVal = 10
+local hitboxSizeVal = 6
+local originalSizes = {}
 
-local function applyStealthHitbox()
+local function applyRealHitbox()
     pcall(function()
-        if not hitboxState then return end
         for _, plr in pairs(Players:GetPlayers()) do
-            if isEnemy(plr) and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = plr.Character.HumanoidRootPart
                 local humanoid = plr.Character:FindFirstChild("Humanoid")
-                if humanoid and humanoid.Health > 0 then
+                
+                if isEnemy(plr) and humanoid and humanoid.Health > 0 then
+                    if not originalSizes[plr] or originalSizes[plr].hrp ~= hrp then
+                        originalSizes[plr] = {hrp = hrp, size = hrp.Size, canCollide = hrp.CanCollide}
+                        spoofedSizes[hrp] = hrp.Size
+                        spoofedCanCollide[hrp] = hrp.CanCollide
+                    end
                     hrp.Size = Vector3.new(hitboxSizeVal, hitboxSizeVal, hitboxSizeVal)
                     hrp.CanCollide = false
+                    
                     if visibleState then
                         hrp.Transparency = 0.5
                         hrp.Color = Color3.fromRGB(220, 20, 60)
@@ -641,10 +766,36 @@ local function applyStealthHitbox()
                     else
                         hrp.Transparency = 1
                     end
+                else
+                    if originalSizes[plr] and originalSizes[plr].hrp == hrp then
+                        hrp.Size = originalSizes[plr].size
+                        hrp.CanCollide = originalSizes[plr].canCollide
+                        spoofedSizes[hrp] = nil
+                        spoofedCanCollide[hrp] = nil
+                        originalSizes[plr] = nil
+                    end
+                    hrp.Transparency = 1
+                    hrp.Material = Enum.Material.Plastic
                 end
-            elseif plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            end
+        end
+    end)
+end
+
+local function restoreHitboxes()
+    pcall(function()
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
                 local hrp = plr.Character.HumanoidRootPart
-                hrp.Size = Vector3.new(2, 2, 1)
+                if originalSizes[plr] and originalSizes[plr].hrp == hrp then
+                    hrp.Size = originalSizes[plr].size
+                    hrp.CanCollide = originalSizes[plr].canCollide
+                    spoofedSizes[hrp] = nil
+                    spoofedCanCollide[hrp] = nil
+                    originalSizes[plr] = nil
+                end
+                hrp.Transparency = 1
+                hrp.Material = Enum.Material.Plastic
             end
         end
     end)
@@ -658,26 +809,15 @@ local hitbox = Window:Tab({
 })
 
 hitbox:Divider()
-hitbox:Paragraph({ Title = "Hitbox Extendido", Desc = "" })
+hitbox:Paragraph({ Title = "Hitbox Real (Modifica Tamaño)", Desc = "" })
 
 local hitboxToggleRef = hitbox:Toggle({
-    Title = "Activar Hitbox",
+    Title = "Activar Hitbox Real",
     Desc = "Ampliar hitbox exclusivamente de enemigos",
     Default = false,
     Callback = function(hitboxVal)
         hitboxState = hitboxVal
-        if not hitboxVal then
-            pcall(function()
-                for _, plr in ipairs(Players:GetPlayers()) do
-                    if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                        local hrp = plr.Character.HumanoidRootPart
-                        hrp.Size = Vector3.new(2, 2, 1)
-                        hrp.Transparency = 1
-                        hrp.Material = Enum.Material.Plastic
-                    end
-                end
-            end)
-        end
+        if not hitboxVal then restoreHitboxes() end
     end
 })
 
@@ -687,15 +827,16 @@ hitbox:Keybind({
     Key = "C",
     Callback = function()
         hitboxState = not hitboxState
+        if not hitboxState then restoreHitboxes() end
         pcall(function() hitboxToggleRef:SetValue(hitboxState) end)
     end
 })
 
 hitbox:Divider()
-hitbox:Paragraph({ Title = "Hitbox Visible", Desc = "" })
+hitbox:Paragraph({ Title = "Opciones de Hitbox", Desc = "" })
 
 hitbox:Toggle({
-    Title = "Hitbox Visible",
+    Title = "Mostrar Hitbox Visualmente",
     Desc = "Mostrar hitboxes visualmente para enemigos",
     Default = false,
     Callback = function(visibleVal)
@@ -706,7 +847,7 @@ hitbox:Toggle({
 hitbox:Slider({
     Title = "Tamaño de Hitbox",
     Step = 1,
-    Value = {Min = 1, Max = 50, Default = 10},
+    Value = {Min = 2, Max = 20, Default = 6},
     Flag = "hitbox_size",
     Callback = function(sizeVal)
         hitboxSizeVal = sizeVal
@@ -714,96 +855,87 @@ hitbox:Slider({
 })
 
 task.spawn(function()
-    while true do
-        if hitboxState then
-            applyStealthHitbox()
-        end
-        task.wait(0.2)
+    while task.wait(0.5) do
+        if hitboxState then applyRealHitbox() end
     end
 end)
 
+-- ==========================================
+-- VISUALS ESP TAB (OPTIMIZADO)
+-- ==========================================
 local espEnabled = false
 local allyEspEnabled = false
 local professionalEspEnabled = false
 local outlineEnabled = true
 local enemyOutlineColor = Color3.fromRGB(220, 20, 60)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
-
 local professionalEspDrawings = {}
 
 local function addEnemyESP(char, plr)
-	if not char or not char.Parent then return end
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root or root:FindFirstChild("ESPAura") then return end
-	local hum = char:FindFirstChild("Humanoid")
-	if not hum or hum.Health <= 0 then return end
-	pcall(function()
-		local hl = Instance.new("Highlight")
-		hl.Name = "ESPAura"
-		hl.Adornee = char
-		hl.FillColor = Color3.fromRGB(0, 0, 0)
-		hl.OutlineColor = enemyOutlineColor
-		hl.FillTransparency = 0.9
-		hl.OutlineTransparency = outlineEnabled and 0 or 1
-		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		hl.Parent = root
-	end)
+    if not char or not char.Parent or not plr then return end
+    local hlName = plr.Name .. "_EnemyESP"
+    local existingHl = ProtectedGui:FindFirstChild(hlName)
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not root or not hum or hum.Health <= 0 then return end
+    
+    if existingHl then
+        if existingHl.Adornee ~= char then existingHl.Adornee = char end
+        return
+    end
+    
+    pcall(function()
+        local hl = Instance.new("Highlight")
+        hl.Name = hlName
+        hl.Adornee = char
+        hl.FillColor = Color3.fromRGB(0, 0, 0)
+        hl.OutlineColor = enemyOutlineColor
+        hl.FillTransparency = 0.9
+        hl.OutlineTransparency = outlineEnabled and 0 or 1
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = ProtectedGui
+    end)
 end
 
-local function removeEnemyESP(char)
-	if not char then return end
-	pcall(function()
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if root then
-			local hl = root:FindFirstChild("ESPAura")
-			if hl then hl:Destroy() end
-		end
-	end)
+local function removeEnemyESP(plr)
+    if not plr then return end
+    pcall(function()
+        local hl = ProtectedGui:FindFirstChild(plr.Name .. "_EnemyESP")
+        if hl then hl:Destroy() end
+    end)
 end
 
 local function clearAllEnemyESP()
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p.Character then removeEnemyESP(p.Character) end
-	end
+    for _, p in ipairs(Players:GetPlayers()) do removeEnemyESP(p) end
 end
 
 local function clearProfessionalESP()
     for plr, drawings in pairs(professionalEspDrawings) do
         if drawings then
-            if drawings.box then
-                for _, line in ipairs(drawings.box) do
-                    if line then line:Remove() end
-                end
-            end
-            if drawings.tracer then
-                drawings.tracer:Remove()
-            end
-            if drawings.nameText then
-                drawings.nameText:Remove()
-            end
+            if drawings.box then for _, line in ipairs(drawings.box) do if line then line:Remove() end end end
+            if drawings.tracer then drawings.tracer:Remove() end
+            if drawings.nameText then drawings.nameText:Remove() end
         end
     end
     professionalEspDrawings = {}
 end
 
 local function refreshEnemyESP()
-	if not espEnabled then 
+    if not espEnabled then 
         clearAllEnemyESP()
         return 
     end
-
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer and plr.Character then
-			local char = plr.Character
-			if char.Parent and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-				if isEnemy(plr) then 
-                    addEnemyESP(char, plr) 
-                else
-                    removeEnemyESP(char)
-                end
-			end
-		end
-	end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local char = plr.Character
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                if isEnemy(plr) then addEnemyESP(char, plr) else removeEnemyESP(plr) end
+            else
+                removeEnemyESP(plr)
+            end
+        end
+    end
 end
 
 local function refreshProfessionalESP()
@@ -859,7 +991,6 @@ local function refreshProfessionalESP()
                 local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
                 local legPos, legOnScreen = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
 
-                -- Actualizar Tracer (Línea)
                 if onScreen then
                     tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
                     tracer.To = Vector2.new(vector.X, vector.Y)
@@ -868,7 +999,6 @@ local function refreshProfessionalESP()
                     tracer.Visible = false
                 end
 
-                -- Actualizar Box y Nombre de usuario encima
                 if headOnScreen and legOnScreen then
                     local height = math.abs(headPos.Y - legPos.Y)
                     local width = height / 2
@@ -876,19 +1006,14 @@ local function refreshProfessionalESP()
 
                     bLines[1].From = boxPos
                     bLines[1].To = Vector2.new(boxPos.X + width, boxPos.Y)
-                    
                     bLines[2].From = Vector2.new(boxPos.X + width, boxPos.Y)
                     bLines[2].To = Vector2.new(boxPos.X + width, boxPos.Y + height)
-                    
                     bLines[3].From = Vector2.new(boxPos.X + width, boxPos.Y + height)
                     bLines[3].To = Vector2.new(boxPos.X, boxPos.Y + height)
-                    
                     bLines[4].From = Vector2.new(boxPos.X, boxPos.Y + height)
                     bLines[4].To = boxPos
 
                     for i = 1, 4 do bLines[i].Visible = true end
-
-                    -- Posicionar el nombre de usuario justo arriba de la caja
                     nameText.Position = Vector2.new(boxPos.X + (width / 2), boxPos.Y - 16)
                     nameText.Visible = true
                 else
@@ -902,68 +1027,88 @@ local function refreshProfessionalESP()
     for plr, drawings in pairs(professionalEspDrawings) do
         if not currentActive[plr] or not professionalEspEnabled then
             if drawings then
-                if drawings.box then
-                    for _, l in ipairs(drawings.box) do l:Remove() end
-                end
-                if drawings.tracer then
-                    drawings.tracer:Remove()
-                end
-                if drawings.nameText then
-                    drawings.nameText:Remove()
-                end
+                if drawings.box then for _, l in ipairs(drawings.box) do l:Remove() end end
+                if drawings.tracer then drawings.tracer:Remove() end
+                if drawings.nameText then drawings.nameText:Remove() end
             end
             professionalEspDrawings[plr] = nil
         end
     end
 end
 
-local function addAllyESP(char)
-	if not char or not char.Parent then return end
-	local root = char:FindFirstChild("HumanoidRootPart")
-	if not root or root:FindFirstChild("AllyESPAura") then return end
-	local hum = char:FindFirstChild("Humanoid")
-	if not hum or hum.Health <= 0 then return end
-	pcall(function()
-		local hl = Instance.new("Highlight")
-		hl.Name = "AllyESPAura"
-		hl.Adornee = char
-		hl.FillColor = Color3.fromRGB(0, 0, 0)
-		hl.OutlineColor = allyOutlineColor
-		hl.FillTransparency = 0.9
-		hl.OutlineTransparency = 0
-		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
-		hl.Parent = root
-	end)
+local function addAllyESP(char, plr)
+    if not char or not char.Parent or not plr then return end
+    local hlName = plr.Name .. "_AllyESP"
+    local existingHl = ProtectedGui:FindFirstChild(hlName)
+    
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChild("Humanoid")
+    if not root or not hum or hum.Health <= 0 then return end
+    
+    if existingHl then
+        if existingHl.Adornee ~= char then existingHl.Adornee = char end
+        return
+    end
+    
+    pcall(function()
+        local hl = Instance.new("Highlight")
+        hl.Name = hlName
+        hl.Adornee = char
+        hl.FillColor = Color3.fromRGB(0, 0, 0)
+        hl.OutlineColor = allyOutlineColor
+        hl.FillTransparency = 0.9
+        hl.OutlineTransparency = 0
+        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+        hl.Parent = ProtectedGui
+    end)
 end
 
-local function removeAllyESP(char)
-	if not char then return end
-	pcall(function()
-		local root = char:FindFirstChild("HumanoidRootPart")
-		if root then
-			local hl = root:FindFirstChild("AllyESPAura")
-			if hl then hl:Destroy() end
-		end
-	end)
+local function removeAllyESP(plr)
+    if not plr then return end
+    pcall(function()
+        local hl = ProtectedGui:FindFirstChild(plr.Name .. "_AllyESP")
+        if hl then hl:Destroy() end
+    end)
 end
 
 local function clearAllAllyESP()
-	for _, p in ipairs(Players:GetPlayers()) do
-		if p.Character then removeAllyESP(p.Character) end
-	end
+    for _, p in ipairs(Players:GetPlayers()) do removeAllyESP(p) end
 end
 
 local function refreshAllyESP()
-	if not allyEspEnabled then return end
-	for _, plr in ipairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer and plr.Character then
-			local char = plr.Character
-			if char.Parent and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") then
-				if isAlly(plr) then addAllyESP(char) end
-			end
-		end
-	end
+    if not allyEspEnabled then 
+        clearAllAllyESP()
+        return 
+    end
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            local char = plr.Character
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                if isAlly(plr) then addAllyESP(char, plr) else removeAllyESP(plr) end
+            else
+                removeAllyESP(plr)
+            end
+        end
+    end
 end
+
+Players.PlayerRemoving:Connect(function(plr)
+    removeEnemyESP(plr)
+    removeAllyESP(plr)
+    if professionalEspDrawings[plr] then
+        if professionalEspDrawings[plr].box then
+            for _, l in ipairs(professionalEspDrawings[plr].box) do l:Remove() end
+        end
+        if professionalEspDrawings[plr].tracer then professionalEspDrawings[plr].tracer:Remove() end
+        if professionalEspDrawings[plr].nameText then professionalEspDrawings[plr].nameText:Remove() end
+        professionalEspDrawings[plr] = nil
+    end
+    if originalSizes and originalSizes[plr] then
+        spoofedSizes[originalSizes[plr].hrp] = nil
+        spoofedCanCollide[originalSizes[plr].hrp] = nil
+        originalSizes[plr] = nil
+    end
+end)
 
 local visuals = Window:Tab({
     Title = "Esp",
@@ -1110,20 +1255,10 @@ visuals:Colorpicker({
     Callback = function(colorVal)
         enemyOutlineColor = colorVal
         
-        -- Actualizar Highlight (ESP Enemigos normal)
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p.Character then
-                local root = p.Character:FindFirstChild("HumanoidRootPart")
-                if root then
-                    local hl = root:FindFirstChild("ESPAura")
-                    if hl then
-                        hl.OutlineColor = colorVal
-                    end
-                end
-            end
+        for _, hl in ipairs(ProtectedGui:GetChildren()) do
+            if hl:IsA("Highlight") and hl.Name:find("_EnemyESP") then hl.OutlineColor = colorVal end
         end
 
-        -- Actualizar Dibujos (Professional ESP: Box, Tracers y Nombres)
         for _, drawings in pairs(professionalEspDrawings) do
             if drawings then
                 if drawings.tracer then drawings.tracer.Color = colorVal end
@@ -1159,28 +1294,29 @@ visuals:Colorpicker({
     Default = Color3.fromRGB(0, 255, 128),
     Callback = function(colorVal)
         allyOutlineColor = colorVal
+        for _, hl in ipairs(ProtectedGui:GetChildren()) do
+            if hl:IsA("Highlight") and hl.Name:find("_AllyESP") then hl.OutlineColor = colorVal end
+        end
     end
 })
 
 task.spawn(function()
-    while true do
-        if espEnabled then
-            refreshEnemyESP()
-        end
-        if professionalEspEnabled then
-            refreshProfessionalESP()
-        end
-        if allyEspEnabled then
-            refreshAllyESP()
-        end
-        task.wait(0.1)
+    while task.wait(0.2) do
+        if espEnabled then refreshEnemyESP() end
+        if allyEspEnabled then refreshAllyESP() end
     end
 end)
 
+RunService.RenderStepped:Connect(function()
+    if professionalEspEnabled then refreshProfessionalESP() end
+end)
+
+-- ==========================================
+-- PLAYER CHEATS TAB
+-- ==========================================
 local playerSettings = {
     WalkSpeed = { Enabled = false, Value = 16 },
     JumpPower = { Enabled = false, Value = 50 },
-    InfiniteJump = false,
     Noclip = false
 }
 
@@ -1234,26 +1370,32 @@ playerTab:Divider()
 playerTab:Paragraph({ Title = "Movimiento Especial", Desc = "" })
 
 playerTab:Toggle({
-    Title = "Salto Infinito",
-    Desc = "Saltar multiples veces en el aire",
-    Default = false,
-    Callback = function(state)
-        playerSettings.InfiniteJump = state
-    end
-})
-
-playerTab:Toggle({
     Title = "Noclip",
-    Desc = "Atravesar paredes y objetos",
+    Desc = "Atravesar paredes y objetos (Sin ser detectado)",
     Default = false,
     Callback = function(state)
         playerSettings.Noclip = state
+        if not state then
+            pcall(function()
+                if LocalPlayer.Character then
+                    for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+                        if part:IsA("BasePart") and spoofedCanCollide[part] ~= nil then
+                            part.CanCollide = spoofedCanCollide[part]
+                            spoofedCanCollide[part] = nil
+                        end
+                    end
+                end
+            end)
+        end
     end
 })
 
 Window:Divider()
 Window:Divider()
 
+-- ==========================================
+-- EXTERNAL SCRIPTS TAB
+-- ==========================================
 local externalScriptsTab = Window:Tab({
     Title = "External Scripts",
     Icon = "terminal",
@@ -1303,6 +1445,9 @@ externalScriptsTab:Button({
     end
 })
 
+-- ==========================================
+-- EVENT & BOXES TAB
+-- ==========================================
 getgenv().Config = getgenv().Config or {}
 getgenv().Config.autoCollect = false
 getgenv().Config.autoBuyCrates = false
@@ -1408,24 +1553,18 @@ task.spawn(function()
     end
 end)
 
+-- Bucle de Noclip con Anti-Detección Optimizado
 RunService.Stepped:Connect(function()
     pcall(function()
         if playerSettings.Noclip and LocalPlayer.Character then
-            for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
+            for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    if spoofedCanCollide[part] == nil then
+                        spoofedCanCollide[part] = part.CanCollide
+                    end
                     part.CanCollide = false
                 end
             end
         end
     end)
-end)
-
-UserInputService.UserInputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == Enum.KeyCode.Space then
-        pcall(function()
-            if playerSettings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-    end
 end)
