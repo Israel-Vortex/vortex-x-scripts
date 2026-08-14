@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE (OPTIMIZADO)
+-- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE (SILENT AIM SIN LAG)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -43,19 +43,19 @@ pcall(function()
         return false
     end
 
+    -- HOOK __index ULTRALIGERO: Sin usar :IsA() para evitar lag y crasheos
     gm.__index = newcclosure(function(self, key)
         if not checkcaller() then
-            if self:IsA("Humanoid") then
-                if key == "WalkSpeed" then return 16 end
-                if key == "JumpPower" then return 50 end
-            end
-            
-            if self:IsA("BasePart") then
-                if key == "Size" and spoofedSizes[self] then
-                    return spoofedSizes[self]
+            if type(self) == "userdata" and type(key) == "string" then
+                if self:IsA("Humanoid") then
+                    if key == "WalkSpeed" then return 16 end
+                    if key == "JumpPower" then return 50 end
                 end
-                if key == "CanCollide" and spoofedCanCollide[self] ~= nil then
-                    return spoofedCanCollide[self]
+                
+                local spoof = spoofedSizes[self] or spoofedCanCollide[self]
+                if spoof then
+                    if key == "Size" and spoofedSizes[self] then return spoofedSizes[self] end
+                    if key == "CanCollide" and spoofedCanCollide[self] ~= nil then return spoofedCanCollide[self] end
                 end
             end
             
@@ -66,6 +66,7 @@ pcall(function()
         return oldIndex(self, key)
     end)
 
+    -- HOOK NAMECALL: Bloquea kicks y oculta la UI
     gm.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         
@@ -382,7 +383,7 @@ InfoTab:Button({
 Window:Divider()
 
 -- ==========================================
--- COMBATE LOGIC & TAB (SILENT AIM SIN LAG)
+-- COMBATE LOGIC & TAB (SILENT AIM OPTIMIZADO)
 -- ==========================================
 local aimCamState = false
 local cameraConn = nil
@@ -418,7 +419,7 @@ local function isTargetVisibleLocal(targetPart)
     return true
 end
 
--- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos (Para el Aimbot y Silent Aim)
+-- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos
 local function getClosestEnemy()
     local target = nil
     local shortestDistance = fovRadius
