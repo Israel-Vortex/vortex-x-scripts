@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE
+-- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE (OPTIMIZADO)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -382,13 +382,14 @@ InfoTab:Button({
 Window:Divider()
 
 -- ==========================================
--- COMBATE LOGIC & TAB
+-- COMBATE LOGIC & TAB (SILENT AIM SIN LAG)
 -- ==========================================
 local aimCamState = false
 local cameraConn = nil
 local wallCheckEnabled = false
 local fovRadius = 150
 local silentAimEnabled = false
+local currentSilentTarget = nil 
 
 local function isTargetVisibleLocal(targetPart)
     if not wallCheckEnabled then return true end
@@ -417,7 +418,7 @@ local function isTargetVisibleLocal(targetPart)
     return true
 end
 
--- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos
+-- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos (Para el Aimbot y Silent Aim)
 local function getClosestEnemy()
     local target = nil
     local shortestDistance = fovRadius
@@ -557,39 +558,25 @@ silentaim:Toggle({
     end
 })
 
--- LÓGICA ORIGINAL DE SILENT AIM
+-- BUCLE DE 60 FPS PARA ACTUALIZAR EL OBJETIVO DEL SILENT AIM (SIN LAG AL DISPARAR)
+RunService.RenderStepped:Connect(function()
+    if silentAimEnabled then
+        currentSilentTarget = getClosestEnemy()
+    else
+        currentSilentTarget = nil
+    end
+end)
+
+-- LÓGICA DE SILENT AIM (LEE EL OBJETIVO GUARDADO, NO CALCULA AL DISPARAR)
 pcall(function()
     local mt = getrawmetatable(Mouse)
     local oldIndex = mt.__index
     setreadonly(mt, false)
 
     mt.__index = newcclosure(function(self, index)
-        if (index == "Hit" or index == "Target") and silentAimEnabled then
-            local target = nil
-            local shortestDistance = math.huge
-            local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            
-            for _, v in pairs(Players:GetPlayers()) do
-                if isEnemy(v) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
-                    local hrp = v.Character.HumanoidRootPart
-                    if isTargetVisibleLocal(hrp) then
-                        local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                        
-                        if onScreen then
-                            local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
-                            if distance < shortestDistance then
-                                target = hrp
-                                shortestDistance = distance
-                            end
-                        end
-                    end
-                end
-            end
-            
-            if target then
-                if index == "Hit" then return target.CFrame end
-                if index == "Target" then return target end
-            end
+        if (index == "Hit" or index == "Target") and silentAimEnabled and currentSilentTarget then
+            if index == "Hit" then return currentSilentTarget.CFrame end
+            if index == "Target" then return currentSilentTarget end
         end
         return oldIndex(self, index)
     end)
