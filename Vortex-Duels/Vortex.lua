@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM V3.2.3 [DMvSS] - WIND UI INTERFACE (OSCURO SÓLIDO + BORDE NEÓN)
+-- VORTEX X SYSTEM V3.2.4 [DMvSS] - WIND UI INTERFACE (OSCURO SÓLIDO + BORDE NEÓN)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -202,7 +202,7 @@ local Window = WindUI:CreateWindow({
     Folder = "VortexXSystem",
     Resizable = false,
     HideSearchBar = true,
-    Transparent = false, -- Ventana sólida y oscura como en la referencia
+    Transparent = false,
     Theme = "Dark",
     User = {
         Enabled = true,
@@ -211,7 +211,7 @@ local Window = WindUI:CreateWindow({
 })
 
 Window:EditOpenButton({
-    Title = "VXS",
+    Title = "VXSHUB",
     Icon = "rbxassetid://134730158740955",
     CornerRadius = UDim.new(1, 0),
     StrokeThickness = 2,
@@ -226,7 +226,7 @@ Window:EditOpenButton({
 })
 
 Window:Tag({
-    Title = "3.2.3",
+    Title = "3.2.4",
     Icon = "github",
     Color = Color3.fromRGB(230, 0, 50)
 })
@@ -238,9 +238,9 @@ WindUI:AddTheme({
         ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 },
         ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 },
     }, { Rotation = 45 }),
-    Background = Color3.fromRGB(14, 14, 14),             -- Fondo oscuro sólido estilo panel moderno
+    Background = Color3.fromRGB(14, 14, 14),
     BackgroundTransparency = 0,
-    Outline = Color3.fromRGB(255, 30, 80),                -- Borde exterior de la ventana brillante (Neón Carmesí)
+    Outline = Color3.fromRGB(255, 30, 80),
     Text = Color3.fromRGB(245, 245, 245),
     Placeholder = Color3.fromRGB(150, 150, 150),
     Button = Color3.fromRGB(210, 15, 60),
@@ -250,7 +250,7 @@ WindUI:AddTheme({
         ["0"]   = { Color = Color3.fromRGB(16, 16, 16), Transparency = 0 },
         ["100"] = { Color = Color3.fromRGB(10, 10, 10), Transparency = 0 },
     }, { Rotation = 45 }),
-    WindowShadow = Color3.fromRGB(255, 30, 80),          -- Sombra con tinte neón sutil alrededor
+    WindowShadow = Color3.fromRGB(255, 30, 80),
     DialogBackground = Color3.fromRGB(22, 22, 22),
     DialogBackgroundTransparency = 0,
     DialogTitle = Color3.fromRGB(255, 255, 255),
@@ -399,7 +399,413 @@ InfoTab:Button({
 Window:Divider()
 
 -- ==========================================
--- COMBATE LOGIC & TAB (SILENT AIM OPTIMIZADO)
+-- AVANZADO TAB (BREADCRUMB FLOATING BUBBLES + GHOST & DESYNC)
+-- ==========================================
+getgenv().CONFIG_BANNABLE = {
+    INVIS_OFFSET_Y = 100,
+    DESYNC_HEIGHT = 50
+}
+
+getgenv().invisState = getgenv().invisState or {
+    isInvisible = false,
+    realChar = nil,
+    fakeChar = nil,
+    platform = nil,
+    seat = nil
+}
+
+getgenv().desyncState = getgenv().desyncState or {
+    isDesynced = false,
+    fakeChar = nil,
+    platform = nil,
+    syncConnection = nil,
+    animCache = {}
+}
+
+local function setCharacterTransparency(char, transparency)
+    if not char then return end
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("MeshPart") then
+            if part.Name ~= "HumanoidRootPart" then
+                part.Transparency = transparency
+            end
+        elseif part:IsA("Accessory") then
+            local handle = part:FindFirstChild("Handle")
+            if handle then
+                handle.Transparency = transparency
+            end
+        end
+    end
+end
+
+local avanzadoTab = Window:Tab({
+    Title = "Avanzado",
+    Icon = "sliders-horizontal",
+    ShowTabTitle = true,
+    Border = true
+})
+
+avanzadoTab:Divider()
+avanzadoTab:Paragraph({ Title = "Controles Flotantes (Bubbles)", Desc = "" })
+
+local editBubblesState = false
+local bubblesScreenGui = Instance.new("ScreenGui")
+bubblesScreenGui.Name = "Vortex_SystemGUI"
+bubblesScreenGui.ResetOnSpawn = false
+bubblesScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+pcall(function() bubblesScreenGui.Parent = ProtectedGui end)
+if not bubblesScreenGui.Parent then bubblesScreenGui.Parent = CoreGui end
+
+-- Contenedor ajustado a la derecha
+local bubblesContainer = Instance.new("Frame")
+bubblesContainer.Name = "BubblesContainer"
+bubblesContainer.Size = UDim2.new(0, 50, 0, 110)
+bubblesContainer.AnchorPoint = Vector2.new(1, 0.5)
+bubblesContainer.Position = UDim2.new(0.98, 0, 0.45, 0) 
+bubblesContainer.BackgroundTransparency = 1
+bubblesContainer.Active = false
+bubblesContainer.Parent = bubblesScreenGui
+
+-- Botón Bubble Desync (Arriba, texto DSY)
+local bubbleDesync = Instance.new("TextButton")
+bubbleDesync.Name = "BubbleDesync"
+bubbleDesync.Size = UDim2.new(0, 45, 0, 45)
+bubbleDesync.Position = UDim2.new(0, 2, 0, 0)
+bubbleDesync.Text = "DSY"
+bubbleDesync.TextColor3 = Color3.fromRGB(255, 255, 255)
+bubbleDesync.Font = Enum.Font.GothamBold
+bubbleDesync.TextSize = 13
+bubbleDesync.Visible = false 
+bubbleDesync.Parent = bubblesContainer
+Instance.new("UICorner", bubbleDesync).CornerRadius = UDim.new(1, 0)
+
+local bgDesync = Instance.new("UIGradient")
+bgDesync.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+})
+bgDesync.Rotation = 45
+bgDesync.Parent = bubbleDesync
+
+-- Botón Bubble Ghost (Abajo, texto GST)
+local bubbleGhost = Instance.new("TextButton")
+bubbleGhost.Name = "BubbleGhost"
+bubbleGhost.Size = UDim2.new(0, 45, 0, 45)
+bubbleGhost.Position = UDim2.new(0, 2, 0, 55)
+bubbleGhost.Text = "GST"
+bubbleGhost.TextColor3 = Color3.fromRGB(255, 255, 255)
+bubbleGhost.Font = Enum.Font.GothamBold
+bubbleGhost.TextSize = 13
+bubbleGhost.Visible = false 
+bubbleGhost.Parent = bubblesContainer
+Instance.new("UICorner", bubbleGhost).CornerRadius = UDim.new(1, 0)
+
+local bgGhost = Instance.new("UIGradient")
+bgGhost.Color = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 80)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+})
+bgGhost.Rotation = 45
+bgGhost.Parent = bubbleGhost
+
+-- Lógica de arrastre para mover las burbujas desde los botones
+local function makeDraggable(trigger, target)
+    local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
+    trigger.InputBegan:Connect(function(input)
+        if editBubblesState and (input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch) then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+            input.UserInputConsumed = true
+        end
+    end)
+    trigger.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+    trigger.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
+makeDraggable(bubbleDesync, bubblesContainer)
+makeDraggable(bubbleGhost, bubblesContainer)
+
+avanzadoTab:Toggle({
+    Title = "Edit Bubble Positions",
+    Desc = "Desbloquea las burbujas flotantes para arrastrarlas libremente.",
+    Default = false,
+    Callback = function(state)
+        editBubblesState = state
+    end
+})
+
+avanzadoTab:Divider()
+avanzadoTab:Paragraph({ Title = "Controles Internos (Ghost & Desync)", Desc = "" })
+
+-- Lógica de Ghost arreglada (Evita freeze, sonido de muerte y atascos)
+local function executeGhostLogic()
+    invisState.isInvisible = not invisState.isInvisible
+
+    if invisState.isInvisible then
+        local realChar = LocalPlayer.Character
+        if not realChar then invisState.isInvisible = false return end
+        local hrp = realChar:FindFirstChild("HumanoidRootPart")
+        local realHumanoid = realChar:FindFirstChild("Humanoid")
+        if not hrp or not realHumanoid then invisState.isInvisible = false return end
+
+        invisState.realChar = realChar
+        local savedCFrame = realChar:GetPivot()
+
+        local safePos = savedCFrame.Position - Vector3.new(0, CONFIG_BANNABLE.INVIS_OFFSET_Y, 0)
+
+        local safePlatform = Instance.new("Part")
+        safePlatform.Name = "InvisSafePlatform"
+        safePlatform.Anchored = true
+        safePlatform.Size = Vector3.new(40, 2, 40)
+        safePlatform.CFrame = CFrame.new(safePos) - Vector3.new(0, 3, 0)
+        safePlatform.Transparency = 1
+        safePlatform.Parent = workspace
+        invisState.platform = safePlatform
+
+        local seat = Instance.new("Seat")
+        seat.Name = "InvisSeat"
+        seat.Anchored = true
+        seat.Size = Vector3.new(2, 1, 2)
+        seat.CFrame = CFrame.new(safePos)
+        seat.Transparency = 1
+        seat.Parent = workspace
+        invisState.seat = seat
+
+        realChar.Archivable = true
+        local fakeChar = realChar:Clone()
+        fakeChar.Name = "Vortex_FakeChar_Invis"
+        
+        for _, v in ipairs(fakeChar:GetDescendants()) do
+            if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then 
+                v:Destroy() 
+            end
+        end
+        fakeChar.Parent = workspace
+        fakeChar:PivotTo(savedCFrame)
+        invisState.fakeChar = fakeChar
+
+        realChar:PivotTo(seat.CFrame + Vector3.new(0, 3, 0))
+        task.wait(0.05)
+        seat:Sit(realHumanoid)
+        
+        LocalPlayer.Character = fakeChar
+        workspace.CurrentCamera.CameraSubject = fakeChar:FindFirstChild("Humanoid")
+        
+        setCharacterTransparency(fakeChar, 0.5)
+        setCharacterTransparency(realChar, 1)
+    else
+        local realChar = invisState.realChar
+        local fakeChar = invisState.fakeChar
+        
+        local targetCFrame = nil
+        if fakeChar and fakeChar.PrimaryPart then
+            targetCFrame = fakeChar:GetPivot()
+        end
+
+        if realChar then
+            local hrp = realChar:FindFirstChild("HumanoidRootPart")
+            local realHumanoid = realChar:FindFirstChild("Humanoid")
+
+            if realHumanoid then
+                realHumanoid.Sit = false
+            end
+            task.wait(0.05) 
+
+            if hrp then
+                hrp.Anchored = true
+                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            end
+            
+            if targetCFrame then
+                realChar:PivotTo(targetCFrame + Vector3.new(0, 3, 0))
+            end
+            
+            setCharacterTransparency(realChar, 0)
+            
+            LocalPlayer.Character = realChar
+            if realHumanoid then 
+                workspace.CurrentCamera.CameraSubject = realHumanoid 
+            end
+            
+            task.wait(0.05)
+            if hrp then
+                hrp.Anchored = false
+            end
+        end
+
+        if invisState.seat then invisState.seat:Destroy(); invisState.seat = nil end
+        if invisState.platform then invisState.platform:Destroy(); invisState.platform = nil end
+
+        if fakeChar then 
+            fakeChar:Destroy() 
+            invisState.fakeChar = nil 
+        end
+
+        invisState.realChar = nil
+    end
+end
+
+-- Lógica de Desync Independiente
+local function executeDesyncLogic()
+    local realChar = LocalPlayer.Character
+    if not realChar then return end
+    local hrp = realChar:FindFirstChild("HumanoidRootPart")
+    local realHumanoid = realChar:FindFirstChild("Humanoid")
+    if not hrp or not realHumanoid then return end
+
+    desyncState.isDesynced = not desyncState.isDesynced
+    
+    if desyncState.isDesynced then
+        local savedCFrame = hrp.CFrame
+        desyncState.animCache = {}
+        
+        realChar.Archivable = true
+        local fakeChar = realChar:Clone()
+        fakeChar.Name = "Vortex_FakeChar_Desync"
+        
+        for _, v in ipairs(fakeChar:GetDescendants()) do
+            if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
+        end
+        
+        fakeChar.Parent = workspace
+        desyncState.fakeChar = fakeChar
+
+        local fakeHrp = fakeChar:FindFirstChild("HumanoidRootPart")
+        local fakeHumanoid = fakeChar:FindFirstChild("Humanoid")
+        if fakeHrp then fakeHrp.Anchored = true end
+
+        for _, part in fakeChar:GetDescendants() do
+            if part:IsA("BasePart") and part ~= fakeHrp then 
+                part.CanCollide = false 
+                part.Anchored = false
+            end
+        end
+        
+        fakeChar:PivotTo(savedCFrame)
+
+        local realAnimator = realHumanoid:FindFirstChild("Animator")
+        local fakeAnimator = fakeHumanoid and fakeHumanoid:FindFirstChild("Animator")
+        if fakeHumanoid and not fakeAnimator then
+            fakeAnimator = Instance.new("Animator", fakeHumanoid)
+        end
+
+        local platform = Instance.new("Part")
+        platform.Name = "desyncplatform"
+        platform.Size = Vector3.new(2048, 5, 2048) 
+        platform.CFrame = CFrame.new(savedCFrame.X, savedCFrame.Y + CONFIG_BANNABLE.DESYNC_HEIGHT, savedCFrame.Z)
+        platform.Anchored = true
+        platform.Transparency = 1
+        platform.Parent = workspace
+        desyncState.platform = platform
+
+        setCharacterTransparency(realChar, 1)
+        hrp.CFrame = CFrame.new(savedCFrame.X, platform.Position.Y + (platform.Size.Y/2) + 3, savedCFrame.Z)
+
+        workspace.CurrentCamera.CameraSubject = fakeHumanoid
+
+        local rayParams = RaycastParams.new()
+        rayParams.FilterType = Enum.RaycastFilterType.Exclude
+        rayParams.FilterDescendantsInstances = {realChar, fakeChar, platform}
+
+        desyncState.syncConnection = RunService.RenderStepped:Connect(function()
+            if hrp and fakeChar and fakeHrp then
+                local realPos = hrp.Position
+                local cloneCurrentY = fakeHrp.Position.Y
+                
+                local rayOrigin = Vector3.new(realPos.X, cloneCurrentY + 3, realPos.Z)
+                local raycastResult = workspace:Raycast(rayOrigin, Vector3.new(0, -1000, 0), rayParams)
+                
+                local floorY = raycastResult and raycastResult.Position.Y or cloneCurrentY
+                local hipHeight = realHumanoid.HipHeight > 0 and realHumanoid.HipHeight or 2
+                local platformTop = platform.Position.Y + (platform.Size.Y / 2)
+                local expectedRealY = platformTop + hipHeight + (hrp.Size.Y / 2)
+                local jumpOffset = math.max(0, realPos.Y - expectedRealY)
+                
+                local targetY = floorY + (fakeHrp.Size.Y / 2) + hipHeight + jumpOffset
+                fakeChar:SetPrimaryPartCFrame(CFrame.new(realPos.X, targetY, realPos.Z) * hrp.CFrame.Rotation)
+                
+                if realAnimator and fakeAnimator then
+                    local playingTracks = realAnimator:GetPlayingAnimationTracks()
+                    for _, realTrack in ipairs(playingTracks) do
+                        local animId = realTrack.Animation.AnimationId
+                        local fakeTrack = desyncState.animCache[animId]
+                        if not fakeTrack then
+                            fakeTrack = fakeAnimator:LoadAnimation(realTrack.Animation)
+                            desyncState.animCache[animId] = fakeTrack
+                        end
+                        if not fakeTrack.IsPlaying then fakeTrack:Play() end
+                        fakeTrack.TimePosition = realTrack.TimePosition
+                        fakeTrack:AdjustWeight(realTrack.WeightTarget)
+                        fakeTrack:AdjustSpeed(realTrack.Speed)
+                    end
+                end
+            end
+        end)
+    else
+        if desyncState.syncConnection then desyncState.syncConnection:Disconnect(); desyncState.syncConnection = nil end
+        
+        local returnCFrame = nil
+        if desyncState.fakeChar then
+            returnCFrame = desyncState.fakeChar:GetPivot()
+            desyncState.fakeChar:Destroy()
+            desyncState.fakeChar = nil
+        end
+        
+        if desyncState.platform then desyncState.platform:Destroy(); desyncState.platform = nil end
+        
+        if returnCFrame and hrp then hrp.CFrame = returnCFrame end
+        setCharacterTransparency(realChar, 0)
+        workspace.CurrentCamera.CameraSubject = realHumanoid
+    end
+end
+
+avanzadoTab:Toggle({
+    Title = "Mostrar Bubble Ghost (GST)",
+    Desc = "Muestra u oculta el botón flotante.",
+    Default = false,
+    Callback = function(val)
+        bubbleGhost.Visible = val
+    end
+})
+
+avanzadoTab:Toggle({
+    Title = "Mostrar Bubble Desync (DSY)",
+    Desc = "Muestra u oculta el botón flotante.",
+    Default = false,
+    Callback = function(val)
+        bubbleDesync.Visible = val
+    end
+})
+
+-- EVENTOS DE LOS BOTONES
+bubbleGhost.MouseButton1Click:Connect(function()
+    if editBubblesState then return end
+    executeGhostLogic()
+end)
+
+bubbleDesync.MouseButton1Click:Connect(function()
+    if editBubblesState then return end
+    executeDesyncLogic()
+end)
+
+-- ==========================================
+-- COMBATE LOGIC & TAB (SILENT AIM OPTIMIZADO SIN LAG)
 -- ==========================================
 local aimCamState = false
 local cameraConn = nil
@@ -435,45 +841,33 @@ local function isTargetVisibleLocal(targetPart)
     return true
 end
 
-local function getClosestEnemy()
-    local target = nil
-    local shortestDistance = fovRadius
-    local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-    
-    local closestHrp = nil
-    local closestDist = math.huge
-
-    for _, v in pairs(Players:GetPlayers()) do
-        if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
-            if isEnemy(v) then
-                local hrp = v.Character.HumanoidRootPart
-                local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
-                if onScreen then
-                    local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
-                    if distance < closestDist then
-                        closestHrp = hrp
-                        closestDist = distance
-                    end
-                end
-            end
-        end
-    end
-
-    if closestHrp and closestDist < shortestDistance then
-        if isTargetVisibleLocal(closestHrp) then
-            target = closestHrp
-            shortestDistance = closestDist
-        end
-    end
-    return target
-end
-
 local function setupAimbotLoop()
     if cameraConn then return end
     cameraConn = RunService.RenderStepped:Connect(function()
         if not aimCamState then return end
         pcall(function()
-            local target = getClosestEnemy()
+            local target = nil
+            local shortestDistance = fovRadius
+            local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+            
+            for _, v in pairs(Players:GetPlayers()) do
+                if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+                    if isEnemy(v) then
+                        local hrp = v.Character.HumanoidRootPart
+                        local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                        if onScreen then
+                            local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
+                            if distance < shortestDistance then
+                                if isTargetVisibleLocal(hrp) then
+                                    target = hrp
+                                    shortestDistance = distance
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            
             if target then
                 local currentCamCFrame = Camera.CFrame
                 Camera.CFrame = CFrame.new(currentCamCFrame.Position, target.Position)
@@ -572,14 +966,35 @@ silentaim:Toggle({
     end
 })
 
+-- OPTIMIZACIÓN MASIVA: Calcular el objetivo del Silent Aim una vez por frame en lugar de hacerlo cada vez que el motor lee el Mouse.Hit
 RunService.RenderStepped:Connect(function()
     if silentAimEnabled then
-        currentSilentTarget = getClosestEnemy()
+        local target = nil
+        local shortestDistance = math.huge
+        local centerScreen = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+        
+        for _, v in pairs(Players:GetPlayers()) do
+            if isEnemy(v) and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
+                local hrp = v.Character.HumanoidRootPart
+                if isTargetVisibleLocal(hrp) then
+                    local pos, onScreen = Camera:WorldToViewportPoint(hrp.Position)
+                    if onScreen then
+                        local distance = (Vector2.new(pos.X, pos.Y) - centerScreen).Magnitude
+                        if distance < shortestDistance then
+                            target = hrp
+                            shortestDistance = distance
+                        end
+                    end
+                end
+            end
+        end
+        currentSilentTarget = target
     else
         currentSilentTarget = nil
     end
 end)
 
+-- LÓGICA DE SILENT AIM (Lee el objetivo guardado en memoria, cero lag al disparar)
 pcall(function()
     local mt = getrawmetatable(Mouse)
     local oldIndex = mt.__index
@@ -1502,6 +1917,9 @@ eventBoxesTab:Toggle({
     end
 })
 
+-- ==========================================
+-- LOOPS Y FUNCIONES GLOBALES
+-- ==========================================
 task.spawn(function()
     while task.wait(0.5) do
         if getgenv().Config and getgenv().Config.autoCollect then
