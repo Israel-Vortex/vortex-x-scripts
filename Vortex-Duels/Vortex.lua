@@ -1,5 +1,5 @@
 -- ==========================================
--- VORTEX X SYSTEM V3.2.2 [DMvSS] - WIND UI INTERFACE (SILENT AIM SIN LAG)
+-- VORTEX X SYSTEM V3.2.3 [DMvSS] - WIND UI INTERFACE (OSCURO SÓLIDO + BORDE NEÓN)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -43,7 +43,6 @@ pcall(function()
         return false
     end
 
-    -- HOOK __index ULTRALIGERO: Sin usar :IsA() para evitar lag y crasheos
     gm.__index = newcclosure(function(self, key)
         if not checkcaller() then
             if type(self) == "userdata" and type(key) == "string" then
@@ -66,7 +65,6 @@ pcall(function()
         return oldIndex(self, key)
     end)
 
-    -- HOOK NAMECALL: Bloquea kicks y oculta la UI
     gm.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         
@@ -176,9 +174,25 @@ if ProtectedGui.Parent ~= CoreGui and not gethui then
 end
 
 -- ==========================================
--- WIND UI SETUP
+-- WIND UI SETUP Y NOTIFICACIÓN DE LOGIN
 -- ==========================================
 local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
+
+WindUI:Notify({
+    Title = "Vortex-x-System",
+    Content = "Iniciando sesión... Por favor espera.",
+    Duration = 3
+})
+
+task.wait(3)
+
+WindUI:Notify({
+    Title = "Vortex-x-System",
+    Content = "¡Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...",
+    Duration = 2
+})
+
+task.wait(2)
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex X System [DMvSS]",
@@ -188,6 +202,7 @@ local Window = WindUI:CreateWindow({
     Folder = "VortexXSystem",
     Resizable = false,
     HideSearchBar = true,
+    Transparent = false, -- Ventana sólida y oscura como en la referencia
     Theme = "Dark",
     User = {
         Enabled = true,
@@ -196,14 +211,14 @@ local Window = WindUI:CreateWindow({
 })
 
 Window:EditOpenButton({
-    Title = "VortexHub",
+    Title = "VXS",
     Icon = "rbxassetid://134730158740955",
-    CornerRadius = UDim.new(0,16),
-    StrokeThickness = 2.5,
+    CornerRadius = UDim.new(1, 0),
+    StrokeThickness = 2,
     Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 0, 20)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 20, 60)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 70, 100))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 30)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(230, 0, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 90))
     }),
     OnlyMobile = true,
     Enabled = true,
@@ -211,66 +226,67 @@ Window:EditOpenButton({
 })
 
 Window:Tag({
-    Title = "3.2.2",
+    Title = "3.2.3",
     Icon = "github",
-    Color = Color3.fromRGB(220, 20, 60)
+    Color = Color3.fromRGB(230, 0, 50)
 })
 
+-- TEMA OSCURO SÓLIDO CON BORDE NEÓN / ROJO CARMESÍ
 WindUI:AddTheme({
-    Name = "VortexCrimson",
+    Name = "VortexCrimsonSolid",
     Accent = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 },
     }, { Rotation = 45 }),
-    Background = Color3.fromRGB(8, 2, 3),
+    Background = Color3.fromRGB(14, 14, 14),             -- Fondo oscuro sólido estilo panel moderno
     BackgroundTransparency = 0,
-    Outline = Color3.fromHex("#dc143c"),
-    Text = Color3.fromRGB(255, 255, 255),
-    Placeholder = Color3.fromRGB(255, 255, 255),
-    Button = Color3.fromRGB(220, 20, 60),
-    Icon = Color3.fromHex("#dc143c"),
+    Outline = Color3.fromRGB(255, 30, 80),                -- Borde exterior de la ventana brillante (Neón Carmesí)
+    Text = Color3.fromRGB(245, 245, 245),
+    Placeholder = Color3.fromRGB(150, 150, 150),
+    Button = Color3.fromRGB(210, 15, 60),
+    Icon = Color3.fromRGB(255, 50, 90),
     Hover = Color3.fromRGB(255, 255, 255),
     WindowBackground = WindUI:Gradient({
-        ["0"]   = { Color = Color3.fromRGB(10, 2, 4), Transparency = 0.35 },
-        ["100"] = { Color = Color3.fromRGB(10, 2, 4), Transparency = 0.35 },
+        ["0"]   = { Color = Color3.fromRGB(16, 16, 16), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(10, 10, 10), Transparency = 0 },
     }, { Rotation = 45 }),
-    WindowShadow = Color3.fromHex("#000000"),
-    DialogBackground = Color3.fromHex("#1a0509"),
+    WindowShadow = Color3.fromRGB(255, 30, 80),          -- Sombra con tinte neón sutil alrededor
+    DialogBackground = Color3.fromRGB(22, 22, 22),
     DialogBackgroundTransparency = 0,
     DialogTitle = Color3.fromRGB(255, 255, 255),
-    DialogContent = Color3.fromRGB(255, 255, 255),
-    DialogIcon = Color3.fromHex("#dc143c"),
+    DialogContent = Color3.fromRGB(220, 220, 220),
+    DialogIcon = Color3.fromRGB(255, 50, 90),
     WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
     WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
-    WindowTopbarAuthor = Color3.fromRGB(255, 255, 255),
-    WindowTopbarIcon = Color3.fromRGB(255, 255, 255),
-    TabBackground = Color3.fromHex("#160307"),
-    TabTitle = Color3.fromRGB(255, 255, 255),
-    TabIcon = Color3.fromRGB(220, 20, 60),
-    ElementBackground = Color3.fromHex("#160307"),
+    WindowTopbarAuthor = Color3.fromRGB(180, 180, 180),
+    WindowTopbarIcon = Color3.fromRGB(255, 50, 90),
+    TabBackground = Color3.fromRGB(20, 20, 20),
+    TabTitle = Color3.fromRGB(240, 240, 240),
+    TabIcon = Color3.fromRGB(255, 50, 90),
+    ElementBackground = Color3.fromRGB(22, 22, 22),
     ElementTitle = Color3.fromRGB(255, 255, 255),
-    ElementDesc = Color3.fromRGB(255, 255, 255),
-    ElementIcon = Color3.fromHex("#dc143c"),
-    PopupBackground = Color3.fromRGB(20, 4, 8),
+    ElementDesc = Color3.fromRGB(170, 170, 170),
+    ElementIcon = Color3.fromRGB(255, 50, 90),
+    PopupBackground = Color3.fromRGB(22, 22, 22),
     PopupBackgroundTransparency = 0,
     PopupTitle = Color3.fromRGB(255, 255, 255),
-    PopupContent = Color3.fromRGB(255, 255, 255),
-    PopupIcon = Color3.fromHex("#dc143c"),
+    PopupContent = Color3.fromRGB(200, 200, 200),
+    PopupIcon = Color3.fromRGB(255, 50, 90),
     Toggle = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 },
     }, { Rotation = 90 }),
-    ToggleBar = Color3.fromRGB(15, 3, 5),
-    Checkbox = Color3.fromRGB(15, 3, 5),
+    ToggleBar = Color3.fromRGB(30, 30, 30),
+    Checkbox = Color3.fromRGB(30, 30, 30),
     CheckboxIcon = Color3.fromRGB(255, 255, 255),
     Slider = WindUI:Gradient({
-        ["0"] = { Color = Color3.fromRGB(120, 0, 20), Transparency = 0 },
-        ["100"] = { Color = Color3.fromRGB(220, 20, 60), Transparency = 0 },
+        ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 },
+        ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 },
     }, { Rotation = 0 }),
     SliderThumb = Color3.fromRGB(255, 255, 255),
 })
 
-WindUI:SetTheme("VortexCrimson")
+WindUI:SetTheme("VortexCrimsonSolid")
 Window:SetToggleKey(Enum.KeyCode.K)
 
 Window:OnClose(function()
@@ -419,7 +435,6 @@ local function isTargetVisibleLocal(targetPart)
     return true
 end
 
--- OPTIMIZACIÓN: Encontrar al jugador más cercano SIN hacer Raycast a todos
 local function getClosestEnemy()
     local target = nil
     local shortestDistance = fovRadius
@@ -428,7 +443,6 @@ local function getClosestEnemy()
     local closestHrp = nil
     local closestDist = math.huge
 
-    -- Paso 1: Buscar el más cercano en pantalla (sin raycast, muy ligero)
     for _, v in pairs(Players:GetPlayers()) do
         if v ~= LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") and v.Character:FindFirstChild("Humanoid") and v.Character.Humanoid.Health > 0 then
             if isEnemy(v) then
@@ -445,7 +459,6 @@ local function getClosestEnemy()
         end
     end
 
-    -- Paso 2: Si encontramos a alguien, hacer el raycast SOLO a él para comprobar paredes
     if closestHrp and closestDist < shortestDistance then
         if isTargetVisibleLocal(closestHrp) then
             target = closestHrp
@@ -559,7 +572,6 @@ silentaim:Toggle({
     end
 })
 
--- BUCLE DE 60 FPS PARA ACTUALIZAR EL OBJETIVO DEL SILENT AIM (SIN LAG AL DISPARAR)
 RunService.RenderStepped:Connect(function()
     if silentAimEnabled then
         currentSilentTarget = getClosestEnemy()
@@ -568,7 +580,6 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- LÓGICA DE SILENT AIM (LEE EL OBJETIVO GUARDADO, NO CALCULA AL DISPARAR)
 pcall(function()
     local mt = getrawmetatable(Mouse)
     local oldIndex = mt.__index
@@ -588,7 +599,7 @@ silentaim:Divider()
 silentaim:Paragraph({ Title = "Crosshair", Desc = "" })
 
 local crosshairGui = nil
-local crosshairColor = Color3.fromRGB(220, 20, 60)
+local crosshairColor = Color3.fromRGB(255, 30, 80)
 local crosshairSizeVal = 6
 local crosshairGapVal = 4
 
@@ -707,7 +718,7 @@ silentaim:Slider({
 silentaim:Colorpicker({
     Title = "Color Crosshair",
     Desc = "Cambiar color de la cruz",
-    Default = Color3.fromRGB(220, 20, 60),
+    Default = Color3.fromRGB(255, 30, 80),
     Callback = function(colorVal)
         crosshairColor = colorVal
         if crosshairGui then
@@ -749,7 +760,7 @@ local function applyRealHitbox()
                     
                     if visibleState then
                         hrp.Transparency = 0.5
-                        hrp.Color = Color3.fromRGB(220, 20, 60)
+                        hrp.Color = Color3.fromRGB(255, 30, 80)
                         hrp.Material = Enum.Material.Neon
                     else
                         hrp.Transparency = 1
@@ -855,7 +866,7 @@ local espEnabled = false
 local allyEspEnabled = false
 local professionalEspEnabled = false
 local outlineEnabled = true
-local enemyOutlineColor = Color3.fromRGB(220, 20, 60)
+local enemyOutlineColor = Color3.fromRGB(255, 30, 80)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 local professionalEspDrawings = {}
 
@@ -1239,7 +1250,7 @@ visuals:Keybind({
 visuals:Colorpicker({
     Title = "Color Outline y Elementos",
     Desc = "Color del contorno (Highlight), líneas, cajas y nombre del ESP",
-    Default = Color3.fromRGB(220, 20, 60),
+    Default = Color3.fromRGB(255, 30, 80),
     Callback = function(colorVal)
         enemyOutlineColor = colorVal
         
@@ -1541,7 +1552,6 @@ task.spawn(function()
     end
 end)
 
--- Bucle de Noclip con Anti-Detección Optimizado
 RunService.Stepped:Connect(function()
     pcall(function()
         if playerSettings.Noclip and LocalPlayer.Character then
