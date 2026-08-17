@@ -1,0 +1,1163 @@
+-- ==========================================
+-- VORTEX X SYSTEM V3.3.41 [MM2] - WIND UI INTERFACE (FULL FEATURES)
+-- ==========================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+local TextChatService = game:GetService("TextChatService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+-- ==========================================
+-- LIMPIEZA DE CONEXIONES PREVIAS (EVITA LAG SI SE RE-EJECUTA)
+-- ==========================================
+if getgenv().VortexConnections then
+    for _, conn in pairs(getgenv().VortexConnections) do
+        pcall(function() conn:Disconnect() end)
+    end
+end
+getgenv().VortexConnections = {}
+
+local function TrackConnection(conn)
+    table.insert(getgenv().VortexConnections, conn)
+    return conn
+end
+
+-- ==========================================
+-- PROTECCIÓN Y ANTI-DETECCIÓN (HOOKS & UI CLOAKING)
+-- ==========================================
+local spoofedSizes = {}
+local spoofedCanCollide = {}
+
+pcall(function()
+    local gm = getrawmetatable(game)
+    local oldIndex = gm.__index
+    local oldNamecall = gm.__namecall
+
+    setreadonly(gm, false)
+
+    local hiddenUINames = {
+        "VortexXSystem",
+        "VortexXSystem_Protected",
+        "VortexXSystemCrosshair",
+        "WindUI",
+        "Luna",
+        "Luna-Interface"
+    }
+
+    local function isHiddenUI(name)
+        if type(name) ~= "string" then return false end
+        for _, hiddenName in ipairs(hiddenUINames) do
+            if string.find(name, hiddenName) then return true end
+        end
+        return false
+    end
+
+    gm.__index = newcclosure(function(self, key)
+        if not checkcaller() then
+            if type(self) == "userdata" and type(key) == "string" then
+                if self:IsA("Humanoid") then
+                    if key == "WalkSpeed" then return 16 end
+                    if key == "JumpPower" then return 50 end
+                end
+                
+                local spoof = spoofedSizes[self] or spoofedCanCollide[self]
+                if spoof then
+                    if key == "Size" and spoofedSizes[self] then return spoofedSizes[self] end
+                    if key == "CanCollide" and spoofedCanCollide[self] ~= nil then return spoofedCanCollide[self] end
+                end
+            end
+            
+            if type(key) == "string" and isHiddenUI(key) then
+                return nil
+            end
+        end
+        return oldIndex(self, key)
+    end)
+
+    gm.__namecall = newcclosure(function(self, ...)
+        local method = getnamecallmethod()
+        
+        if not checkcaller() then
+            if (method == "Kick" or method == "kick") and self == LocalPlayer then
+                return nil 
+            end
+
+            if method == "FindFirstChild" or method == "WaitForChild" then
+                local result = oldNamecall(self, ...)
+                if result and typeof(result) == "Instance" and isHiddenUI(result.Name) then
+                    return nil
+                end
+                return result
+            end
+
+            if method == "GetChildren" or method == "GetDescendants" then
+                local result = oldNamecall(self, ...)
+                local spoofedTable = {}
+                for _, v in ipairs(result) do
+                    if typeof(v) == "Instance" and not isHiddenUI(v.Name) then
+                        table.insert(spoofedTable, v)
+                    end
+                end
+                return spoofedTable
+            end
+        end
+
+        return oldNamecall(self, ...)
+    end)
+
+    setreadonly(gm, true)
+end)
+
+local ProtectedGui = Instance.new("Folder")
+ProtectedGui.Name = "VortexXSystem_Protected"
+pcall(function()
+    ProtectedGui.Parent = (gethui and gethui()) or CoreGui
+end)
+if ProtectedGui.Parent ~= CoreGui and not gethui then
+    pcall(function()
+        ProtectedGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end)
+end
+
+-- ==========================================
+-- WIND UI SETUP Y NOTIFICACIÓN DE LOGIN
+-- ==========================================
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+WindUI:Notify({ Title = "Vortex-x-System", Content = "Iniciando sesión... Por favor espera.", Duration = 3 })
+task.wait(3)
+WindUI:Notify({ Title = "Vortex-x-System", Content = "¡Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...", Duration = 2 })
+task.wait(2)
+
+local Window = WindUI:CreateWindow({
+    Title = "Vortex X System [MM2]",
+    Icon = "rbxassetid://134730158740955",
+    IconSize = "35",
+    Author = "by Israelcc",
+    Folder = "VortexXSystemMM2",
+    Resizable = false,
+    HideSearchBar = true,
+    Transparent = false,
+    Theme = "Dark",
+    User = { Enabled = true, Anonymous = false }
+})
+
+Window:EditOpenButton({
+    Title = "VXSHUB", Icon = "rbxassetid://134730158740955", CornerRadius = UDim.new(1, 0), StrokeThickness = 2,
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 30)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(230, 0, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 90))
+    }), OnlyMobile = true, Enabled = true, Draggable = true,
+})
+Window:Tag({ Title = "3.3.41", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
+
+WindUI:AddTheme({
+    Name = "VortexCrimsonSolid",
+    Accent = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 45 }),
+    Background = Color3.fromRGB(14, 14, 14), BackgroundTransparency = 0, Outline = Color3.fromRGB(255, 30, 80),
+    Text = Color3.fromRGB(245, 245, 245), Placeholder = Color3.fromRGB(150, 150, 150), Button = Color3.fromRGB(210, 15, 60),
+    Icon = Color3.fromRGB(255, 50, 90), Hover = Color3.fromRGB(255, 255, 255),
+    WindowBackground = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(16, 16, 16), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(10, 10, 10), Transparency = 0 } }, { Rotation = 45 }),
+    WindowShadow = Color3.fromRGB(255, 30, 80), DialogBackground = Color3.fromRGB(22, 22, 22), DialogBackgroundTransparency = 0,
+    DialogTitle = Color3.fromRGB(255, 255, 255), DialogContent = Color3.fromRGB(220, 220, 220), DialogIcon = Color3.fromRGB(255, 50, 90),
+    WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255), WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
+    WindowTopbarAuthor = Color3.fromRGB(180, 180, 180), WindowTopbarIcon = Color3.fromRGB(255, 50, 90),
+    TabBackground = Color3.fromRGB(20, 20, 20), TabTitle = Color3.fromRGB(240, 240, 240), TabIcon = Color3.fromRGB(255, 50, 90),
+    ElementBackground = Color3.fromRGB(22, 22, 22), ElementTitle = Color3.fromRGB(255, 255, 255), ElementDesc = Color3.fromRGB(170, 170, 170),
+    ElementIcon = Color3.fromRGB(255, 50, 90), PopupBackground = Color3.fromRGB(22, 22, 22), PopupBackgroundTransparency = 0,
+    PopupTitle = Color3.fromRGB(255, 255, 255), PopupContent = Color3.fromRGB(200, 200, 200), PopupIcon = Color3.fromRGB(255, 50, 90),
+    Toggle = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 90 }),
+    ToggleBar = Color3.fromRGB(30, 30, 30), Checkbox = Color3.fromRGB(30, 30, 30), CheckboxIcon = Color3.fromRGB(255, 255, 255),
+    Slider = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 0 }),
+    SliderThumb = Color3.fromRGB(255, 255, 255),
+})
+
+WindUI:SetTheme("VortexCrimsonSolid")
+Window:SetToggleKey(Enum.KeyCode.K)
+
+-- ==========================================
+-- LOGICA BASE MM2
+-- ==========================================
+local function getRole(plr)
+    if not plr or not plr.Character then return "Innocent" end
+    local character = plr.Character
+    local backpack = plr:FindFirstChild("Backpack")
+    local hasKnife, hasGun = false, false
+    
+    local function scanContainer(container)
+        if not container then return end
+        for _, item in ipairs(container:GetChildren()) do
+            if item:IsA("Tool") then
+                local name = item.Name:lower()
+                if item:FindFirstChild("KnifeServer") or item:FindFirstChild("Blade") or name:find("knife") or name:find("dagger") or name:find("cuchillo") or name:find("murderer") or name:find("slash") then hasKnife = true
+                elseif item:FindFirstChild("GunServer") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then hasGun = true end
+            end
+        end
+    end
+    pcall(function() scanContainer(character) scanContainer(backpack) end)
+    if hasKnife then return "Murderer" elseif hasGun then return "Sheriff" else return "Innocent" end
+end
+
+local function getMurderer()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 and getRole(plr) == "Murderer" then return plr end
+    end
+    return nil
+end
+
+local function getSheriff()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("Humanoid") and plr.Character.Humanoid.Health > 0 and getRole(plr) == "Sheriff" then return plr end
+    end
+    return nil
+end
+
+local function getAndEquipKnife()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return nil end
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            local name = tool.Name:lower()
+            if tool:FindFirstChild("KnifeServer") or tool:FindFirstChild("Blade") or name:find("knife") or name:find("dagger") or name:find("cuchillo") or name:find("murderer") then return tool end
+        end
+    end
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                local name = tool.Name:lower()
+                if tool:FindFirstChild("KnifeServer") or tool:FindFirstChild("Blade") or name:find("knife") or name:find("dagger") or name:find("cuchillo") or name:find("murderer") then
+                    hum:EquipTool(tool)
+                    task.wait(0.12)
+                    return char:FindFirstChild(tool.Name) or tool
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function getAndEquipGun()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return nil end
+    for _, tool in ipairs(char:GetChildren()) do
+        if tool:IsA("Tool") then
+            local name = tool.Name:lower()
+            if tool:FindFirstChild("GunServer") or tool:FindFirstChild("Shoot") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then return tool end
+        end
+    end
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    if backpack then
+        for _, tool in ipairs(backpack:GetChildren()) do
+            if tool:IsA("Tool") then
+                local name = tool.Name:lower()
+                if tool:FindFirstChild("GunServer") or tool:FindFirstChild("Shoot") or name:find("gun") or name:find("revolver") or name:find("pistola") or name:find("sheriff") then
+                    hum:EquipTool(tool)
+                    task.wait(0.15)
+                    return char:FindFirstChild(tool.Name) or tool
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function attackTarget(targetPlr)
+    if not targetPlr or not targetPlr.Character then return end
+    local targetHrp = targetPlr.Character:FindFirstChild("HumanoidRootPart") or targetPlr.Character:FindFirstChild("Head")
+    local targetHum = targetPlr.Character:FindFirstChildOfClass("Humanoid")
+    if not targetHrp or not targetHum or targetHum.Health <= 0 then return end
+    local knife = getAndEquipKnife()
+    if not knife then return end
+    local handle = knife:FindFirstChild("Handle") or knife:FindFirstChildOfClass("BasePart")
+    pcall(function()
+        knife:Activate()
+        if handle and targetHrp then
+            firetouchinterest(targetHrp, handle, 0)
+            firetouchinterest(targetHrp, handle, 1)
+        end
+    end)
+end
+
+local function executeKillAll()
+    pcall(function()
+        local char = LocalPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then WindUI:Notify({ Title = "Kill All", Content = "Your character is not available.", Duration = 3 }) return end
+        local knife = getAndEquipKnife()
+        if not knife then WindUI:Notify({ Title = "Kill All", Content = "You do not have a knife in your inventory.", Duration = 3 }) return end
+        local oldPos = hrp.CFrame
+        local targetsKilled = 0
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer and plr.Character then
+                local targetHrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                local targetHum = plr.Character:FindFirstChildOfClass("Humanoid")
+                if targetHrp and targetHum and targetHum.Health > 0 then
+                    targetsKilled = targetsKilled + 1
+                    for i = 1, 3 do
+                        hrp.CFrame = targetHrp.CFrame * CFrame.new(0, 0, 1.2)
+                        task.wait(0.03)
+                        attackTarget(plr)
+                    end
+                    task.wait(0.05)
+                end
+            end
+        end
+        task.wait(0.05)
+        hrp.CFrame = oldPos
+        if targetsKilled > 0 then WindUI:Notify({ Title = "Vortex x System", Content = "Kill All successfully executed!", Duration = 2 })
+        else WindUI:Notify({ Title = "Kill All", Content = "There are no living players to eliminate.", Duration = 3 }) end
+    end)
+end
+
+local function shootAtMurderer()
+    pcall(function()
+        local murderer = getMurderer()
+        if not murderer or not murderer.Character then WindUI:Notify({ Title = "Gun Shoot", Content = "Murderer not found or dead.", Duration = 3 }) return end
+        local mHrp = murderer.Character:FindFirstChild("HumanoidRootPart") or murderer.Character:FindFirstChild("UpperTorso") or murderer.Character:FindFirstChild("Head")
+        if not mHrp then return end
+        local gun = getAndEquipGun()
+        if not gun then WindUI:Notify({ Title = "Gun Shoot", Content = "You do not have a gun in your inventory.", Duration = 3 }) return end
+        local targetPos = mHrp.Position
+        local fired = false
+        pcall(function()
+            local shootRemote = gun:FindFirstChild("Shoot") or ReplicatedStorage:FindFirstChild("Shoot") or (ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Shoot"))
+            if shootRemote then shootRemote:FireServer(targetPos) fired = true end
+        end)
+        if not fired or gun.Parent ~= LocalPlayer.Character then
+            local char = LocalPlayer.Character
+            local handle = gun:FindFirstChild("Handle") or gun:FindFirstChildOfClass("BasePart")
+            if char and handle then
+                local oldCFrame = handle.CFrame
+                handle.CFrame = CFrame.new(handle.Position, targetPos)
+                gun:Activate()
+                task.wait(0.05)
+                handle.CFrame = oldCFrame
+            else gun:Activate() end
+        end
+        WindUI:Notify({ Title = "Vortex x System", Content = "Shot sent to the Murderer!", Duration = 2 })
+    end)
+end
+
+local function getLobbyCFrame()
+    local lobby = workspace:FindFirstChild("Lobby")
+    if lobby then
+        local spawnPart = lobby:FindFirstChild("SpawnLocation", true) or lobby:FindFirstChild("Spawn", true)
+        if spawnPart and spawnPart:IsA("BasePart") then return spawnPart.CFrame + Vector3.new(0, 3.5, 0) end
+    end
+    return nil
+end
+
+local function getActiveMap()
+    for _, obj in ipairs(workspace:GetChildren()) do
+        if obj:IsA("Model") and obj.Name ~= "Lobby" and obj ~= LocalPlayer.Character and not Players:GetPlayerFromCharacter(obj) then
+            if obj:FindFirstChild("SpawnLocation", true) or obj:FindFirstChild("CoinContainer") then return obj end
+        end
+    end
+    return nil
+end
+
+local function findGunDrop()
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v.Name == "GunDrop" and v:IsA("BasePart") then return v end
+    end
+    return nil
+end
+
+local function instantGrabGun()
+    if getRole(LocalPlayer) == "Murderer" then return end
+    local gunDrop = findGunDrop()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if gunDrop and hrp then
+        local oldCFrame = hrp.CFrame
+        hrp.CFrame = gunDrop.CFrame + Vector3.new(0, 1, 0)
+        task.wait(0.03)
+        pcall(function() firetouchinterest(hrp, gunDrop, 0) firetouchinterest(hrp, gunDrop, 1) end)
+        task.wait(0.05)
+        hrp.CFrame = oldCFrame
+    else WindUI:Notify({ Title = "Gun TP", Content = "No gun drop found.", Duration = 3 }) end
+end
+
+local function hasGunEquippedOrInBag()
+    local char = LocalPlayer.Character
+    local backpack = LocalPlayer:FindFirstChild("Backpack")
+    local function scan(container)
+        if not container then return false end
+        for _, tool in ipairs(container:GetChildren()) do
+            if tool:IsA("Tool") then
+                local name = tool.Name:lower()
+                if tool:FindFirstChild("GunServer") or name:find("gun") or name:find("revolver") or name:find("pistola") then return true end
+            end
+        end
+        return false
+    end
+    return scan(char) or scan(backpack)
+end
+
+local function sendChatMessage(msg)
+    local sent = false
+    pcall(function()
+        if TextChatService.ChatVersion == Enum.ChatVersion.TextChatService then
+            local rbxGeneral = TextChatService:FindFirstChild("TextChannels") and TextChatService.TextChannels:FindFirstChild("RBXGeneral")
+            if rbxGeneral then rbxGeneral:SendAsync(msg) sent = true end
+        end
+    end)
+    if sent then return end
+    pcall(function()
+        local sayRemote = ReplicatedStorage:FindFirstChild("DefaultChatSystemChatEvents") and ReplicatedStorage.DefaultChatSystemChatEvents:FindFirstChild("SayMessageRequest")
+        if sayRemote then sayRemote:FireServer(msg, "All") end
+    end)
+end
+
+-- ==========================================
+-- CONFIG TAB
+-- ==========================================
+local InfoTab = Window:Tab({ Title = "Config", Icon = "info", ShowTabTitle = true, Border = true })
+InfoTab:Select()
+
+InfoTab:Divider()
+InfoTab:Paragraph({ Title = "Comunidad", Desc = "" })
+
+InfoTab:Button({ Title = "Copiar Link de Discord", Desc = "Copia el enlace de invitación al portapapeles", Callback = function() pcall(function() setclipboard("https://discord.gg/Fn74MpzFUn") end) end })
+InfoTab:Button({ Title = "Sitio Web Oficial", Desc = "Copia el enlace del sitio web al portapapeles", Callback = function() pcall(function() setclipboard("https://vortex-x-system.netlify.app/") end) end })
+InfoTab:Paragraph({ Title = "Israelcc", Desc = "Desarrollador Principal" })
+InfoTab:Paragraph({ Title = "Footagesus", Desc = "Creditos Especiales / UI Library" })
+
+InfoTab:Divider()
+InfoTab:Paragraph({ Title = "Configuracion", Desc = "" })
+
+InfoTab:Keybind({ Title = "Tecla Menu", Desc = "Abrir/Cerrar UI", Key = "K", Callback = function(keyVal) Window:SetToggleKey(Enum.KeyCode[tostring(keyVal)] or Enum.KeyCode.K) end })
+InfoTab:Button({ Title = "Desconectar", Desc = "Salir al Lobby", Callback = function() pcall(function() LocalPlayer:Kick("Desconectado por el usuario.") end) end })
+
+Window:Divider()
+
+-- ==========================================
+-- COMBATE TAB
+-- ==========================================
+local killAuraEnabled = false
+local touchFlingEnabled = false
+local antiFlingEnabled = false
+local isFlingingActive = false
+local combatTab = Window:Tab({ Title = "Combate", Icon = "swords", ShowTabTitle = true, Border = true })
+
+combatTab:Divider()
+combatTab:Paragraph({ Title = "Murderer Automation", Desc = "" })
+
+combatTab:Toggle({ Title = "Kill Aura", Desc = "Automatically attacks players within 22 studs.", Default = false, Callback = function(val) killAuraEnabled = val end })
+combatTab:Button({ Title = "Kill All Players", Desc = "Teleports and kills all living players instantly.", Callback = function() executeKillAll() end })
+
+combatTab:Divider()
+combatTab:Paragraph({ Title = "Sheriff & Gun Utilities", Desc = "" })
+
+combatTab:Button({ Title = "Shoot Murderer (Instant)", Desc = "Automatically shoots the Murderer without locking the camera.", Callback = function() shootAtMurderer() end })
+
+combatTab:Divider()
+combatTab:Paragraph({ Title = "Fling & Protection Tools", Desc = "" })
+
+combatTab:Button({ Title = "Fling Murderer", Desc = "", Callback = function() local target = getMurderer() if target then flingTarget(target) else WindUI:Notify({ Title = "Fling", Content = "Murderer not found.", Duration = 3 }) end end })
+combatTab:Button({ Title = "Fling Sheriff", Desc = "", Callback = function() local target = getSheriff() if target then flingTarget(target) else WindUI:Notify({ Title = "Fling", Content = "Sheriff not found.", Duration = 3 }) end end })
+
+local selectedFlingPlayer = ""
+local flingDropdown = combatTab:Dropdown({ Title = "Select Player to Fling", Values = (function() local names = {}; for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(names, p.Name) end end return names end)(), Callback = function(selected) selectedFlingPlayer = selected end })
+local function updateFlingDropdown() pcall(function() local names = {}; for _, p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then table.insert(names, p.Name) end end flingDropdown:SetValues(names) end) end
+TrackConnection(Players.PlayerAdded:Connect(function() task.wait(1) updateFlingDropdown() end))
+TrackConnection(Players.PlayerRemoving:Connect(function() updateFlingDropdown() end))
+combatTab:Button({ Title = "Refresh Player List", Desc = "", Callback = function() updateFlingDropdown() WindUI:Notify({ Title = "Vortex x System", Content = "Player list updated.", Duration = 2 }) end })
+combatTab:Button({ Title = "Fling Selected Player", Callback = function() if selectedFlingPlayer ~= "" then local target = Players:FindFirstChild(selectedFlingPlayer) if target then flingTarget(target) else WindUI:Notify({ Title = "Fling", Content = "Player not found.", Duration = 3 }) end else WindUI:Notify({ Title = "Fling", Content = "Select a player first.", Duration = 3 }) end end })
+
+combatTab:Toggle({ Title = "Touch Fling", Desc = "Spins at extreme speed, launching anyone who touches you.", Default = false, Callback = function(val) touchFlingEnabled = val end })
+combatTab:Toggle({ Title = "Anti-Fling", Desc = "Cancels collisions and external physical forces to prevent flinging.", Default = false, Callback = function(val) antiFlingEnabled = val end })
+
+TrackConnection(RunService.Heartbeat:Connect(function()
+    if touchFlingEnabled and not isFlingingActive then
+        pcall(function()
+            local char = LocalPlayer.Character
+            local hrp = char and char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                local vel = hrp.AssemblyLinearVelocity
+                hrp.AssemblyAngularVelocity = Vector3.new(0, 999999, 0)
+                hrp.AssemblyLinearVelocity = Vector3.new(vel.X, 9999, vel.Z)
+            end
+        end)
+    end
+    if antiFlingEnabled and not isFlingingActive then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if not char then return end
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if hrp.AssemblyAngularVelocity.Magnitude > 300 or hrp.AssemblyLinearVelocity.Magnitude > 300 then
+                    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                end
+            end
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanCollide = false end
+            end
+        end)
+    end
+end))
+
+TrackConnection(task.spawn(function()
+    while task.wait(0.2) do
+        if killAuraEnabled then
+            pcall(function()
+                local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    for _, plr in ipairs(Players:GetPlayers()) do
+                        if plr ~= LocalPlayer and plr.Character then
+                            local targetHrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                            local targetHum = plr.Character:FindFirstChildOfClass("Humanoid")
+                            if targetHrp and targetHum and targetHum.Health > 0 then
+                                if (hrp.Position - targetHrp.Position).Magnitude <= 22 then attackTarget(plr) end
+                            end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end))
+
+-- ==========================================
+-- VISUALS ESP TAB
+-- ==========================================
+local espEnabled = false
+local espMurderer = true
+local espSheriff = true
+local espInnocent = true
+local espSelf = false
+local gunEspEnabled = false
+local trapsEspEnabled = false
+local xrayEnabled = false 
+local originalTransparency = {}
+local enemyOutlineColor = Color3.fromRGB(255, 30, 80)
+local allyOutlineColor = Color3.fromRGB(0, 255, 128)
+local innocentColor = Color3.fromRGB(0, 170, 255)
+local gunEspColor = Color3.fromRGB(255, 215, 0)
+local trapEspColor = Color3.fromRGB(255, 100, 0)
+local visualsTab = Window:Tab({ Title = "Visuals", Icon = "eye", ShowTabTitle = true, Border = true })
+
+visualsTab:Divider()
+visualsTab:Paragraph({ Title = "Role ESP System", Desc = "" })
+
+local function updateMM2ESP()
+    local localHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    for _, plr in ipairs(Players:GetPlayers()) do
+        if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+            local root = plr.Character.HumanoidRootPart
+            local hlName = plr.Name .. "_MM2ESP"
+            local existingHl = ProtectedGui:FindFirstChild(hlName)
+            
+            if espEnabled then
+                local isLocal = (plr == LocalPlayer)
+                if isLocal and not espSelf then
+                    if existingHl then existingHl:Destroy() end
+                else
+                    local role = getRole(plr)
+                    local shouldShow = (role == "Murderer" and espMurderer) or (role == "Sheriff" and espSheriff) or (role == "Innocent" and espInnocent)
+                    if shouldShow then
+                        if not existingHl then
+                            existingHl = Instance.new("Highlight")
+                            existingHl.Name = hlName
+                            existingHl.Adornee = plr.Character
+                            existingHl.FillTransparency = 0.85
+                            existingHl.OutlineTransparency = 0
+                            existingHl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            existingHl.Parent = ProtectedGui
+                        end
+                        if role == "Murderer" then existingHl.OutlineColor = enemyOutlineColor; existingHl.FillColor = enemyOutlineColor
+                        elseif role == "Sheriff" then existingHl.OutlineColor = allyOutlineColor; existingHl.FillColor = allyOutlineColor
+                        else existingHl.OutlineColor = innocentColor; existingHl.FillColor = innocentColor end
+                    else
+                        if existingHl then existingHl:Destroy() end
+                    end
+                end
+            else
+                if existingHl then existingHl:Destroy() end
+            end
+        end
+    end
+end
+
+visualsTab:Toggle({ Title = "Master Role ESP", Default = false, Callback = function(val) 
+    espEnabled = val 
+    if not val then for _, v in ipairs(ProtectedGui:GetChildren()) do if v.Name:find("_MM2ESP") then v:Destroy() end end end
+end })
+visualsTab:Toggle({ Title = "ESP Murderer", Default = true, Callback = function(val) espMurderer = val end })
+visualsTab:Toggle({ Title = "ESP Sheriff", Default = true, Callback = function(val) espSheriff = val end })
+visualsTab:Toggle({ Title = "ESP Innocent", Default = true, Callback = function(val) espInnocent = val end })
+visualsTab:Toggle({ Title = "Self ESP", Default = false, Callback = function(val) espSelf = val end })
+
+visualsTab:Divider()
+visualsTab:Paragraph({ Title = "World & Item ESP", Desc = "" })
+
+visualsTab:Toggle({ Title = "Enable Gun ESP", Default = false, Callback = function(val) gunEspEnabled = val end })
+visualsTab:Toggle({ Title = "Traps & Hazards ESP", Default = false, Callback = function(val) trapsEspEnabled = val end })
+
+local vortexTimerUI = Instance.new("ScreenGui")
+vortexTimerUI.Name = "VortexTimerUI"
+vortexTimerUI.Enabled = false
+vortexTimerUI.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+vortexTimerUI.Parent = ProtectedGui
+local timerFrame = Instance.new("Frame")
+timerFrame.Size = UDim2.new(0, 110, 0, 20)
+timerFrame.Position = UDim2.new(0.5, 0, 0, 8) 
+timerFrame.AnchorPoint = Vector2.new(0.5, 0)
+timerFrame.BackgroundColor3 = Color3.fromRGB(15, 8, 10)
+timerFrame.BorderSizePixel = 0
+timerFrame.Parent = vortexTimerUI
+Instance.new("UICorner", timerFrame).CornerRadius = UDim.new(0, 4)
+local uiStrokeTimer = Instance.new("UIStroke")
+uiStrokeTimer.Thickness = 1.2
+uiStrokeTimer.Color = Color3.fromRGB(255, 255, 255)
+uiStrokeTimer.Parent = timerFrame
+local timerText = Instance.new("TextLabel")
+timerText.Size = UDim2.new(1, 0, 1, 0)
+timerText.BackgroundTransparency = 1
+timerText.Font = Enum.Font.GothamBold
+timerText.Text = "TIME: 00:00"
+timerText.TextColor3 = Color3.fromRGB(255, 255, 255)
+timerText.TextSize = 10
+timerText.Parent = timerFrame
+
+local timerConnection
+visualsTab:Toggle({ Title = "Round Timer", Default = false, Callback = function(state) 
+    vortexTimerUI.Enabled = state
+    if state then
+        timerConnection = TrackConnection(RunService.RenderStepped:Connect(function()
+            local foundVal = nil
+            pcall(function()
+                for _, v in ipairs(workspace:GetDescendants()) do
+                    local nLower = v.Name:lower()
+                    if nLower:find("roundtime") or nLower:find("time") or nLower:find("timer") then
+                        if v:IsA("IntValue") or v:IsA("NumberValue") or v:IsA("StringValue") then foundVal = v.Value break
+                        elseif v:IsA("TextLabel") or v:IsA("TextBox") then if v.Text and v.Text ~= "" then foundVal = v.Text break end end
+                    end
+                end
+                if not foundVal then
+                    local pGui = LocalPlayer:FindFirstChild("PlayerGui")
+                    if pGui then
+                        for _, gui in ipairs(pGui:GetDescendants()) do
+                            if gui:IsA("TextLabel") then
+                                local gName = gui.Name:lower()
+                                local gText = gui.Text or ""
+                                if gName:find("timer") or gName:find("time") or gText:match("^%d+$") or gText:match("^%d+:%d+$") then
+                                    if gText ~= "" and #gText < 15 then foundVal = gText break end
+                                end
+                            end
+                        end
+                    end
+                end
+            end)
+            if foundVal ~= nil and tostring(foundVal) ~= "" and tostring(foundVal):lower() ~= "waiting..." and tostring(foundVal):lower() ~= "esperando..." and tostring(foundVal):lower() ~= "waiting" then
+                timerText.Text = "TIME: " .. tostring(foundVal)
+            else timerText.Text = "TIME: --:--" end
+        end))
+    else
+        if timerConnection then timerConnection:Disconnect() timerConnection = nil end
+    end
+end })
+
+visualsTab:Toggle({ Title = "X-Ray", Default = false, Callback = function(val) 
+    xrayEnabled = val 
+    pcall(function()
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+                local isPlayerPart = false
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr.Character and obj:IsDescendantOf(plr.Character) then isPlayerPart = true break end
+                end
+                if not isPlayerPart then
+                    if val then
+                        if originalTransparency[obj] == nil then originalTransparency[obj] = obj.Transparency end
+                        if obj.Name ~= "HumanoidRootPart" then obj.Transparency = 0.65 end
+                    else
+                        if originalTransparency[obj] ~= nil then obj.Transparency = originalTransparency[obj] end
+                    end
+                end
+            end
+        end
+    end)
+end })
+
+TrackConnection(task.spawn(function()
+    while task.wait(1.5) do
+        pcall(function()
+            if gunEspEnabled then
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v.Name == "GunDrop" and v:IsA("BasePart") then
+                        if not v:FindFirstChild("GunESP_Highlight") then
+                            local hl = Instance.new("Highlight")
+                            hl.Name = "GunESP_Highlight"
+                            hl.Adornee = v
+                            hl.FillColor = gunEspColor
+                            hl.OutlineColor = gunEspColor
+                            hl.FillTransparency = 0.3
+                            hl.OutlineTransparency = 0
+                            hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                            hl.Parent = v
+                        end
+                    end
+                end
+            end
+            if trapsEspEnabled then
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("BasePart") or v:IsA("Model") then
+                        local nameLower = v.Name:lower()
+                        if nameLower:find("trap") or nameLower:find("bear") or nameLower:find("hazard") then
+                            local part = v:IsA("BasePart") and v or v.PrimaryPart or v:FindFirstChildOfClass("BasePart")
+                            if part and not part:FindFirstChild("TrapESP_Highlight") then
+                                local hl = Instance.new("Highlight")
+                                hl.Name = "TrapESP_Highlight"
+                                hl.Adornee = v
+                                hl.FillColor = trapEspColor
+                                hl.OutlineColor = trapEspColor
+                                hl.FillTransparency = 0.2
+                                hl.OutlineTransparency = 0
+                                hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                                hl.Parent = part
+                            end
+                        end
+                    end
+                end
+            end
+            if xrayEnabled then
+                for _, obj in pairs(workspace:GetDescendants()) do
+                    if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+                        local isPlayerPart = false
+                        for _, plr in ipairs(Players:GetPlayers()) do
+                            if plr.Character and obj:IsDescendantOf(plr.Character) then isPlayerPart = true break end
+                        end
+                        if not isPlayerPart and obj.Name ~= "HumanoidRootPart" then
+                            if originalTransparency[obj] == nil then originalTransparency[obj] = obj.Transparency end
+                            obj.Transparency = 0.65
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end))
+
+TrackConnection(task.spawn(function()
+    while task.wait(0.6) do updateMM2ESP() end
+end))
+
+-- ==========================================
+-- PLAYER CHEATS TAB
+-- ==========================================
+local playerSettings = { WalkSpeed = { Enabled = false, Value = 16 }, JumpPower = { Enabled = false, Value = 50 }, Noclip = false }
+local playerTab = Window:Tab({ Title = "Player Cheats", Icon = "user", ShowTabTitle = true, Border = true })
+
+playerTab:Divider()
+playerTab:Paragraph({ Title = "WalkSpeed / JumpPower", Desc = "" })
+
+playerTab:Toggle({ Title = "Activar WalkSpeed", Default = false, Callback = function(state) playerSettings.WalkSpeed.Enabled = state end })
+playerTab:Slider({ Title = "Velocidad", Step = 1, Value = {Min = 16, Max = 200, Default = 16}, Callback = function(val) playerSettings.WalkSpeed.Value = val end })
+playerTab:Toggle({ Title = "Activar JumpPower", Default = false, Callback = function(state) playerSettings.JumpPower.Enabled = state end })
+playerTab:Slider({ Title = "Poder de Salto", Step = 1, Value = {Min = 50, Max = 300, Default = 50}, Callback = function(val) playerSettings.JumpPower.Value = val end })
+
+playerTab:Divider()
+playerTab:Paragraph({ Title = "Movimiento Especial", Desc = "" })
+
+playerTab:Toggle({ Title = "Noclip", Desc = "Atravesar paredes y objetos (Sin ser detectado)", Default = false, Callback = function(state)
+    playerSettings.Noclip = state
+    if not state then
+        pcall(function()
+            if LocalPlayer.Character then
+                for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+                    if part:IsA("BasePart") and spoofedCanCollide[part] ~= nil then
+                        part.CanCollide = spoofedCanCollide[part]
+                        spoofedCanCollide[part] = nil
+                    end
+                end
+            end
+        end)
+    end
+end })
+
+TrackConnection(task.spawn(function()
+    while true do
+        pcall(function()
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                local humanoid = LocalPlayer.Character.Humanoid
+                if playerSettings.WalkSpeed.Enabled then humanoid.WalkSpeed = playerSettings.WalkSpeed.Value end
+                if playerSettings.JumpPower.Enabled then humanoid.UseJumpPower = true; humanoid.JumpPower = playerSettings.JumpPower.Value end
+            end
+        end)
+        task.wait(0.1)
+    end
+end))
+
+TrackConnection(RunService.Stepped:Connect(function()
+    pcall(function()
+        if playerSettings.Noclip and LocalPlayer.Character then
+            for _, part in ipairs(LocalPlayer.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    if spoofedCanCollide[part] == nil then spoofedCanCollide[part] = part.CanCollide end
+                    part.CanCollide = false
+                end
+            end
+        end
+    end)
+end))
+
+Window:Divider()
+Window:Divider()
+
+-- ==========================================
+-- NAVIGATION TAB
+-- ==========================================
+local autoCollectCoins = false
+local autoGunTp = false
+local isBagFullPaused = false
+local teleportsTab = Window:Tab({ Title = "Navigation", Icon = "navigation", ShowTabTitle = true, Border = true })
+
+teleportsTab:Divider()
+teleportsTab:Paragraph({ Title = "Map & Lobby Teleports", Desc = "" })
+
+teleportsTab:Button({ Title = "Teleport to Lobby", Callback = function()
+    pcall(function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local lobbyCFrame = getLobbyCFrame()
+        if lobbyCFrame then hrp.CFrame = lobbyCFrame else WindUI:Notify({ Title = "Teleport", Content = "Lobby not found.", Duration = 3 }) end
+    end)
+end })
+
+teleportsTab:Button({ Title = "Teleport to Map", Callback = function()
+    pcall(function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local mapFound = getActiveMap()
+        if mapFound then
+            local spawnPart = mapFound:FindFirstChild("SpawnLocation", true) or mapFound:FindFirstChild("Spawn", true)
+            if spawnPart and spawnPart:IsA("BasePart") then
+                hrp.CFrame = spawnPart.CFrame + Vector3.new(0, 3, 0)
+                WindUI:Notify({ Title = "Vortex x System", Content = "Successfully teleported to the map!", Duration = 3 })
+            else
+                local success, pivot = pcall(function() return mapFound:GetPivot() end)
+                if success and pivot then hrp.CFrame = pivot + Vector3.new(0, 5, 0) WindUI:Notify({ Title = "Vortex x System", Content = "Teleported to map center.", Duration = 3 })
+                else
+                    local foundPart = mapFound:FindFirstChildOfClass("BasePart")
+                    if foundPart then hrp.CFrame = foundPart.CFrame + Vector3.new(0, 5, 0) WindUI:Notify({ Title = "Vortex x System", Content = "Teleported to map.", Duration = 3 })
+                    else WindUI:Notify({ Title = "Teleport", Content = "Map has no valid parts for teleporting.", Duration = 3 }) end
+                end
+            end
+        else WindUI:Notify({ Title = "Teleport", Content = "Map not active (Wait for round to start).", Duration = 3 }) end
+    end)
+end })
+
+teleportsTab:Divider()
+teleportsTab:Paragraph({ Title = "Sheriff Gun Utilities", Desc = "" })
+
+teleportsTab:Button({ Title = "Get Gun Instantly", Callback = function() pcall(instantGrabGun) end })
+teleportsTab:Toggle({ Title = "Auto Get Gun", Default = false, Callback = function(state) autoGunTp = state end })
+
+teleportsTab:Divider()
+teleportsTab:Paragraph({ Title = "Coin Farm Automation", Desc = "" })
+
+teleportsTab:Toggle({ Title = "Auto Collect Coins", Default = false, Callback = function(state) 
+    autoCollectCoins = state
+    if not state then isBagFullPaused = false end
+end })
+
+TrackConnection(task.spawn(function()
+    while true do
+        if autoCollectCoins then
+            pcall(function()
+                if isFlingingActive then task.wait(0.5) return end
+                local char = LocalPlayer.Character
+                if not char then task.wait(1.5) return end
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                local hrp = char:FindFirstChild("HumanoidRootPart")
+                if not hum or hum.Health <= 0 or not hrp then task.wait(1.5) return end
+                
+                local currentCoinsNum = -1
+                pcall(function()
+                    local playerGui = LocalPlayer:FindFirstChild("PlayerGui")
+                    if playerGui then
+                        for _, gui in ipairs(playerGui:GetDescendants()) do
+                            if gui:IsA("TextLabel") or gui:IsA("TextButton") then
+                                local textVal = gui.Text or ""
+                                local c, m = textVal:match("(%d+)%s*/%s*(%d+)")
+                                if c then currentCoinsNum = tonumber(c) or -1 break
+                                else
+                                    local numOnly = textVal:match("^%s*(%d+)%s*$")
+                                    if numOnly then
+                                        local n = tonumber(numOnly)
+                                        if n and n <= 40 and n >= 0 then currentCoinsNum = n break end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end)
+
+                if isBagFullPaused then
+                    if currentCoinsNum == 0 then
+                        isBagFullPaused = false
+                        WindUI:Notify({ Title = "Vortex x System", Content = "Bag empty. Resuming Auto Collect.", Duration = 3 })
+                    else task.wait(1) return end
+                end
+
+                if currentCoinsNum >= 40 then
+                    isBagFullPaused = true
+                    WindUI:Notify({ Title = "Vortex x System", Content = "Bag full (40/40). Pausing...", Duration = 4 })
+                    task.wait(1.5) return
+                end
+
+                local lobbyModel = workspace:FindFirstChild("Lobby")
+                if lobbyModel then
+                    local lobbyCenter = lobbyModel:GetPivot().Position
+                    if (hrp.Position - lobbyCenter).Magnitude < 300 then task.wait(1.5) return end
+                end
+
+                local activeMapModel = getActiveMap()
+                if not activeMapModel then task.wait(1.5) return end
+                
+                local coins = {}
+                for _, v in ipairs(workspace:GetChildren()) do
+                    if v.Name == "CoinContainer" then
+                        for _, coin in ipairs(v:GetChildren()) do table.insert(coins, coin) end
+                    elseif v:IsA("Model") and v.Name ~= "Lobby" and not Players:GetPlayerFromCharacter(v) then
+                        local cc = v:FindFirstChild("CoinContainer")
+                        if cc then
+                            for _, coin in ipairs(cc:GetChildren()) do table.insert(coins, coin) end
+                        end
+                    end
+                end
+                
+                if #coins == 0 then task.wait(1)
+                else
+                    for _, coin in ipairs(coins) do
+                        if not autoCollectCoins or isBagFullPaused or isFlingingActive or not coin or not coin.Parent then break end
+                        local currentHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                        local currentHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                        if not currentHum or currentHum.Health <= 0 or not currentHrp then break end
+                        
+                        local mapStillExists = false
+                        for _, obj in ipairs(workspace:GetChildren()) do
+                            if obj == activeMapModel then mapStillExists = true break end
+                        end
+                        if not mapStillExists then break end
+
+                        local coinPart = coin:FindFirstChild("Coin") or coin:FindFirstChildOfClass("BasePart") or (coin:IsA("BasePart") and coin)
+                        if coinPart and coinPart:IsA("BasePart") then
+                            local distance = (currentHrp.Position - coinPart.Position).Magnitude
+                            local speed = 15 
+                            local timeVal = math.clamp(distance / speed, 0.1, 4.0)
+                            local targetCFrame = coinPart.CFrame + Vector3.new(0, 2.5, 0)
+                            local tweenInfo = TweenInfo.new(timeVal, Enum.EasingStyle.Linear)
+                            local tween = TweenService:Create(currentHrp, tweenInfo, {CFrame = targetCFrame})
+                            tween:Play()
+                            local connection
+                            connection = RunService.Heartbeat:Connect(function()
+                                local liveHum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                                if not autoCollectCoins or isBagFullPaused or isFlingingActive or not liveHum or liveHum.Health <= 0 then 
+                                    tween:Cancel()
+                                    if connection then connection:Disconnect() end
+                                end
+                            end)
+                            tween.Completed:Wait()
+                            if connection then connection:Disconnect() end
+                            if not isFlingingActive and not isBagFullPaused then
+                                pcall(function()
+                                    local activeHrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                    if activeHrp then
+                                        activeHrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+                                        firetouchinterest(activeHrp, coinPart, 0)
+                                        firetouchinterest(activeHrp, coinPart, 1)
+                                    end
+                                end)
+                            end
+                            task.wait(0.7)
+                        end
+                    end
+                end
+            end)
+        end
+        task.wait(0.4)
+    end
+end))
+
+TrackConnection(task.spawn(function()
+    while true do
+        if autoGunTp then
+            pcall(function()
+                local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+                if hum and hum.Health > 0 and not isFlingingActive then
+                    if getRole(LocalPlayer) ~= "Murderer" and not hasGunEquippedOrInBag() then
+                        if findGunDrop() then instantGrabGun() task.wait(1.5) end
+                    end
+                end
+            end)
+        end
+        task.wait(0.8)
+    end
+end))
+
+Window:Divider()
+
+-- ==========================================
+-- PC KEYBINDS TAB
+-- ==========================================
+local pcTab = Window:Tab({ Title = "PC Keybinds", Icon = "keyboard", ShowTabTitle = true, Border = true })
+
+pcTab:Divider()
+pcTab:Paragraph({ Title = "Keyboard Shortcuts", Desc = "" })
+
+pcTab:Keybind({ Title = "Kill All Keybind", Key = "None", Callback = function() executeKillAll() end })
+pcTab:Keybind({ Title = "Shoot Murderer Keybind", Key = "None", Callback = function() shootAtMurderer() end })
+pcTab:Keybind({ Title = "Master ESP Keybind", Key = "None", Callback = function()
+    pcall(function()
+        espEnabled = not espEnabled
+        if not espEnabled then for _, v in ipairs(ProtectedGui:GetChildren()) do if v.Name:find("_MM2ESP") then v:Destroy() end end end
+        WindUI:Notify({ Title = "Vortex x System", Content = "Master ESP: " .. (espEnabled and "ON" or "OFF"), Duration = 2 })
+    end)
+end })
+pcTab:Keybind({ Title = "Auto Collect Coins Keybind", Key = "None", Callback = function()
+    pcall(function()
+        autoCollectCoins = not autoCollectCoins
+        if not autoCollectCoins then isBagFullPaused = false end
+        WindUI:Notify({ Title = "Vortex x System", Content = "Auto Collect Coins: " .. (autoCollectCoins and "ON" or "OFF"), Duration = 2 })
+    end)
+end })
+pcTab:Keybind({ Title = "X-Ray Keybind", Key = "None", Callback = function()
+    pcall(function()
+        xrayEnabled = not xrayEnabled
+        for _, obj in pairs(workspace:GetDescendants()) do
+            if obj:IsA("BasePart") and not obj:IsA("Terrain") then
+                local isPlayerPart = false
+                for _, plr in ipairs(Players:GetPlayers()) do
+                    if plr.Character and obj:IsDescendantOf(plr.Character) then isPlayerPart = true break end
+                end
+                if not isPlayerPart then
+                    if xrayEnabled then
+                        if originalTransparency[obj] == nil then originalTransparency[obj] = obj.Transparency end
+                        if obj.Name ~= "HumanoidRootPart" then obj.Transparency = 0.65 end
+                    else
+                        if originalTransparency[obj] ~= nil then obj.Transparency = originalTransparency[obj] end
+                    end
+                end
+            end
+        end
+        WindUI:Notify({ Title = "Vortex x System", Content = "X-Ray: " .. (xrayEnabled and "ON" or "OFF"), Duration = 2 })
+    end)
+end })
+pcTab:Keybind({ Title = "Teleport to Map Keybind", Key = "None", Callback = function()
+    pcall(function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local mapFound = getActiveMap()
+        if mapFound then
+            local spawnPart = mapFound:FindFirstChild("SpawnLocation", true) or mapFound:FindFirstChild("Spawn", true)
+            if spawnPart and spawnPart:IsA("BasePart") then hrp.CFrame = spawnPart.CFrame + Vector3.new(0, 3, 0)
+            else
+                local success, pivot = pcall(function() return mapFound:GetPivot() end)
+                if success and pivot then hrp.CFrame = pivot + Vector3.new(0, 5, 0) end
+            end
+        end
+    end)
+end })
+pcTab:Keybind({ Title = "Teleport to Lobby Keybind", Key = "None", Callback = function()
+    pcall(function()
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        local lobbyCFrame = getLobbyCFrame()
+        if lobbyCFrame then hrp.CFrame = lobbyCFrame end
+    end)
+end })
+pcTab:Keybind({ Title = "Get Gun Instantly Keybind", Key = "None", Callback = function() pcall(instantGrabGun) end })
+
+Window:Divider()
+
+-- ==========================================
+-- MISC / FUN TAB
+-- ==========================================
+local miscTab = Window:Tab({ Title = "Misc / Fun", Icon = "sparkles", ShowTabTitle = true, Border = true })
+
+miscTab:Divider()
+miscTab:Paragraph({ Title = "Emotes & Animations", Desc = "" })
+
+miscTab:Button({ Title = "AFEM Max (Emotes)", Desc = "Opens the full animation and emote menu.", Callback = function()
+    pcall(function() loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-AFEM-Max-Open-Alpha-50210"))() WindUI:Notify({ Title = "Vortex x System", Content = "Loading AFEM Max Emotes...", Duration = 3 }) end)
+end })
+
+miscTab:Divider()
+miscTab:Paragraph({ Title = "Trade Exploits", Desc = "" })
+
+local tradeTargetName = ""
+miscTab:Input({ Title = "Player Username", Placeholder = "Enter username...", Callback = function(text) tradeTargetName = text end })
+miscTab:Button({ Title = "Force Trade Request", Callback = function()
+    pcall(function()
+        if tradeTargetName == "" then WindUI:Notify({ Title = "Trade", Content = "Enter a valid username.", Duration = 3 }) return end
+        local target = Players:FindFirstChild(tradeTargetName)
+        if target then
+            local tradeFolder = ReplicatedStorage:FindFirstChild("Trade")
+            if tradeFolder then
+                local sendReq = tradeFolder:FindFirstChild("SendRequest")
+                local acceptReq = tradeFolder:FindFirstChild("AcceptRequest")
+                if sendReq then sendReq:InvokeServer(target) end
+                if acceptReq then acceptReq:FireServer() end
+                WindUI:Notify({ Title = "Force Trade", Content = "Trade sent to: " + target.Name, Duration = 3 })
+            end
+        else WindUI:Notify({ Title = "Trade", Content = "Player not found in server.", Duration = 3 }) end
+    end)
+end })
+
+miscTab:Divider()
+miscTab:Paragraph({ Title = "Chat Role Revealer", Desc = "" })
+
+local autoExposeEnabled = false
+local rolesExposedThisRound = false
+
+miscTab:Button({ Title = "Expose Roles in Chat", Callback = function()
+    pcall(function()
+        local murderer = getMurderer()
+        local sheriff = getSheriff()
+        if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
+        if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIFF: " .. sheriff.Name) end
+        if not murderer and not sheriff then WindUI:Notify({ Title = "Role Revealer", Content = "No active roles detected yet.", Duration = 3 }) end
+    end)
+end })
+
+miscTab:Toggle({ Title = "Auto Expose Roles in Chat", Default = false, Callback = function(val) 
+    autoExposeEnabled = val 
+    if not val then rolesExposedThisRound = false end
+end })
+
+TrackConnection(task.spawn(function()
+    while true do
+        if autoExposeEnabled then
+            pcall(function()
+                local murderer = getMurderer()
+                local sheriff = getSheriff()
+                if (murderer or sheriff) and not rolesExposedThisRound then
+                    if murderer then sendChatMessage("[VORTEX] 🔪 MURDER: " .. murderer.Name) task.wait(0.3) end
+                    if sheriff then sendChatMessage("[VORTEX] 🔪 SHERIPP: " .. sheriff.Name) end
+                    rolesExposedThisRound = true
+                else
+                    rolesExposedThisRound = false
+                end
+            end)
+        else
+            rolesExposedThisRound = false
+        end
+        task.wait(1.5)
+    end
+end))
