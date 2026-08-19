@@ -622,4 +622,15 @@ function Library:Window(options)
     return WindowObject
 end
 
-return Library
+local Window = Library:Window({
+	Title = "Vortex | x System (Test)",
+})
+
+local Tab = Window:Tab({ Title = "Prueba" })
+
+Tab:Button({
+    Title = "¡Si ves esto, funciona!",
+    Callback = function()
+        print("Botón presionado")
+    end
+})
