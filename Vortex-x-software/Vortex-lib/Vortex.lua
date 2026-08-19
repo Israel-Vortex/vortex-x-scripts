@@ -5,26 +5,45 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 local MarketplaceService = game:GetService("MarketplaceService")
 
+-- Obtener LocalPlayer de forma segura
 local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    Players:GetPropertyChangedSignal("LocalPlayer"):Wait()
+    LocalPlayer = Players.LocalPlayer
+end
 
--- Obtener contenedor seguro de interfaz
-local ParentGui = (gethui and gethui()) or (cloneref and cloneref(CoreGui)) or CoreGui
+-- Obtener contenedor seguro de interfaz (Evita crasheos por permisos)
+local function GetSafeGui()
+    if gethui then
+        local success, res = pcall(gethui)
+        if success and res then return res end
+    end
+    local success, core = pcall(function() return CoreGui end)
+    if success and core then return core end
+    return LocalPlayer:WaitForChild("PlayerGui")
+end
 
--- Limpieza de interfaces previas VXS (Se removió "ScreenGui" para evitar borrar contenedores del sistema)
+local ParentGui = GetSafeGui()
+
+-- Limpieza de interfaces previas
 for _, name in ipairs({"VXSHub", "NotificationFrame", "VXSToggle"}) do
     local oldGui = ParentGui:FindFirstChild(name)
     if oldGui then
-        oldGui:Destroy()
+        pcall(function() oldGui:Destroy() end)
     end
 end
 
--- Prevención de AFK
-LocalPlayer.Idled:Connect(function()
-    local VirtualUser = game:GetService("VirtualUser")
-    VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-    task.wait(1)
-    VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
-end)
+-- Prevención de AFK segura
+if LocalPlayer then
+    LocalPlayer.Idled:Connect(function()
+        pcall(function()
+            local VirtualUser = game:GetService("VirtualUser")
+            VirtualUser:Button2Down(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0, 0), workspace.CurrentCamera.CFrame)
+        end)
+    end)
+end
 
 -- Paleta de colores VXS
 local Colors = {
@@ -35,11 +54,39 @@ local Colors = {
     AccentSecondary = Color3.fromRGB(100, 30, 200),
     TextPrimary = Color3.fromRGB(252, 252, 255),
     TextMuted = Color3.fromRGB(160, 160, 175),
-    TextDark = Color3.fromRGB(80, 80, 95),
     ItemBg = Color3.fromRGB(22, 22, 28)
 }
 
--- Función para permitir arrastrar la ventana
+-- Carga segura de módulos de iconos
+pcall(function()
+    local iconsScript = game:HttpGet("https://storage.relzhub.com/modules/icons.lua")
+    if iconsScript then loadstring(iconsScript)() end
+end)
+
+-- Obtención segura del nombre del lugar sin detener el script si falla
+local placeName = "Game_" .. tostring(game.PlaceId)
+pcall(function()
+    local info = MarketplaceService:GetProductInfo(game.PlaceId)
+    if info and info.Name then
+        placeName = string.gsub(info.Name, "[\\/:%*%?\"<>| ]", "")
+    end
+end)
+
+-- Sistema de archivos seguro
+local canSave = (isfolder and makefolder and writefile and isfile and readfile) ~= nil
+local configPath = "VXS Hub/Library/" .. placeName .. "-" .. (LocalPlayer and LocalPlayer.Name or "User") .. ".json"
+
+local function ensureFolders()
+    if not canSave then return end
+    pcall(function()
+        if not isfolder("VXS Hub") then makefolder("VXS Hub") end
+        if not isfolder("VXS Hub/Library/") then makefolder("VXS Hub/Library/") end
+    end)
+end
+
+ensureFolders()
+
+-- Función para arrastrar la ventana
 local function MakeDraggable(dragHandle, frameToMove)
     local dragging, dragInput, dragStart, startPos
     dragHandle.InputBegan:Connect(function(input)
@@ -67,16 +114,18 @@ local function MakeDraggable(dragHandle, frameToMove)
     end)
 end
 
--- Botón flotante para alternar visibilidad
+-- Botón flotante para alternar la ventana (VXSToggle)
 local ToggleGui = Instance.new("ScreenGui")
 ToggleGui.Name = "VXSToggle"
+ToggleGui.ResetOnSpawn = false
+ToggleGui.IgnoreGuiInset = true
+ToggleGui.DisplayOrder = 99999
 ToggleGui.Parent = ParentGui
-ToggleGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
 local OutlineButton = Instance.new("Frame")
 OutlineButton.Name = "OutlineButton"
-OutlineButton.Size = UDim2.new(0, 44, 0, 44)
-OutlineButton.Position = UDim2.new(0, 10, 0, 10)
+OutlineButton.Size = UDim2.new(0, 46, 0, 46)
+OutlineButton.Position = UDim2.new(0, 15, 0, 50)
 OutlineButton.BackgroundColor3 = Colors.Background
 OutlineButton.Parent = ToggleGui
 
@@ -85,13 +134,23 @@ UICornerBtn.CornerRadius = UDim.new(0, 10)
 UICornerBtn.Parent = OutlineButton
 
 local ImageButton = Instance.new("ImageButton")
-ImageButton.Size = UDim2.new(1, -12, 1, -12)
+ImageButton.Size = UDim2.new(1, -10, 1, -10)
 ImageButton.Position = UDim2.new(0.5, 0, 0.5, 0)
 ImageButton.AnchorPoint = Vector2.new(0.5, 0.5)
 ImageButton.BackgroundTransparency = 1
 ImageButton.Image = "rbxassetid://102268449481061"
 ImageButton.ImageColor3 = Colors.TextPrimary
 ImageButton.Parent = OutlineButton
+
+-- Texto de respaldo por si el ID de imagen falla en cargar
+local FallbackLabel = Instance.new("TextLabel")
+FallbackLabel.Size = UDim2.new(1, 0, 1, 0)
+FallbackLabel.BackgroundTransparency = 1
+FallbackLabel.Font = Enum.Font.GothamBold
+FallbackLabel.Text = "VXS"
+FallbackLabel.TextColor3 = Colors.AccentPrimary
+FallbackLabel.TextSize = 12
+FallbackLabel.Parent = OutlineButton
 
 ImageButton.MouseButton1Click:Connect(function()
     local mainGui = ParentGui:FindFirstChild("VXSHub")
@@ -103,8 +162,8 @@ end)
 -- Sistema de Notificaciones
 local NotificationFrame = Instance.new("ScreenGui")
 NotificationFrame.Name = "NotificationFrame"
+NotificationFrame.ResetOnSpawn = false
 NotificationFrame.Parent = ParentGui
-NotificationFrame.ZIndexBehavior = Enum.ZIndexBehavior.Global
 
 local Library = {}
 
@@ -169,8 +228,9 @@ function Library:Window(options)
 
     local VXSHubGui = Instance.new("ScreenGui")
     VXSHubGui.Name = "VXSHub"
+    VXSHubGui.ResetOnSpawn = false
     VXSHubGui.IgnoreGuiInset = true
-    VXSHubGui.DisplayOrder = 999
+    VXSHubGui.DisplayOrder = 9999
     VXSHubGui.Parent = ParentGui
 
     local OutlineMain = Instance.new("Frame")
@@ -255,7 +315,6 @@ function Library:Window(options)
         tabOptions = typeof(tabOptions) == "table" and tabOptions or { Title = tostring(tabOptions) }
         local tabTitle = tabOptions.Title or "Tab"
 
-        -- Botón de la pestaña
         local TabBtn = Instance.new("TextButton")
         TabBtn.Size = UDim2.new(0.9, 0, 0, 32)
         TabBtn.BackgroundColor3 = Colors.DarkSecondary
@@ -271,7 +330,6 @@ function Library:Window(options)
         TabBtnCorner.CornerRadius = UDim.new(0, 6)
         TabBtnCorner.Parent = TabBtn
 
-        -- Pagina de la pestaña
         local TabPage = Instance.new("ScrollingFrame")
         TabPage.Name = tabTitle .. "Page"
         TabPage.Size = UDim2.new(1, 0, 1, 0)
@@ -316,7 +374,6 @@ function Library:Window(options)
             ActivateTab()
         end
 
-        -- Métodos de componentes para cada Tab
         local TabObject = {}
 
         function TabObject:Button(btnCfg)
@@ -337,9 +394,7 @@ function Library:Window(options)
             Corner.CornerRadius = UDim.new(0, 6)
             Corner.Parent = BtnFrame
 
-            BtnFrame.MouseButton1Click:Connect(function()
-                pcall(callback)
-            end)
+            BtnFrame.MouseButton1Click:Connect(function() pcall(callback) end)
             return BtnFrame
         end
 
