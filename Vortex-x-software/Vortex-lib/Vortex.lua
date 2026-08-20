@@ -1,12 +1,11 @@
 --[[
-    NovaUI v4
-    Estilo WindUI / Fluent
-    Iconos: solo WindUI Icons (Footagesus/Icons)
+    NovaUI v5
+    WindUI style - OpenButton interno, subtitle abajo, gradient setup
 ]]
 
 local NovaUI = {}
 NovaUI.__index = NovaUI
-NovaUI.Version = "4.0.0"
+NovaUI.Version = "5.0.0"
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -25,9 +24,7 @@ do
     if ok and res then
         IconLib = res
         pcall(function()
-            if IconLib.SetIconsType then
-                IconLib.SetIconsType("lucide")
-            end
+            if IconLib.SetIconsType then IconLib.SetIconsType("lucide") end
         end)
     end
 end
@@ -38,21 +35,14 @@ local function ResolveIcon(name)
         return name, nil, nil
     end
     if not IconLib then return nil, nil, nil end
-
     name = tostring(name)
     local ok, data = pcall(function()
-        if IconLib.GetIcon then
-            return IconLib.GetIcon(name)
-        elseif IconLib.Icon then
-            return IconLib.Icon(name)
-        end
+        if IconLib.GetIcon then return IconLib.GetIcon(name) end
+        if IconLib.Icon then return IconLib.Icon(name) end
         return nil
     end)
     if not ok or not data then return nil, nil, nil end
-
-    if typeof(data) == "string" then
-        return data, nil, nil
-    end
+    if typeof(data) == "string" then return data, nil, nil end
     if typeof(data) == "table" then
         local img = data[1] or data.Image or data.image
         local meta = data[2] or data
@@ -65,40 +55,57 @@ end
 
 local function ApplyIcon(imageObj, name, color)
     local img, rectSize, rectPos = ResolveIcon(name)
-    if not img then
-        imageObj.Image = ""
-        return false
-    end
+    if not img then imageObj.Image = "" return false end
     imageObj.Image = img
     if color then imageObj.ImageColor3 = color end
-    if rectSize and typeof(rectSize) == "Vector2" then
-        imageObj.ImageRectSize = rectSize
-    else
-        imageObj.ImageRectSize = Vector2.new(0, 0)
-    end
-    if rectPos and typeof(rectPos) == "Vector2" then
-        imageObj.ImageRectOffset = rectPos
-    else
-        imageObj.ImageRectOffset = Vector2.new(0, 0)
-    end
+    imageObj.ImageRectSize = (rectSize and typeof(rectSize) == "Vector2") and rectSize or Vector2.new(0, 0)
+    imageObj.ImageRectOffset = (rectPos and typeof(rectPos) == "Vector2") and rectPos or Vector2.new(0, 0)
     return true
+end
+
+local function HexToColor3(hex)
+    if typeof(hex) == "Color3" then return hex end
+    if typeof(hex) \~= "string" then return Color3.fromRGB(0, 145, 255) end
+    hex = hex:gsub("#", "")
+    if #hex == 3 then
+        hex = hex:sub(1,1)..hex:sub(1,1)..hex:sub(2,2)..hex:sub(2,2)..hex:sub(3,3)..hex:sub(3,3)
+    end
+    local r = tonumber(hex:sub(1, 2), 16) or 0
+    local g = tonumber(hex:sub(3, 4), 16) or 0
+    local b = tonumber(hex:sub(5, 6), 16) or 0
+    return Color3.fromRGB(r, g, b)
+end
+
+local function IsImageSource(v)
+    if not v then return false end
+    if typeof(v) \~= "string" then return false end
+    if string.find(v, "rbxassetid://") then return true end
+    if string.match(v, "^%d+$") then return true end
+    return false
+end
+
+local function ToAssetId(v)
+    if not v then return nil end
+    if string.find(tostring(v), "rbxassetid://") then return tostring(v) end
+    if string.match(tostring(v), "^%d+$") then return "rbxassetid://" .. tostring(v) end
+    return nil
 end
 
 -- ==================== THEME ====================
 local Theme = {
-    Background   = Color3.fromRGB(18, 18, 22),
-    Sidebar      = Color3.fromRGB(22, 22, 28),
-    TitleBar     = Color3.fromRGB(24, 24, 30),
-    Panel        = Color3.fromRGB(28, 28, 36),
-    Element      = Color3.fromRGB(32, 32, 40),
-    ElementHover = Color3.fromRGB(40, 40, 50),
+    Background   = Color3.fromRGB(16, 16, 20),
+    Sidebar      = Color3.fromRGB(20, 20, 26),
+    TitleBar     = Color3.fromRGB(22, 22, 28),
+    Panel        = Color3.fromRGB(26, 26, 34),
+    Element      = Color3.fromRGB(30, 30, 38),
+    ElementHover = Color3.fromRGB(38, 38, 48),
     Accent       = Color3.fromRGB(0, 145, 255),
-    Text         = Color3.fromRGB(240, 240, 245),
-    TextDim      = Color3.fromRGB(140, 140, 155),
-    Stroke       = Color3.fromRGB(40, 40, 52),
-    ToggleOff    = Color3.fromRGB(48, 48, 58),
+    Text         = Color3.fromRGB(245, 245, 250),
+    TextDim      = Color3.fromRGB(130, 130, 145),
+    TextMuted    = Color3.fromRGB(100, 100, 115),
+    Stroke       = Color3.fromRGB(38, 38, 48),
+    ToggleOff    = Color3.fromRGB(46, 46, 56),
     ToggleOn     = Color3.fromRGB(0, 145, 255),
-    Danger       = Color3.fromRGB(255, 85, 95),
 }
 
 local function Tween(obj, props, t)
@@ -116,6 +123,7 @@ local function Stroke(p, color, th)
     local s = Instance.new("UIStroke")
     s.Color = color or Theme.Stroke
     s.Thickness = th or 1
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
     s.Parent = p
     return s
 end
@@ -128,6 +136,20 @@ local function Padding(p, t, b, l, r)
     x.PaddingRight = UDim.new(0, r or 0)
     x.Parent = p
     return x
+end
+
+local function ApplyGradient(parent, colors, rotation)
+    if not colors or #colors < 2 then return end
+    local g = Instance.new("UIGradient")
+    local c1 = HexToColor3(colors[1])
+    local c2 = HexToColor3(colors[2])
+    g.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, c1),
+        ColorSequenceKeypoint.new(1, c2),
+    })
+    g.Rotation = rotation or 90
+    g.Parent = parent
+    return g
 end
 
 -- ==================== NOTIFY ====================
@@ -158,7 +180,6 @@ end
 function NovaUI:Notify(cfg)
     EnsureNotify()
     cfg = cfg or {}
-
     local card = Instance.new("Frame")
     card.AutomaticSize = Enum.AutomaticSize.Y
     card.Size = UDim2.new(1, 0, 0, 0)
@@ -210,6 +231,122 @@ function NovaUI:Notify(cfg)
     end)
 end
 
+-- ==================== OPEN BUTTON (interno, estilo WindUI) ====================
+local function CreateOpenButton(parent, cfg, onOpen)
+    -- cfg: Text, Icon, Image, Gradient, Position
+    local useImage = false
+    local imageSrc = nil
+
+    if cfg.Image and IsImageSource(tostring(cfg.Image)) then
+        useImage = true
+        imageSrc = ToAssetId(cfg.Image) or tostring(cfg.Image)
+    elseif cfg.Icon and IsImageSource(tostring(cfg.Icon)) then
+        useImage = true
+        imageSrc = ToAssetId(cfg.Icon) or tostring(cfg.Icon)
+    elseif cfg.Icon and ResolveIcon(cfg.Icon) then
+        useImage = true
+        -- icon name from WindUI pack
+        imageSrc = nil -- se aplica con ApplyIcon
+    end
+
+    -- Si hay Text y no forzaron imagen, modo texto largo
+    local forceText = (cfg.Mode == "Text") or (cfg.Text and cfg.Mode \~= "Image" and not cfg.Image)
+
+    local btn = Instance.new("ImageButton")
+    btn.Name = "NovaOpenButton"
+    btn.AutoButtonColor = false
+    btn.BorderSizePixel = 0
+    btn.Visible = false
+    btn.Parent = parent
+
+    if forceText and cfg.Text and cfg.Text \~= "" and not cfg.Image then
+        -- Modo TEXTO: largo, fondo semi-transparente
+        btn.Size = cfg.Size or UDim2.new(0, 130, 0, 40)
+        btn.Position = cfg.Position or UDim2.new(0, 16, 1, -64)
+        btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        btn.BackgroundTransparency = 0.15
+        Corner(btn, 12)
+        Stroke(btn, Color3.fromRGB(255, 255, 255), 1)
+
+        if cfg.Gradient and #cfg.Gradient >= 2 then
+            ApplyGradient(btn, cfg.Gradient, cfg.GradientRotation or 0)
+            btn.BackgroundTransparency = 0.1
+        else
+            btn.BackgroundColor3 = Theme.Panel
+            btn.BackgroundTransparency = 0.25
+        end
+
+        local label = Instance.new("TextLabel")
+        label.BackgroundTransparency = 1
+        label.Size = UDim2.new(1, -16, 1, 0)
+        label.Position = UDim2.new(0, 8, 0, 0)
+        label.Font = Enum.Font.GothamBold
+        label.TextSize = 13
+        label.TextColor3 = Theme.Text
+        label.Text = cfg.Text
+        label.Parent = btn
+    else
+        -- Modo IMAGEN: cuadrado
+        local side = 50
+        if cfg.Size then
+            btn.Size = cfg.Size
+        else
+            btn.Size = UDim2.new(0, side, 0, side)
+        end
+        btn.Position = cfg.Position or UDim2.new(0, 16, 1, -72)
+        btn.BackgroundColor3 = Theme.Panel
+        btn.BackgroundTransparency = 0.1
+        Corner(btn, 14)
+        Stroke(btn, Theme.Stroke, 1)
+
+        if cfg.Gradient and #cfg.Gradient >= 2 then
+            ApplyGradient(btn, cfg.Gradient, cfg.GradientRotation or 45)
+            btn.BackgroundTransparency = 0
+        end
+
+        local img = Instance.new("ImageLabel")
+        img.BackgroundTransparency = 1
+        img.AnchorPoint = Vector2.new(0.5, 0.5)
+        img.Position = UDim2.new(0.5, 0, 0.5, 0)
+        img.Size = UDim2.new(0, 24, 0, 24)
+        img.Parent = btn
+
+        if imageSrc and string.find(imageSrc, "rbxassetid://") then
+            img.Image = imageSrc
+            img.ImageColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            ApplyIcon(img, cfg.Icon or "menu", Color3.fromRGB(255, 255, 255))
+        end
+    end
+
+    -- drag
+    local dragging, dStart, pStart
+    btn.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dStart = input.Position
+            pStart = btn.Position
+        end
+    end)
+    btn.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local d = input.Position - dStart
+            btn.Position = UDim2.new(pStart.X.Scale, pStart.X.Offset + d.X, pStart.Y.Scale, pStart.Y.Offset + d.Y)
+        end
+    end)
+
+    btn.MouseButton1Click:Connect(function()
+        if onOpen then onOpen() end
+    end)
+
+    return btn
+end
+
 -- ==================== WINDOW ====================
 function NovaUI:CreateWindow(cfg)
     cfg = cfg or {}
@@ -217,40 +354,23 @@ function NovaUI:CreateWindow(cfg)
     local subTitle = cfg.SubTitle or cfg.Author or ""
     local toggleKey = cfg.ToggleKey or Enum.KeyCode.RightControl
 
-    local SIZE_NORMAL = IsMobile and UDim2.new(0.94, 0, 0, 420) or UDim2.new(0, 640, 0, 420)
-    local SIZE_MINI   = IsMobile and UDim2.new(0.94, 0, 0, 46) or UDim2.new(0, 640, 0, 46)
-    local SIZE_MAX    = IsMobile and UDim2.new(0.96, 0, 0.84, 0) or UDim2.new(0, 920, 0, 580)
-    local SIDE_W      = IsMobile and 58 or 168
-    local TITLE_H     = 46
+    -- OpenButton config (opcional en setup; si no hay, defaults internos)
+    local openCfg = cfg.OpenButton or {}
+    if openCfg.Enabled == nil then openCfg.Enabled = true end
+    openCfg.Text = openCfg.Text or title
+    openCfg.Icon = openCfg.Icon or cfg.Icon or "menu"
+    openCfg.Image = openCfg.Image
+    openCfg.Gradient = openCfg.Gradient -- ej: {"#FF0000", "#FF8800"}
+    openCfg.GradientRotation = openCfg.GradientRotation or 45
+    openCfg.Mode = openCfg.Mode -- "Image" | "Text" | nil auto
+    openCfg.Position = openCfg.Position or UDim2.new(0, 16, 1, -72)
+    openCfg.Size = openCfg.Size
 
-    local miniCfg = cfg.Minimizer
-    if miniCfg == false then
-        miniCfg = { Enabled = false }
-    elseif not (typeof(miniCfg) == "table") then
-        miniCfg = {
-            Enabled = true,
-            Icon = cfg.Icon or "menu",
-            Size = UDim2.new(0, 52, 0, 52),
-            Position = UDim2.new(0, 16, 1, -80),
-            BackgroundColor = Theme.Panel,
-            IconColor = Theme.Accent,
-            Stroke = true,
-            StrokeColor = Theme.Accent,
-            StrokeThickness = 1.2,
-            CornerRadius = 14,
-        }
-    else
-        if miniCfg.Enabled == nil then miniCfg.Enabled = true end
-        miniCfg.Icon = miniCfg.Icon or cfg.Icon or "menu"
-        miniCfg.Size = miniCfg.Size or UDim2.new(0, 52, 0, 52)
-        miniCfg.Position = miniCfg.Position or UDim2.new(0, 16, 1, -80)
-        miniCfg.BackgroundColor = miniCfg.BackgroundColor or Theme.Panel
-        miniCfg.IconColor = miniCfg.IconColor or Theme.Accent
-        if miniCfg.Stroke == nil then miniCfg.Stroke = true end
-        miniCfg.StrokeColor = miniCfg.StrokeColor or Theme.Accent
-        miniCfg.StrokeThickness = miniCfg.StrokeThickness or 1.2
-        miniCfg.CornerRadius = miniCfg.CornerRadius or 14
-    end
+    local SIZE_NORMAL = IsMobile and UDim2.new(0.94, 0, 0, 430) or UDim2.new(0, 650, 0, 430)
+    local SIZE_MINI   = IsMobile and UDim2.new(0.94, 0, 0, 52) or UDim2.new(0, 650, 0, 52)
+    local SIZE_MAX    = IsMobile and UDim2.new(0.96, 0, 0.85, 0) or UDim2.new(0, 940, 0, 590)
+    local SIDE_W      = IsMobile and 58 or 172
+    local TITLE_H     = 54
 
     local old = PlayerGui:FindFirstChild("NovaUI_Window")
     if old then old:Destroy() end
@@ -274,6 +394,7 @@ function NovaUI:CreateWindow(cfg)
     Corner(Main, 16)
     Stroke(Main)
 
+    -- Title bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Size = UDim2.new(1, 0, 0, TITLE_H)
     TitleBar.BackgroundColor3 = Theme.TitleBar
@@ -290,27 +411,44 @@ function NovaUI:CreateWindow(cfg)
 
     local WinIcon = Instance.new("ImageLabel")
     WinIcon.BackgroundTransparency = 1
-    WinIcon.Position = UDim2.new(0, 14, 0.5, -9)
-    WinIcon.Size = UDim2.new(0, 18, 0, 18)
+    WinIcon.Position = UDim2.new(0, 16, 0.5, -10)
+    WinIcon.Size = UDim2.new(0, 20, 0, 20)
     WinIcon.Parent = TitleBar
     ApplyIcon(WinIcon, cfg.Icon or "menu", Theme.Accent)
 
+    -- Title + Subtitle (subtitle ABAJO, color más bajo)
+    local TitleWrap = Instance.new("Frame")
+    TitleWrap.BackgroundTransparency = 1
+    TitleWrap.Position = UDim2.new(0, 44, 0, 0)
+    TitleWrap.Size = UDim2.new(1, -150, 1, 0)
+    TitleWrap.Parent = TitleBar
+
     local TitleLbl = Instance.new("TextLabel")
     TitleLbl.BackgroundTransparency = 1
-    TitleLbl.Position = UDim2.new(0, 40, 0, 0)
-    TitleLbl.Size = UDim2.new(1, -150, 1, 0)
+    TitleLbl.Position = UDim2.new(0, 0, 0, subTitle \~= "" and 8 or 0)
+    TitleLbl.Size = UDim2.new(1, 0, 0, subTitle \~= "" and 18 or TITLE_H)
     TitleLbl.Font = Enum.Font.GothamBold
     TitleLbl.TextSize = 14
     TitleLbl.TextColor3 = Theme.Text
     TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    if subTitle == "" then
-        TitleLbl.Text = title
-    else
-        TitleLbl.Text = title .. "  ·  " .. subTitle
-    end
-    TitleLbl.Parent = TitleBar
+    TitleLbl.TextYAlignment = Enum.TextYAlignment.Center
+    TitleLbl.Text = title
+    TitleLbl.Parent = TitleWrap
 
-    -- 3 botones WindUI: min | max | close
+    if subTitle \~= "" then
+        local SubLbl = Instance.new("TextLabel")
+        SubLbl.BackgroundTransparency = 1
+        SubLbl.Position = UDim2.new(0, 0, 0, 26)
+        SubLbl.Size = UDim2.new(1, 0, 0, 16)
+        SubLbl.Font = Enum.Font.Gotham
+        SubLbl.TextSize = 11
+        SubLbl.TextColor3 = Theme.TextMuted
+        SubLbl.TextXAlignment = Enum.TextXAlignment.Left
+        SubLbl.Text = subTitle
+        SubLbl.Parent = TitleWrap
+    end
+
+    -- Controls: min max close
     local Controls = Instance.new("Frame")
     Controls.AnchorPoint = Vector2.new(1, 0.5)
     Controls.Position = UDim2.new(1, -12, 0.5, 0)
@@ -333,7 +471,6 @@ function NovaUI:CreateWindow(cfg)
         b.AutoButtonColor = false
         b.Parent = Controls
         Corner(b, 8)
-
         local img = Instance.new("ImageLabel")
         img.BackgroundTransparency = 1
         img.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -341,7 +478,6 @@ function NovaUI:CreateWindow(cfg)
         img.Size = UDim2.new(0, 14, 0, 14)
         img.Parent = b
         ApplyIcon(img, iconName, Theme.TextDim)
-
         b.MouseEnter:Connect(function()
             Tween(b, { BackgroundColor3 = hoverColor or Theme.ElementHover }, 0.12)
             Tween(img, { ImageColor3 = Theme.Text }, 0.12)
@@ -427,59 +563,25 @@ function NovaUI:CreateWindow(cfg)
         end
     end)
 
-    local MinimizerBtn
+    local OpenBtn
     local function SetMainVisible(vis)
         Main.Visible = vis
-        if MinimizerBtn then MinimizerBtn.Visible = not vis end
+        if OpenBtn then OpenBtn.Visible = not vis end
     end
 
-    if miniCfg.Enabled then
-        MinimizerBtn = Instance.new("ImageButton")
-        MinimizerBtn.Name = "Minimizer"
-        MinimizerBtn.Size = miniCfg.Size
-        MinimizerBtn.Position = miniCfg.Position
-        MinimizerBtn.BackgroundColor3 = miniCfg.BackgroundColor
-        MinimizerBtn.BorderSizePixel = 0
-        MinimizerBtn.AutoButtonColor = false
-        MinimizerBtn.Visible = false
-        MinimizerBtn.Parent = ScreenGui
-        Corner(MinimizerBtn, miniCfg.CornerRadius)
-        if miniCfg.Stroke then
-            Stroke(MinimizerBtn, miniCfg.StrokeColor, miniCfg.StrokeThickness)
-        end
+    local function HideUI()
+        state.hidden = true
+        SetMainVisible(false)
+    end
 
-        local mImg = Instance.new("ImageLabel")
-        mImg.BackgroundTransparency = 1
-        mImg.AnchorPoint = Vector2.new(0.5, 0.5)
-        mImg.Position = UDim2.new(0.5, 0, 0.5, 0)
-        mImg.Size = UDim2.new(0, 22, 0, 22)
-        mImg.Parent = MinimizerBtn
-        ApplyIcon(mImg, miniCfg.Icon, miniCfg.IconColor)
+    local function ShowUI()
+        state.hidden = false
+        SetMainVisible(true)
+    end
 
-        MinimizerBtn.MouseButton1Click:Connect(function()
-            state.hidden = false
-            SetMainVisible(true)
-        end)
-
-        local mDrag, mStart, mPos
-        MinimizerBtn.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                mDrag = true
-                mStart = input.Position
-                mPos = MinimizerBtn.Position
-            end
-        end)
-        MinimizerBtn.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                mDrag = false
-            end
-        end)
-        UserInputService.InputChanged:Connect(function(input)
-            if mDrag and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-                local d = input.Position - mStart
-                MinimizerBtn.Position = UDim2.new(mPos.X.Scale, mPos.X.Offset + d.X, mPos.Y.Scale, mPos.Y.Offset + d.Y)
-            end
-        end)
+    -- OpenButton INTERNO (siempre si Enabled)
+    if openCfg.Enabled then
+        OpenBtn = CreateOpenButton(ScreenGui, openCfg, ShowUI)
     end
 
     MinBtn.MouseButton1Click:Connect(function()
@@ -508,24 +610,9 @@ function NovaUI:CreateWindow(cfg)
         end
     end)
 
-    local function HideUI()
-        state.hidden = true
-        SetMainVisible(false)
-        NovaUI:Notify({ Title = "UI Oculta", Content = "Boton flotante o RightControl", Duration = 2 })
-    end
-
-    local function ShowUI()
-        state.hidden = false
-        SetMainVisible(true)
-    end
-
+    -- Cerrar = ocultar + boton abrir (como WindUI)
     CloseBtn.MouseButton1Click:Connect(function()
-        ScreenGui:Destroy()
-        if NotifyGui then
-            NotifyGui:Destroy()
-            NotifyGui = nil
-            NotifyHolder = nil
-        end
+        HideUI()
     end)
 
     UserInputService.InputBegan:Connect(function(input, gpe)
@@ -541,6 +628,7 @@ function NovaUI:CreateWindow(cfg)
         Hide = HideUI,
         Destroy = function()
             ScreenGui:Destroy()
+            if NotifyGui then NotifyGui:Destroy() NotifyGui = nil NotifyHolder = nil end
         end,
     }
 
@@ -550,7 +638,7 @@ function NovaUI:CreateWindow(cfg)
         local iconName = tabCfg.Icon
 
         local TabBtn = Instance.new("TextButton")
-        TabBtn.Size = UDim2.new(1, 0, 0, IsMobile and 44 or 38)
+        TabBtn.Size = UDim2.new(1, 0, 0, IsMobile and 44 or 40)
         TabBtn.BackgroundTransparency = 1
         TabBtn.BorderSizePixel = 0
         TabBtn.AutoButtonColor = false
@@ -614,7 +702,6 @@ function NovaUI:CreateWindow(cfg)
         end
 
         TabBtn.MouseButton1Click:Connect(Select)
-
         local TabObj = { Btn = TabBtn, Page = Page, Text = TabText, Icon = IconImg }
 
         function TabObj:Section(opt)
@@ -626,7 +713,7 @@ function NovaUI:CreateWindow(cfg)
             l.BackgroundTransparency = 1
             l.Size = UDim2.new(1, 0, 1, 0)
             l.Font = Enum.Font.GothamBold
-            l.TextSize = 12
+            l.TextSize = 11
             l.TextColor3 = Theme.Accent
             l.TextXAlignment = Enum.TextXAlignment.Left
             l.Text = string.upper((opt and opt.Title) or "SECTION")
@@ -637,7 +724,6 @@ function NovaUI:CreateWindow(cfg)
             opt = opt or {}
             local on = opt.Value or false
             local cb = opt.Callback or function() end
-
             local Row = Instance.new("Frame")
             Row.Size = UDim2.new(1, 0, 0, IsMobile and 48 or 44)
             Row.BackgroundColor3 = Theme.Element
@@ -645,7 +731,6 @@ function NovaUI:CreateWindow(cfg)
             Row.Parent = Page
             Corner(Row, 12)
             Stroke(Row)
-
             local Lbl = Instance.new("TextLabel")
             Lbl.BackgroundTransparency = 1
             Lbl.Position = UDim2.new(0, 14, 0, 0)
@@ -656,7 +741,6 @@ function NovaUI:CreateWindow(cfg)
             Lbl.TextXAlignment = Enum.TextXAlignment.Left
             Lbl.Text = opt.Title or "Toggle"
             Lbl.Parent = Row
-
             local Track = Instance.new("Frame")
             Track.AnchorPoint = Vector2.new(1, 0.5)
             Track.Position = UDim2.new(1, -14, 0.5, 0)
@@ -665,7 +749,6 @@ function NovaUI:CreateWindow(cfg)
             Track.BorderSizePixel = 0
             Track.Parent = Row
             Corner(Track, 12)
-
             local Knob = Instance.new("Frame")
             Knob.Size = UDim2.new(0, 18, 0, 18)
             Knob.Position = on and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
@@ -673,13 +756,11 @@ function NovaUI:CreateWindow(cfg)
             Knob.BorderSizePixel = 0
             Knob.Parent = Track
             Corner(Knob, 9)
-
             local Hit = Instance.new("TextButton")
             Hit.Size = UDim2.new(1, 0, 1, 0)
             Hit.BackgroundTransparency = 1
             Hit.Text = ""
             Hit.Parent = Row
-
             Hit.MouseButton1Click:Connect(function()
                 on = not on
                 Tween(Track, { BackgroundColor3 = on and Theme.ToggleOn or Theme.ToggleOff }, 0.18)
@@ -705,12 +786,8 @@ function NovaUI:CreateWindow(cfg)
             Btn.MouseButton1Click:Connect(function()
                 task.spawn(opt.Callback or function() end)
             end)
-            Btn.MouseEnter:Connect(function()
-                Tween(Btn, { BackgroundColor3 = Theme.ElementHover }, 0.12)
-            end)
-            Btn.MouseLeave:Connect(function()
-                Tween(Btn, { BackgroundColor3 = Theme.Element }, 0.12)
-            end)
+            Btn.MouseEnter:Connect(function() Tween(Btn, { BackgroundColor3 = Theme.ElementHover }, 0.12) end)
+            Btn.MouseLeave:Connect(function() Tween(Btn, { BackgroundColor3 = Theme.Element }, 0.12) end)
         end
 
         function TabObj:Slider(opt)
@@ -719,7 +796,6 @@ function NovaUI:CreateWindow(cfg)
             local max = (opt.Value and opt.Value.Max) or opt.Max or 100
             local value = (opt.Value and opt.Value.Default) or opt.Default or min
             local cb = opt.Callback or function() end
-
             local Row = Instance.new("Frame")
             Row.Size = UDim2.new(1, 0, 0, 58)
             Row.BackgroundColor3 = Theme.Element
@@ -727,7 +803,6 @@ function NovaUI:CreateWindow(cfg)
             Row.Parent = Page
             Corner(Row, 12)
             Stroke(Row)
-
             local Lbl = Instance.new("TextLabel")
             Lbl.BackgroundTransparency = 1
             Lbl.Position = UDim2.new(0, 14, 0, 8)
@@ -738,7 +813,6 @@ function NovaUI:CreateWindow(cfg)
             Lbl.TextXAlignment = Enum.TextXAlignment.Left
             Lbl.Text = opt.Title or "Slider"
             Lbl.Parent = Row
-
             local ValLbl = Instance.new("TextLabel")
             ValLbl.BackgroundTransparency = 1
             ValLbl.AnchorPoint = Vector2.new(1, 0)
@@ -750,7 +824,6 @@ function NovaUI:CreateWindow(cfg)
             ValLbl.TextXAlignment = Enum.TextXAlignment.Right
             ValLbl.Text = tostring(value)
             ValLbl.Parent = Row
-
             local BarBG = Instance.new("Frame")
             BarBG.Position = UDim2.new(0, 14, 0, 36)
             BarBG.Size = UDim2.new(1, -28, 0, 6)
@@ -758,14 +831,12 @@ function NovaUI:CreateWindow(cfg)
             BarBG.BorderSizePixel = 0
             BarBG.Parent = Row
             Corner(BarBG, 3)
-
             local BarFill = Instance.new("Frame")
             BarFill.Size = UDim2.new((value - min) / math.max(max - min, 1), 0, 1, 0)
             BarFill.BackgroundColor3 = Theme.Accent
             BarFill.BorderSizePixel = 0
             BarFill.Parent = BarBG
             Corner(BarFill, 3)
-
             local sliding = false
             local function update(x)
                 local rel = math.clamp((x - BarBG.AbsolutePosition.X) / BarBG.AbsoluteSize.X, 0, 1)
@@ -774,7 +845,6 @@ function NovaUI:CreateWindow(cfg)
                 ValLbl.Text = tostring(value)
                 task.spawn(cb, value)
             end
-
             BarBG.InputBegan:Connect(function(input)
                 if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
                     sliding = true
@@ -798,7 +868,6 @@ function NovaUI:CreateWindow(cfg)
             local values = opt.Values or opt.Options or {}
             local selected = opt.Value or values[1]
             local cb = opt.Callback or function() end
-
             local Row = Instance.new("Frame")
             Row.Size = UDim2.new(1, 0, 0, 44)
             Row.BackgroundColor3 = Theme.Element
@@ -807,7 +876,6 @@ function NovaUI:CreateWindow(cfg)
             Row.Parent = Page
             Corner(Row, 12)
             Stroke(Row)
-
             local Lbl = Instance.new("TextLabel")
             Lbl.BackgroundTransparency = 1
             Lbl.Position = UDim2.new(0, 14, 0, 0)
@@ -818,7 +886,6 @@ function NovaUI:CreateWindow(cfg)
             Lbl.TextXAlignment = Enum.TextXAlignment.Left
             Lbl.Text = opt.Title or "Dropdown"
             Lbl.Parent = Row
-
             local SelectedLbl = Instance.new("TextLabel")
             SelectedLbl.BackgroundTransparency = 1
             SelectedLbl.AnchorPoint = Vector2.new(1, 0)
@@ -830,24 +897,20 @@ function NovaUI:CreateWindow(cfg)
             SelectedLbl.TextXAlignment = Enum.TextXAlignment.Right
             SelectedLbl.Text = tostring(selected or "Select")
             SelectedLbl.Parent = Row
-
             local open = false
             local Hit = Instance.new("TextButton")
             Hit.Size = UDim2.new(1, 0, 0, 44)
             Hit.BackgroundTransparency = 1
             Hit.Text = ""
             Hit.Parent = Row
-
             local OptionsFrame = Instance.new("Frame")
             OptionsFrame.Position = UDim2.new(0, 10, 0, 44)
             OptionsFrame.Size = UDim2.new(1, -20, 0, 0)
             OptionsFrame.BackgroundTransparency = 1
             OptionsFrame.Parent = Row
-
             local OptLayout = Instance.new("UIListLayout")
             OptLayout.Padding = UDim.new(0, 4)
             OptLayout.Parent = OptionsFrame
-
             for _, v in ipairs(values) do
                 local OptBtn = Instance.new("TextButton")
                 OptBtn.Size = UDim2.new(1, 0, 0, 30)
@@ -868,7 +931,6 @@ function NovaUI:CreateWindow(cfg)
                     task.spawn(cb, v)
                 end)
             end
-
             Hit.MouseButton1Click:Connect(function()
                 open = not open
                 Row.Size = open and UDim2.new(1, 0, 0, 44 + (#values * 34) + 10) or UDim2.new(1, 0, 0, 44)
