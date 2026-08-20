@@ -1,13 +1,3 @@
---[[
-    NovaUI v3
-    Librería UI estilo WindUI
-    Uso:
-      local NovaUI = loadstring(game:HttpGet("TU_LINK"))()
-      -- o require(ModuleScript)
-
-      local Window = NovaUI:CreateWindow({ Title = "OK Hub", Minimizer = { ... } })
-]]
-
 local NovaUI = {}
 NovaUI.__index = NovaUI
 NovaUI.Version = "3.0.0"
@@ -101,7 +91,7 @@ local function Padding(p, t, b, l, r)
     return x
 end
 
--- ==================== NOTIFY (solo se crea al usar) ====================
+-- ==================== NOTIFY ====================
 local NotifyGui, NotifyHolder
 
 local function EnsureNotify()
@@ -190,7 +180,6 @@ function NovaUI:CreateWindow(cfg)
     local SIDE_W      = IsMobile and 54 or 156
     local TITLE_H     = 44
 
-    -- Minimizer config
     local miniCfg = cfg.Minimizer
     if miniCfg == false then
         miniCfg = { Enabled = false }
@@ -246,7 +235,6 @@ function NovaUI:CreateWindow(cfg)
     Corner(Main, 14)
     Stroke(Main)
 
-    -- Title bar
     local TitleBar = Instance.new("Frame")
     TitleBar.Size = UDim2.new(1, 0, 0, TITLE_H)
     TitleBar.BackgroundColor3 = Theme.TitleBar
@@ -272,7 +260,6 @@ function NovaUI:CreateWindow(cfg)
     TitleLbl.Text = title .. (subTitle \~= "" and ("  ·  " .. subTitle) or "")
     TitleLbl.Parent = TitleBar
 
-    -- Window controls
     local Controls = Instance.new("Frame")
     Controls.AnchorPoint = Vector2.new(1, 0.5)
     Controls.Position = UDim2.new(1, -10, 0.5, 0)
@@ -308,12 +295,11 @@ function NovaUI:CreateWindow(cfg)
         return b
     end
 
-    local MinBtn = Ctrl("–", Theme.TextDim)
-    local MaxBtn = Ctrl("□", Theme.TextDim)
-    local HideBtn = Ctrl("◉", Theme.Warning)
-    local CloseBtn = Ctrl("✕", Theme.Danger)
+    local MinBtn = Ctrl("-", Theme.TextDim)
+    local MaxBtn = Ctrl("[]", Theme.TextDim)
+    local HideBtn = Ctrl("O", Theme.Warning)
+    local CloseBtn = Ctrl("X", Theme.Danger)
 
-    -- Body
     local Body = Instance.new("Frame")
     Body.Position = UDim2.new(0, 0, 0, TITLE_H)
     Body.Size = UDim2.new(1, 0, 1, -TITLE_H)
@@ -355,7 +341,6 @@ function NovaUI:CreateWindow(cfg)
         lastPos = Main.Position,
     }
 
-    -- Drag window
     local dragging, dragStart, startPos
     TitleBar.InputBegan:Connect(function(input)
         if state.maximized then return end
@@ -377,7 +362,6 @@ function NovaUI:CreateWindow(cfg)
         end
     end)
 
-    -- Minimizer button
     local MinimizerBtn
 
     local function SetMainVisible(vis)
@@ -460,7 +444,6 @@ function NovaUI:CreateWindow(cfg)
         end)
     end
 
-    -- Controls actions
     MinBtn.MouseButton1Click:Connect(function()
         state.minimized = not state.minimized
         if state.minimized then
@@ -471,7 +454,7 @@ function NovaUI:CreateWindow(cfg)
         else
             Body.Visible = true
             Tween(Main, { Size = state.maximized and SIZE_MAX or state.lastSize }, 0.25)
-            MinBtn.Text = "–"
+            MinBtn.Text = "-"
         end
     end)
 
@@ -482,17 +465,17 @@ function NovaUI:CreateWindow(cfg)
             state.lastSize = Main.Size
             state.lastPos = Main.Position
             Tween(Main, { Size = SIZE_MAX, Position = UDim2.new(0.5, 0, 0.5, 0) }, 0.25)
-            MaxBtn.Text = "❐"
+            MaxBtn.Text = "[=]"
         else
             Tween(Main, { Size = state.lastSize, Position = state.lastPos }, 0.25)
-            MaxBtn.Text = "□"
+            MaxBtn.Text = "[]"
         end
     end)
 
     local function HideUI()
         state.hidden = true
         SetMainVisible(false)
-        NovaUI:Notify({ Title = "UI Oculta", Content = "Botón flotante o RightControl", Duration = 2 })
+        NovaUI:Notify({ Title = "UI Oculta", Content = "Boton flotante o RightControl", Duration = 2 })
     end
 
     local function ShowUI()
@@ -518,7 +501,6 @@ function NovaUI:CreateWindow(cfg)
         end
     end)
 
-    -- ==================== WINDOW API ====================
     local WindowObj = {
         _tabs = {},
         _gui = ScreenGui,
