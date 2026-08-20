@@ -1,6 +1,11 @@
+--[[
+    NovaUI v3
+    Libreria UI estilo WindUI
+]]
+
 local NovaUI = {}
 NovaUI.__index = NovaUI
-NovaUI.Version = "3.0.0"
+NovaUI.Version = "3.0.1"
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
@@ -10,7 +15,6 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local IsMobile = UserInputService.TouchEnabled
 
--- ==================== LUCIDE ICONS ====================
 local Icons = {
     ["swords"] = "rbxassetid://10734975692",
     ["settings"] = "rbxassetid://10734950309",
@@ -40,7 +44,6 @@ local function GetIcon(name)
     return Icons[tostring(name)]
 end
 
--- ==================== THEME ====================
 local Theme = {
     Background   = Color3.fromRGB(14, 14, 18),
     Sidebar      = Color3.fromRGB(18, 18, 24),
@@ -59,7 +62,6 @@ local Theme = {
     Success      = Color3.fromRGB(70, 220, 130),
 }
 
--- ==================== UTILS ====================
 local function Tween(obj, props, t)
     local tw = TweenService:Create(obj, TweenInfo.new(t or 0.2, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props)
     tw:Play()
@@ -91,7 +93,6 @@ local function Padding(p, t, b, l, r)
     return x
 end
 
--- ==================== NOTIFY ====================
 local NotifyGui, NotifyHolder
 
 local function EnsureNotify()
@@ -167,7 +168,6 @@ function NovaUI:Notify(cfg)
     end)
 end
 
--- ==================== CREATE WINDOW ====================
 function NovaUI:CreateWindow(cfg)
     cfg = cfg or {}
     local title = cfg.Title or "NovaUI"
@@ -183,7 +183,7 @@ function NovaUI:CreateWindow(cfg)
     local miniCfg = cfg.Minimizer
     if miniCfg == false then
         miniCfg = { Enabled = false }
-    elseif typeof(miniCfg) \~= "table" then
+    elseif not (typeof(miniCfg) == "table") then
         miniCfg = {
             Enabled = true,
             Icon = cfg.Icon or "menu",
@@ -200,7 +200,7 @@ function NovaUI:CreateWindow(cfg)
             CornerRadius = 14,
         }
     else
-        miniCfg.Enabled = miniCfg.Enabled \~= false
+        if miniCfg.Enabled == nil then miniCfg.Enabled = true end
         miniCfg.Icon = miniCfg.Icon or cfg.Icon or "menu"
         miniCfg.Size = miniCfg.Size or UDim2.new(0, 52, 0, 52)
         miniCfg.Position = miniCfg.Position or UDim2.new(0, 16, 1, -80)
@@ -257,7 +257,11 @@ function NovaUI:CreateWindow(cfg)
     TitleLbl.TextSize = 14
     TitleLbl.TextColor3 = Theme.Text
     TitleLbl.TextXAlignment = Enum.TextXAlignment.Left
-    TitleLbl.Text = title .. (subTitle \~= "" and ("  ·  " .. subTitle) or "")
+    if subTitle == "" then
+        TitleLbl.Text = title
+    else
+        TitleLbl.Text = title .. "  |  " .. subTitle
+    end
     TitleLbl.Parent = TitleBar
 
     local Controls = Instance.new("Frame")
@@ -388,7 +392,7 @@ function NovaUI:CreateWindow(cfg)
         end
 
         local imgId = miniCfg.Image or GetIcon(miniCfg.Icon)
-        if imgId and imgId \~= "" then
+        if imgId and not (imgId == "") then
             MinimizerBtn.Image = imgId
             MinimizerBtn.ImageColor3 = miniCfg.IconColor
             MinimizerBtn.ScaleType = Enum.ScaleType.Fit
@@ -400,7 +404,7 @@ function NovaUI:CreateWindow(cfg)
             pad.Parent = MinimizerBtn
         end
 
-        if miniCfg.Text and miniCfg.Text \~= "" then
+        if miniCfg.Text and not (miniCfg.Text == "") then
             local tl = Instance.new("TextLabel")
             tl.BackgroundTransparency = 1
             tl.Size = UDim2.new(1, 0, 1, 0)
@@ -542,7 +546,7 @@ function NovaUI:CreateWindow(cfg)
         end
         IconImg.Image = iconId or ""
         IconImg.ImageColor3 = Theme.TextDim
-        IconImg.Visible = iconId \~= nil
+        IconImg.Visible = not (iconId == nil)
         IconImg.Parent = TabBtn
 
         local TabText = Instance.new("TextLabel")
