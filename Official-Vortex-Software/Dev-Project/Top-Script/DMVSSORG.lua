@@ -73,13 +73,13 @@ end
 local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
 
 if not WindUI then
-    warn("Failed to load WindUI. Your executor might not be compatible.")
+    warn("No se pudo cargar WindUI. Es posible que su ejecutor no sea compatible.")
     return
 end
 
 WindUI:Notify({
     Title = "Software Vortex-x",
-    Content = "Logging in... Please wait.",
+    Content = "Iniciando sesión... Por favor, espere.",
     Duration = 3
 })
 
@@ -87,7 +87,7 @@ task.wait(2)
 
 WindUI:Notify({
     Title = "Software Vortex-x",
-    Content = "Access Granted, " .. LocalPlayer.Name .. "! Loading interface...",
+    Content = "Acceso concedido, " .. LocalPlayer.Name .. "! Interfaz de carga...",
     Duration = 2
 })
 
