@@ -2392,17 +2392,22 @@ teleportsTab:Button({
     end
 })
 
-teleportsTab:Divider()
-teleportsTab:Paragraph({ Title = "Sheriff Gun Utilities", Desc = "Instant gun retrieval options" })
+--------------------------------------------------
+-- 7. INOCENT TAB
+--------------------------------------------------
+local inocentTab = Window:Tab({ Title = "Inocent", Icon = "shield", ShowTabTitle = true, Border = true })
 
-teleportsTab:Button({ 
+inocentTab:Divider()
+inocentTab:Paragraph({ Title = "Sheriff Gun & Innocent Utilities", Desc = "Tools for innocents to retrieve and track the dropped gun" })
+
+inocentTab:Button({ 
     Title = "Get Gun Instantly", 
     Callback = function() 
         pcall(instantGrabGun) 
     end 
 })
 
-teleportsTab:Keybind({
+inocentTab:Keybind({
     Title = "Get Gun Instantly Keybind",
     Key = "None",
     Callback = function()
@@ -2410,7 +2415,7 @@ teleportsTab:Keybind({
     end
 })
 
-teleportsTab:Toggle({ 
+inocentTab:Toggle({ 
     Title = "Auto Get Gun", 
     Default = false, 
     Callback = function(state) 
@@ -2418,7 +2423,7 @@ teleportsTab:Toggle({
     end 
 })
 
-teleportsTab:Toggle({
+inocentTab:Toggle({
     Title = "Floating Get Gun Button (Mobile)",
     Desc = "Boton flotante: TP a la pistola, la toma y regresa.",
     Default = false,
@@ -2426,6 +2431,29 @@ teleportsTab:Toggle({
         createFloatingGunButton(val)
     end
 })
+
+inocentTab:Divider()
+inocentTab:Paragraph({ Title = "Gun Drop Notifications", Desc = "Alerts you when the sheriff's gun is dropped" })
+
+local notifyGunDropEnabled = false
+inocentTab:Toggle({
+    Title = "Notificar Arma Caída",
+    Desc = "Muestra una notificación cuando la pistola es tirada al suelo.",
+    Default = false,
+    Callback = function(val)
+        notifyGunDropEnabled = val
+    end
+})
+
+workspace.DescendantAdded:Connect(function(child)
+    if notifyGunDropEnabled and (child.Name == "GunDrop" and child:IsA("BasePart")) then
+        WindUI:Notify({
+            Title = "¡Alerta de Arma!",
+            Content = "¡El arma del Sheriff ha caído al suelo!",
+            Duration = 4
+        })
+    end
+end)
 
 task.spawn(function()
     while true do
@@ -2447,7 +2475,7 @@ task.spawn(function()
 end)
 
 --------------------------------------------------
--- 7. MISC / FUN TAB
+-- 8. MISC / FUN TAB
 --------------------------------------------------
 local miscTab = Window:Tab({ Title = "Misc / Fun", Icon = "sparkles", ShowTabTitle = true, Border = true })
 
@@ -2557,4 +2585,5 @@ task.spawn(function()
     end
 end)
 
-print("[Vortex] Script cargado OK con teletransporte optimizado y selector de roles ESP mediante Dropdown + Toggle maestro.")
+print("[Vortex] Script cargado OK con pestaña Inocent, Auto Get Gun, Botón Flotante y Notificador de Arma Caída.")
+
