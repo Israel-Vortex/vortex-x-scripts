@@ -8,7 +8,8 @@ local BASE_URL = "https://raw.githubusercontent.com/Israel-Vortex/vortex-x-scrip
 local games = {
     [93978595733734]  = "V-DISTRICT.lua",
     [135856908115931] = "DMVSS.lua",
-    [142823291]       = "MM2.lua"
+    [142823291]       = "MM2.lua",
+    [286090429]       = "Arsenal.lua",
 }
 
 local scriptFile = games[game.PlaceId]
