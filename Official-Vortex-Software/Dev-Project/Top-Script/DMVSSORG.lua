@@ -1,5 +1,5 @@
 -- ==========================================
--- SOFTWARE VORTEX X V3.2.4 [DMvSS] - WIND UI
+-- VORTEX X SOFTWARE V3.2.4 [DMvSS] - WIND UI
 -- MULTI-EXECUTOR (PC, Delta, Hydrogen, CodeX, etc.)
 -- ==========================================
 
@@ -78,7 +78,7 @@ if not WindUI then
 end
 
 WindUI:Notify({
-    Title = "Software Vortex-x",
+    Title = "Vortex x Software",
     Content = "Iniciando sesión... Por favor, espere.",
     Duration = 3
 })
@@ -86,7 +86,7 @@ WindUI:Notify({
 task.wait(2)
 
 WindUI:Notify({
-    Title = "Software Vortex-x",
+    Title = "Vortex x Software",
     Content = "Acceso concedido, " .. LocalPlayer.Name .. "! Interfaz de carga...",
     Duration = 2
 })
@@ -94,7 +94,7 @@ WindUI:Notify({
 task.wait(1)
 
 local Window = WindUI:CreateWindow({
-    Title = "Software Vortex X [DMvSS]",
+    Title = "Vortex x Software [DMvSS]",
     Icon = "rbxassetid://134730158740955",
     IconSize = "35",
     Author = "by Israelcc",
@@ -281,7 +281,7 @@ InfoTab:Toggle({
     Desc = "Activar avisos en pantalla",
     Default = false,
     Callback = function(notifVal)
-        WindUI:Notify({ Title = "Software Vortex X", Content = "Notifications: " .. tostring(notifVal), Duration = 2 })
+        WindUI:Notify({ Title = "Vortex x Software", Content = "Notifications: " .. tostring(notifVal), Duration = 2 })
     end
 })
 
@@ -502,7 +502,7 @@ local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
 
     WindUI:Notify({
-        Title = "Software Vortex X",
+        Title = "Vortex x Software",
         Content = "Ghost Mode: " .. (invisState.isInvisible and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
@@ -622,7 +622,7 @@ local function executeDesyncLogic()
     desyncState.isDesynced = not desyncState.isDesynced
 
     WindUI:Notify({
-        Title = "Software Vortex X",
+        Title = "Vortex x Software",
         Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
@@ -735,7 +735,7 @@ local function executeInstaKillLogic()
     getgenv().instaKillState = not getgenv().instaKillState
 
     WindUI:Notify({
-        Title = "Software Vortex X",
+        Title = "Vortex x Software",
         Content = "Insta Kill (Beta): " .. (getgenv().instaKillState and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
@@ -1664,7 +1664,7 @@ visualsTab:Toggle({
             workspace.StreamingEnabled = true
             workspace.StreamingMinRadius = 30
 
-            WindUI:Notify({ Title = "Software Vortex X", Content = "Fix Lag Optimize Activado", Duration = 2 })
+            WindUI:Notify({ Title = "Vortex x Software", Content = "Fix Lag Optimize Activado", Duration = 2 })
         end
     end
 })
