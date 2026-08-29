@@ -57,7 +57,7 @@ WindUI:SetTheme("VortexCrimsonSolid")
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex x Software [ARSENAL]",
-    Icon = "rbxassetid://134730158740955",
+    Icon = "rbxassetid://80571845178865",
     IconSize = 35,
     Author = "by ISRAEL CC",
     Folder = "VortexXSoftwareArsenal",
@@ -70,7 +70,7 @@ local Window = WindUI:CreateWindow({
 
 Window:EditOpenButton({
     Title = "VXS",
-    Icon = "rbxassetid://134730158740955",
+    Icon = "rbxassetid://80571845178865",
     CornerRadius = UDim.new(1, 0),
     StrokeThickness = 2,
     Color = ColorSequence.new({
