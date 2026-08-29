@@ -1514,6 +1514,161 @@ end
 
 visualsTab:Toggle({ Title = "Night Mode Shaders", Desc = "Activa galaxia oscura, profunda y cristalina", Default = false, Callback = shadersCallback })
 
+-- Toggle Fix Lag Optimize en la sección de Shaders
+visualsTab:Toggle({
+    Title = "Fix Lag Optimize",
+    Desc = "Elimina efectos, partículas y objetos innecesarios para mejorar los FPS",
+    Default = false,
+    Callback = function(estado)
+        if estado then
+            local function GetProtectedParts()
+                local protected = {}
+
+                local char = LocalPlayer.Character
+                if char then
+                    for _, v in pairs(char:GetDescendants()) do
+                        if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+                            protected[v] = true
+                        end
+                    end
+                end
+
+                for _, player in pairs(Players:GetPlayers()) do
+                    if player ~= LocalPlayer and player.Character then
+                        for _, v in pairs(player.Character:GetDescendants()) do
+                            if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+                                protected[v] = true
+                            end
+                        end
+                    end
+                end
+
+                for _, v in pairs(workspace:GetChildren()) do
+                    if (v:IsA("Part") or v:IsA("MeshPart") or v:IsA("Model")) then
+                        local n = v.Name:lower()
+                        if n:match("base") or n:match("floor") or n:match("ground") or n:match("map") or n:match("spawn") then
+                            protected[v] = true
+                        end
+                    end
+                end
+
+                return protected
+            end
+
+            local function RemoveEffects()
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or
+                       v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or
+                       v:IsA("Explosion") then
+                        pcall(function()
+                            v:Destroy()
+                        end)
+                    end
+                end
+            end
+
+            RemoveEffects()
+
+            local function RemoveBlocks()
+                local protected = GetProtectedParts()
+
+                for _, v in pairs(workspace:GetDescendants()) do
+                    if protected[v] then
+                        continue
+                    end
+
+                    if LocalPlayer.Character and v:IsDescendantOf(LocalPlayer.Character) then
+                        continue
+                    end
+
+                    local isPlayer = false
+                    for _, player in pairs(Players:GetPlayers()) do
+                        if player.Character and v:IsDescendantOf(player.Character) then
+                            isPlayer = true
+                            break
+                        end
+                    end
+
+                    if isPlayer then
+                        continue
+                    end
+
+                    if v:IsA("Part") or v:IsA("MeshPart") or v:IsA("UnionOperation") then
+                        local name = v.Name:lower()
+                        local size = v.Size or Vector3.new()
+
+                        local keywords = {
+                            "debris","rubble","rock","stone","fragment","piece","chip","shard",
+                            "dust","smash","break","crack","shatter","explosion","block",
+                            "decal","texture","foliage","grass","tree","bush","prop","decoration"
+                        }
+
+                        local remove = false
+
+                        for _, k in pairs(keywords) do
+                            if name:match(k) then
+                                remove = true
+                                break
+                            end
+                        end
+
+                        if not remove and size.X < 3 and size.Y < 3 and size.Z < 3 then
+                            remove = true
+                        end
+
+                        if remove then
+                            pcall(function()
+                                v:Destroy()
+                            end)
+                        end
+                    end
+                end
+            end
+
+            RemoveBlocks()
+
+            workspace.DescendantAdded:Connect(function(v)
+                task.wait(0.05)
+
+                if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") or
+                   v:IsA("Fire") or v:IsA("Smoke") or v:IsA("Sparkles") or
+                   v:IsA("Explosion") then
+                    pcall(function()
+                        v:Destroy()
+                    end)
+                    return
+                end
+
+                if v:IsA("Part") or v:IsA("MeshPart") then
+                    if v.Parent and not v:IsDescendantOf(LocalPlayer.Character) then
+                        local name = v.Name:lower()
+                        local keywords = {
+                            "debris","rubble","block","decal","grass","tree",
+                            "bush","rock","stone","fragment","piece","shard"
+                        }
+
+                        for _, k in pairs(keywords) do
+                            if name:match(k) then
+                                pcall(function()
+                                    v:Destroy()
+                                end)
+                                break
+                            end
+                        end
+                    end
+                end
+            end)
+
+            Lighting.GlobalShadows = false
+            Lighting.Brightness = 0.5
+            workspace.StreamingEnabled = true
+            workspace.StreamingMinRadius = 30
+
+            WindUI:Notify({ Title = "Software Vortex X", Content = "Fix Lag Optimize Activado", Duration = 2 })
+        end
+    end
+})
+
 visualsTab:Divider()
 visualsTab:Paragraph({ Title = "Enemy ESP", Desc = "" })
 
@@ -1800,4 +1955,3 @@ RunService.RenderStepped:Connect(function()
         end)
     end
 end)
-
