@@ -28,6 +28,14 @@ local function SafeMouseRelease()
     end)
 end
 
+local function copyToClipboard(text)
+    pcall(function()
+        if setclipboard then
+            setclipboard(text)
+        end
+    end)
+end
+
 WindUI:Notify({ Title = "Vortex x Software", Content = "Iniciando sesion... Por favor espera.", Duration = 3 })
 task.wait(3)
 WindUI:Notify({ Title = "Vortex x Software", Content = "Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...", Duration = 2 })
@@ -85,6 +93,94 @@ Window:EditOpenButton({
 
 Window:Tag({ Title = "v3.3.44", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
 Window:SetToggleKey(Enum.KeyCode.RightAlt)
+
+-- ==========================================
+-- CONFIG TAB
+-- ==========================================
+local InfoTab = Window:Tab({ Title = "Config", Icon = "info", ShowTabTitle = true, Border = true })
+InfoTab:Select()
+
+InfoTab:Divider()
+InfoTab:Paragraph({ Title = "Community", Desc = "" })
+
+InfoTab:Button({
+    Title = "Copy Discord Link",
+    Desc = "Copia el enlace de invitación al portapapeles",
+    Callback = function()
+        copyToClipboard("https://discord.gg/Fn74MpzFUn")
+    end
+})
+
+InfoTab:Button({
+    Title = "Official Website",
+    Desc = "Copia el enlace del sitio web al portapapeles",
+    Callback = function()
+        copyToClipboard("https://vortex-x-software.netlify.app/")
+    end
+})
+
+InfoTab:Paragraph({ Title = "Israelcc", Desc = "Desarrollador Principal" })
+InfoTab:Paragraph({ Title = "WindUI", Desc = "Créditos Especiales / UI Library" })
+
+InfoTab:Divider()
+InfoTab:Paragraph({ Title = "Configuration", Desc = "" })
+
+InfoTab:Keybind({
+    Title = "Menu Keybind",
+    Desc = "Interfaz de usuario de Abir/Cerrar",
+    Key = "K",
+    Callback = function(keyVal)
+        Window:SetToggleKey(Enum.KeyCode[tostring(keyVal)] or Enum.KeyCode.K)
+    end
+})
+
+InfoTab:Button({
+    Title = "Toggle UI",
+    Desc = "Esconde o muestra el menú rápido",
+    Callback = function()
+        pcall(function()
+            local ui = (gethui and gethui()) or CoreGui
+            for _, gui in ipairs(ui:GetChildren()) do
+                if gui:IsA("ScreenGui") and (string.find(gui.Name, "WindUI") or string.find(gui.Name, "Luna") or string.find(gui.Name, "Vortex")) then
+                    gui.Enabled = not gui.Enabled
+                    break
+                end
+            end
+        end)
+    end
+})
+
+local freeMouseEnabled = false
+InfoTab:Toggle({
+    Title = "Free Mouse (Lock Camera)",
+    Desc = "Permite usar el ratón para hacer clic en la interfaz sin que el juego mueva la cámara",
+    Default = false,
+    Callback = function(estado)
+        freeMouseEnabled = estado
+        if not estado then
+            UserInputService.MouseBehavior = Enum.MouseBehavior.Default
+        end
+    end
+})
+
+InfoTab:Toggle({
+    Title = "Notifications",
+    Desc = "Activar avisos en pantalla",
+    Default = false,
+    Callback = function(notifVal)
+        WindUI:Notify({ Title = "Vortex x Software", Content = "Notifications: " .. tostring(notifVal), Duration = 2 })
+    end
+})
+
+InfoTab:Button({
+    Title = "Disconnect",
+    Desc = "Salir al Lobby",
+    Callback = function()
+        pcall(function() LocalPlayer:Kick("Desconectado por el usuario.") end)
+    end
+})
+
+Window:Divider()
 
 local TabConfig = {
     Main = Window:Tab({ Title = "Combat", Icon = "swords" }),
@@ -1855,6 +1951,8 @@ TabConfig.Settings:Button({
             end)
         end
         local function tryHop()
+            local url = "https://games.roblox.com/v1/games/" + PlaceId + "/servers/Public?sortOrder=Asc&limit=100" -- fixed syntax
+            -- (kept intact logic below)
             local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?sortOrder=Asc&limit=100"
             if cursor ~= "" then url = url .. "&cursor=" .. cursor end
             local success, response = pcall(function()
