@@ -10,7 +10,7 @@ local games = {
     [135856908115931] = "DMVSS.lua",
     [142823291]       = "MM2.lua",
     [286090429]       = "Arsenal.lua",
-    [125927821145949] = "Mountain.lua",
+    [125927821145949] = "MOUNTAIN.lua",
 }
 
 local scriptFile = games[game.PlaceId]
