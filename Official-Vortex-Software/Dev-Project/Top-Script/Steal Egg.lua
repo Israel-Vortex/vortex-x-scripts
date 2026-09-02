@@ -4351,7 +4351,7 @@ pcall(function()
 end)
 
 pcall(function()
-    windowResult.Window:Tag({ Title = "v3.3.44", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
+    windowResult.Window:Tag({ Title = "v1.44", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
 end)
 
 pcall(function()
