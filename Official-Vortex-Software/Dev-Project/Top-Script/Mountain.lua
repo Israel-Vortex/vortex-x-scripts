@@ -270,7 +270,7 @@ Window:EditOpenButton({
     Draggable = true
 })
 
-Window:Tag({ Title = "v3.3.44", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
+Window:Tag({ Title = "v1.3.4", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
 Window:SetToggleKey(Enum.KeyCode.RightAlt)
 
 local Tabs = {
