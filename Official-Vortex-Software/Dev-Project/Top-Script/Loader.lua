@@ -11,6 +11,7 @@ local games = {
     [142823291]       = "MM2.lua",
     [286090429]       = "Arsenal.lua",
     [125927821145949] = "MOUNTAIN.lua",
+    [107778070777162] = "StealanEgg.lua",
 }
 
 local scriptFile = games[game.PlaceId]
