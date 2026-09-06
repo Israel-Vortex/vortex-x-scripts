@@ -69,6 +69,7 @@ local Window = WindUI:CreateWindow({
     IconSize = 35,
     Author = "by ISRAEL CC",
     Folder = "VortexXSoftwareArsenal",
+    Background = "rbxassetid://129234239237449",
     Resizable = false,
     HideSearchBar = true,
     Transparent = false,
