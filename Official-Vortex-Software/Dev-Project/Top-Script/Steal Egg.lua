@@ -4323,6 +4323,7 @@ windowResult.Window = CreateWindow(createWindowResult, {
     IconSize = 35,
     Author = "by ISRAEL CC",
     Folder = "VortexXSoftwareStealAnEgg",
+    Background = "rbxassetid://129234239237449",
     Size = UDim2.fromOffset(580, 430),
     Resizable = false,
     HideSearchBar = true,
