@@ -128,6 +128,12 @@ local function _randName(len)
     return out
 end
 
+-- Nombres tipo juego (menos sospechosos que Vortex/Astra/Invis)
+local function _gameLikeName()
+    local prefixes = { "Camera", "Effect", "Track", "Bind", "Cache", "Proxy", "Node", "Slot", "Layer", "Buffer", "Mesh", "Anim" }
+    return prefixes[math.random(1, #prefixes)] .. _randName(8)
+end
+
 local function _safeCloneref(obj)
     local ok, res = pcall(function()
         if cloneref then return cloneref(obj) end
@@ -196,7 +202,7 @@ end)
 
 -- Contenedor oculto (nombre random, no "Vortex...")
 local ProtectedGui = Instance.new("Folder")
-ProtectedGui.Name = _randName(14)
+ProtectedGui.Name = _gameLikeName()
 _protectInstance(ProtectedGui)
 _setHiddenParent(ProtectedGui)
 
@@ -206,7 +212,7 @@ if not IsMobile then
         while task.wait(8) do
             pcall(function()
                 if ProtectedGui and ProtectedGui.Parent then
-                    ProtectedGui.Name = _randName(14)
+                    ProtectedGui.Name = _gameLikeName()
                 end
             end)
         end
@@ -405,6 +411,10 @@ local function setSpoofedCollide(hrp, collide)
     if spoofedCanCollide[hrp] == nil then spoofedCanCollide[hrp] = hrp.CanCollide end
     hrp.CanCollide = collide
 end
+
+local hitboxAdornName = _gameLikeName()
+local infectAttrName = _randName(10)
+local silentTargetPart = nil -- local target (no getgenv Astra*)
 
 -- ==========================================
 -- CONTENEDORES DE TABS (SECTIONS)
@@ -1075,7 +1085,7 @@ local function executeGhostLogic()
         local safePos = savedCFrame.Position - Vector3.new(0, CONFIG_BANNABLE.INVIS_OFFSET_Y, 0)
 
         local safePlatform = Instance.new("Part")
-        safePlatform.Name = "InvisSafePlatform"
+        safePlatform.Name = _gameLikeName()
         safePlatform.Anchored = true
         safePlatform.Size = Vector3.new(40, 2, 40)
         safePlatform.CFrame = CFrame.new(safePos) - Vector3.new(0, 3, 0)
@@ -1084,7 +1094,7 @@ local function executeGhostLogic()
         invisState.platform = safePlatform
 
         local seat = Instance.new("Seat")
-        seat.Name = "InvisSeat"
+        seat.Name = _gameLikeName()
         seat.Anchored = true
         seat.Size = Vector3.new(2, 1, 2)
         seat.CFrame = CFrame.new(safePos)
@@ -1094,8 +1104,8 @@ local function executeGhostLogic()
 
         realChar.Archivable = true
         local fakeChar = realChar:Clone()
-        fakeChar.Name = "Vortex_FakeChar_Invis"
-        
+        fakeChar.Name = _gameLikeName()
+
         for _, v in ipairs(fakeChar:GetDescendants()) do
             if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then 
                 v:Destroy() 
@@ -1108,16 +1118,16 @@ local function executeGhostLogic()
         realChar:PivotTo(seat.CFrame + Vector3.new(0, 3, 0))
         task.wait(0.05)
         seat:Sit(realHumanoid)
-        
+
         LocalPlayer.Character = fakeChar
         workspace.CurrentCamera.CameraSubject = fakeChar:FindFirstChild("Humanoid")
-        
+
         setCharacterTransparency(fakeChar, 0.5)
         setCharacterTransparency(realChar, 1)
     else
         local realChar = invisState.realChar
         local fakeChar = invisState.fakeChar
-        
+
         local targetCFrame = nil
         if fakeChar and fakeChar.PrimaryPart then
             targetCFrame = fakeChar:GetPivot()
@@ -1137,18 +1147,18 @@ local function executeGhostLogic()
                 hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
                 hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             end
-            
+
             if targetCFrame then
                 realChar:PivotTo(targetCFrame + Vector3.new(0, 3, 0))
             end
-            
+
             setCharacterTransparency(realChar, 0)
-            
+
             LocalPlayer.Character = realChar
             if realHumanoid then 
                 workspace.CurrentCamera.CameraSubject = realHumanoid 
             end
-            
+
             task.wait(0.05)
             if hrp then
                 hrp.Anchored = false
@@ -1181,19 +1191,19 @@ local function executeDesyncLogic()
         Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
-    
+
     if desyncState.isDesynced then
         local savedCFrame = hrp.CFrame
         desyncState.animCache = {}
-        
+
         realChar.Archivable = true
         local fakeChar = realChar:Clone()
-        fakeChar.Name = "Vortex_FakeChar_Desync"
-        
+        fakeChar.Name = _gameLikeName()
+
         for _, v in ipairs(fakeChar:GetDescendants()) do
             if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
         end
-        
+
         fakeChar.Parent = workspace
         desyncState.fakeChar = fakeChar
 
@@ -1207,7 +1217,7 @@ local function executeDesyncLogic()
                 part.Anchored = false
             end
         end
-        
+
         fakeChar:PivotTo(savedCFrame)
 
         local realAnimator = realHumanoid:FindFirstChild("Animator")
@@ -1217,7 +1227,7 @@ local function executeDesyncLogic()
         end
 
         local platform = Instance.new("Part")
-        platform.Name = "desyncplatform"
+        platform.Name = _gameLikeName()
         platform.Size = Vector3.new(2048, 5, 2048) 
         platform.CFrame = CFrame.new(savedCFrame.X, savedCFrame.Y + CONFIG_BANNABLE.DESYNC_HEIGHT, savedCFrame.Z)
         platform.Anchored = true
@@ -1238,19 +1248,19 @@ local function executeDesyncLogic()
             if hrp and fakeChar and fakeHrp then
                 local realPos = hrp.Position
                 local cloneCurrentY = fakeHrp.Position.Y
-                
+
                 local rayOrigin = Vector3.new(realPos.X, cloneCurrentY + 3, realPos.Z)
                 local raycastResult = workspace:Raycast(rayOrigin, Vector3.new(0, -1000, 0), rayParams)
-                
+
                 local floorY = raycastResult and raycastResult.Position.Y or cloneCurrentY
                 local hipHeight = realHumanoid.HipHeight > 0 and realHumanoid.HipHeight or 2
                 local platformTop = platform.Position.Y + (platform.Size.Y / 2)
                 local expectedRealY = platformTop + hipHeight + (hrp.Size.Y / 2)
                 local jumpOffset = math.max(0, realPos.Y - expectedRealY)
-                
+
                 local targetY = floorY + (fakeHrp.Size.Y / 2) + hipHeight + jumpOffset
                 fakeChar:SetPrimaryPartCFrame(CFrame.new(realPos.X, targetY, realPos.Z) * hrp.CFrame.Rotation)
-                
+
                 if realAnimator and fakeAnimator then
                     local playingTracks = realAnimator:GetPlayingAnimationTracks()
                     for _, realTrack in ipairs(playingTracks) do
@@ -1270,16 +1280,16 @@ local function executeDesyncLogic()
         end)
     else
         if desyncState.syncConnection then desyncState.syncConnection:Disconnect(); desyncState.syncConnection = nil end
-        
+
         local returnCFrame = nil
         if desyncState.fakeChar then
             returnCFrame = desyncState.fakeChar:GetPivot()
             desyncState.fakeChar:Destroy()
             desyncState.fakeChar = nil
         end
-        
+
         if desyncState.platform then desyncState.platform:Destroy(); desyncState.platform = nil end
-        
+
         if returnCFrame and hrp then hrp.CFrame = returnCFrame end
         setCharacterTransparency(realChar, 0)
         workspace.CurrentCamera.CameraSubject = realHumanoid
@@ -1347,7 +1357,7 @@ local ZONAS_SEGURAS = {
     {Centro = Vector3.new(1564.14, -155.45, 40.04), Radio = 300}
 }
 
-pcall(function() getgenv().AstraTargetPart = nil end)
+pcall(function() silentTargetPart = nil end)
 
 local FOVCircle = nil
 if hasDrawing then
@@ -1366,7 +1376,7 @@ local function toggleSilentAimGlobal()
         showBottomMessage(silentAimManualEnabled and "Silent Aim: ACTIVADO" or "Silent Aim: DESACTIVADO")
     end
     if not silentAimManualEnabled and not autoShootEnabled and not silentAimFovEnabled then
-        pcall(function() getgenv().AstraTargetPart = nil end)
+        pcall(function() silentTargetPart = nil end)
     end
 end
 
@@ -1378,7 +1388,7 @@ local function toggleAutoShootGlobal()
         showBottomMessage(autoShootEnabled and "Auto Shoot: ACTIVADO" or "Auto Shoot: DESACTIVADO")
     end
     if not autoShootEnabled then
-        pcall(function() getgenv().AstraTargetPart = nil end)
+        pcall(function() silentTargetPart = nil end)
     end
 end
 
@@ -1423,14 +1433,14 @@ local function estaEnLobby()
     local char = LocalPlayer.Character 
     if not char then return true end
     if char:FindFirstChildOfClass("ForceField") then return true end
-    
+
     if LocalPlayer.Team then
         local tName = string.lower(LocalPlayer.Team.Name)
         if string.find(tName, "lobby") or string.find(tName, "spectat") or string.find(tName, "espectador") or string.find(tName, "menu") or string.find(tName, "dead") then 
             return true 
         end
     end
-    
+
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp then
         for _, zona in ipairs(ZONAS_SEGURAS) do
@@ -1448,10 +1458,10 @@ pcall(function()
         oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
             local method = getnamecallmethod()
 
-            if not checkcaller() and getgenv().AstraTargetPart then
-                local target = getgenv().AstraTargetPart
+            if not checkcaller() and silentTargetPart then
+                local target = silentTargetPart
                 local cameraOrigin = workspace.CurrentCamera.CFrame.Position
-                
+
                 if target and target.Parent then
                     if method == "Raycast" and self == workspace then
                         local origin, direction, p3 = ...
@@ -1473,7 +1483,7 @@ pcall(function()
                         end
                     end
                 else
-                    getgenv().AstraTargetPart = nil
+                    silentTargetPart = nil
                 end
             end
 
@@ -1482,11 +1492,11 @@ pcall(function()
 
         local oldIndex
         oldIndex = hookmetamethod(game, "__index", function(t, k)
-            if not checkcaller() and t == Mouse and getgenv().AstraTargetPart then
+            if not checkcaller() and t == Mouse and silentTargetPart then
                 if k == "Hit" or k == "hit" then
-                    return getgenv().AstraTargetPart.CFrame
+                    return silentTargetPart.CFrame
                 elseif k == "Target" or k == "target" then
-                    return getgenv().AstraTargetPart
+                    return silentTargetPart
                 end
             end
             return oldIndex(t, k)
@@ -1500,13 +1510,13 @@ Tabs.Aim:Paragraph({ Title = "Kill All", Desc = "" })
 local function esVulnerable(char)
     if not char then return false end
     if char:FindFirstChildOfClass("ForceField") then return false end
-    
+
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp and hrp.Anchored then return false end
-    
+
     local hum = char:FindFirstChild("Humanoid")
     if hum and (hum.WalkSpeed == 0 or hum.Health <= 0) then return false end
-    
+
     return true
 end
 
@@ -1523,22 +1533,22 @@ local function setKillAllState(state)
         task.spawn(function()
             while killAllEnabled do
                 local myChar = player.Character
-                
+
                 if not myChar or not myChar:FindFirstChild("HumanoidRootPart") or not player:FindFirstChild("Backpack") then
                     task.wait(0.5)
                     continue 
                 end
-                
+
                 if not estaEnLobby() and esVulnerable(myChar) then
                     local myHrp = myChar:FindFirstChild("HumanoidRootPart")
                     local myHum = myChar:FindFirstChild("Humanoid")
-                    
+
                     if myHrp and myHum and myHum.Health > 0 then
                         local posicionOriginal = myHrp.CFrame
-                        
+
                         for _, p in ipairs(Players:GetPlayers()) do
                             if not killAllEnabled then break end 
-                            
+
                             if p ~= player and isEnemy(p) and p.Character then
                                 if esVulnerable(p.Character) then
                                     local enemyHum = p.Character:FindFirstChild("Humanoid")
@@ -1546,28 +1556,28 @@ local function setKillAllState(state)
 
                                     if enemyHum and enemyHum.Health > 0 and enemyHrp then
                                         local distanciaAlEnemigo = (posicionOriginal.Position - enemyHrp.Position).Magnitude
-                                        
+
                                         if distanciaAlEnemigo <= killAllRango then
                                             enemyHrp.Size = Vector3.new(30, 30, 30)
                                             enemyHrp.CanCollide = false
-                                            
+
                                             local failSafe = 0 
-                                            
+
                                             while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
                                                 myHum.PlatformStand = true 
-                                                
+
                                                 myHrp.CFrame = enemyHrp.CFrame * CFrame.new(0, -2, 0)
                                                 myHrp.AssemblyLinearVelocity = Vector3.zero 
                                                 myHrp.AssemblyAngularVelocity = Vector3.zero
-                                                
+
                                                 pcall(function()
                                                     local arma = myChar:FindFirstChildOfClass("Tool")
-                                                    
+
                                                     if arma and esLaPistola(arma) then
                                                         myHum:UnequipTools()
                                                         arma = nil
                                                     end
-                                                    
+
                                                     if not arma then
                                                         local backpack = player:FindFirstChild("Backpack")
                                                         if backpack then
@@ -1581,12 +1591,12 @@ local function setKillAllState(state)
                                                             end
                                                         end
                                                     end
-                                                    
+
                                                     if arma then
                                                         arma:Activate()
                                                     end
                                                 end)
-                                                
+
                                                 task.wait(0.03)
                                                 failSafe = failSafe + 1
                                             end
@@ -1594,7 +1604,7 @@ local function setKillAllState(state)
                                             if myHum then
                                                 myHum.PlatformStand = false
                                             end
-                                            
+
                                             pcall(function()
                                                 local arma = myChar:FindFirstChildOfClass("Tool")
                                                 if arma then arma:Deactivate() end
@@ -1722,7 +1732,7 @@ UIElements.TogAutoShoot = Tabs.Aim:Toggle({
         task.spawn(function()
             autoShootEnabled = Value
             showBottomMessage(Value and "Auto Shoot: ACTIVADO" or "Auto Shoot: DESACTIVADO")
-            if not Value then pcall(function() getgenv().AstraTargetPart = nil end) end
+            if not Value then pcall(function() silentTargetPart = nil end) end
         end)
     end,
 })
@@ -1757,7 +1767,7 @@ UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
         task.spawn(function()
             silentAimManualEnabled = Value
             showBottomMessage(Value and "Silent Aim: ACTIVADO" or "Silent: DESACTIVADO")
-            if not Value and not autoShootEnabled then pcall(function() getgenv().AstraTargetPart = nil end) end
+            if not Value and not autoShootEnabled then pcall(function() silentTargetPart = nil end) end
         end)
     end,
 })
@@ -1783,7 +1793,7 @@ UIElements.TogSilentAimFOV = Tabs.Aim:Toggle({
             silentAimFovEnabled = Value
             showBottomMessage(Value and "Silent Aim FOV: ACTIVADO" or "Silent FOV: DESACTIVADO")
             if not Value and not silentAimManualEnabled and not autoShootEnabled then 
-                pcall(function() getgenv().AstraTargetPart = nil end) 
+                pcall(function() silentTargetPart = nil end) 
             end
         end)
     end,
@@ -1821,7 +1831,7 @@ UIElements.TogHitbox = Tabs.Aim:Toggle({
                         restoreCollide(hrp)
                         hrp.Transparency = 1
                         hrp.Material = Enum.Material.Plastic
-                        local box = hrp:FindFirstChild("AstraHitboxBox")
+                        local box = hrp:FindFirstChild(hitboxAdornName)
                         if box then box:Destroy() end
                     end
                 end
@@ -1886,7 +1896,7 @@ local function ejecutarAccionMacro()
         task.wait() 
         hum:EquipTool(pistola) 
         task.wait(macroEquipDelay) 
-        
+
         if pistola.Parent == char then 
             pistola:Activate() 
             task.wait(macroShootDelay) 
@@ -1943,13 +1953,13 @@ task.spawn(function()
 
             local arma = char:FindFirstChildOfClass("Tool")
             if not arma or not arma:FindFirstChild("Handle") then 
-                getgenv().AstraTargetPart = nil
+                silentTargetPart = nil
                 continue 
             end
 
             local esGun = esLaPistola(arma)
             if (esGun and not autoShootEnabled) or (not esGun and not autoShootCuchilloEnabled) then
-                getgenv().AstraTargetPart = nil
+                silentTargetPart = nil
                 continue
             end
 
@@ -1975,14 +1985,14 @@ task.spawn(function()
                     end 
                 end 
             end 
-            
+
             table.sort(objetivosPotenciales, function(a, b) return a.Dist < b.Dist end)
 
             local closestTargetPart = nil
             for _, obj in ipairs(objetivosPotenciales) do
                 local part = obj.Part
                 params.FilterDescendantsInstances = {char, obj.Char}
-                
+
                 local isVisible = not workspace:Raycast(headPos, part.Position - headPos, params)
                 if isVisible then
                     closestTargetPart = part
@@ -1991,7 +2001,7 @@ task.spawn(function()
             end
 
             if closestTargetPart then
-                getgenv().AstraTargetPart = closestTargetPart
+                silentTargetPart = closestTargetPart
                 pcall(function() 
                     arma:Activate() 
                     task.delay(0.02, function() 
@@ -2000,7 +2010,7 @@ task.spawn(function()
                 end)
                 task.wait(0.08) 
             else
-                getgenv().AstraTargetPart = nil
+                silentTargetPart = nil
             end
         end
     end
@@ -2018,7 +2028,7 @@ task.spawn(function()
             local closestTargetPart = nil
             local shortestDistToCenter = math.huge 
             local shortestDistanceFisica = math.huge 
-            
+
             local myPos = char.HumanoidRootPart.Position
             local headPos = char:FindFirstChild("Head") and char.Head.Position or myPos
             local viewport = Camera.ViewportSize
@@ -2029,7 +2039,7 @@ task.spawn(function()
                     local enemyHum = p.Character:FindFirstChild("Humanoid")
                     if enemyHum and enemyHum.Health > 0 then
                         local partesAEscanear = {}
-                        
+
                         if silentAimTargetPart == "Cabeza" then
                             local head = p.Character:FindFirstChild("Head")
                             if head then table.insert(partesAEscanear, head) end
@@ -2045,19 +2055,19 @@ task.spawn(function()
                         end
 
                         params.FilterDescendantsInstances = {char, p.Character}
-                        
+
                         for _, part in ipairs(partesAEscanear) do
                             local distFisica = (part.Position - myPos).Magnitude
                             local pos2D, onScreen = Camera:WorldToViewportPoint(part.Position)
                             local distToCenter = (Vector2.new(pos2D.X, pos2D.Y) - mousePos).Magnitude
                             local pasaFiltro = false
-                            
+
                             if silentAimFovEnabled then
                                 if onScreen and distToCenter <= fovRadius and distToCenter < shortestDistToCenter then pasaFiltro = true end
                             elseif silentAimManualEnabled then
                                 if distFisica < shortestDistanceFisica then pasaFiltro = true end
                             end
-                            
+
                             if pasaFiltro then
                                 if not workspace:Raycast(headPos, part.Position - headPos, params) then
                                     if silentAimFovEnabled then
@@ -2073,11 +2083,11 @@ task.spawn(function()
                     end
                 end
             end
-            
+
             if closestTargetPart then
-                getgenv().AstraTargetPart = closestTargetPart
+                silentTargetPart = closestTargetPart
             else
-                if not autoShootEnabled then getgenv().AstraTargetPart = nil end
+                if not autoShootEnabled then silentTargetPart = nil end
             end
         end
     end
@@ -2091,21 +2101,21 @@ task.spawn(function()
                     local hrp = v.Character.HumanoidRootPart 
                     setSpoofedSize(hrp, Vector3.new(hitboxSize, hitboxSize, hitboxSize))
                     setSpoofedCollide(hrp, false)
-                    
+
                     local targetTrans = hitboxInvisible and 1 or 0.5
                     if hrp.Transparency ~= targetTrans then hrp.Transparency = targetTrans end
                     if hrp.Material ~= Enum.Material.ForceField then hrp.Material = Enum.Material.ForceField end
-                    
-                    local box = hrp:FindFirstChild("AstraHitboxBox")
+
+                    local box = hrp:FindFirstChild(hitboxAdornName)
                     if not box then 
                         box = Instance.new("BoxHandleAdornment") 
-                        box.Name = "AstraHitboxBox" 
+                        box.Name = hitboxAdornName 
                         box.Adornee = hrp 
                         box.AlwaysOnTop = true 
                         box.ZIndex = 5 
                         box.Parent = hrp 
                     end
-                    
+
                     box.Size = hrp.Size
                     box.Color3 = Color3.fromRGB(255, 30, 80)
                     box.Transparency = hitboxInvisible and 1 or 0.3
@@ -2117,7 +2127,7 @@ task.spawn(function()
                         restoreCollide(hrp)
                         hrp.Transparency = 1
                         hrp.Material = Enum.Material.Plastic
-                        local box = hrp:FindFirstChild("AstraHitboxBox")
+                        local box = hrp:FindFirstChild(hitboxAdornName)
                         if box then box:Destroy() end
                     end
                 end
@@ -2133,7 +2143,7 @@ RunService.RenderStepped:Connect(function()
             FOVCircle.Position = Vector2.new(viewport.X / 2, viewport.Y / 2)
             FOVCircle.Radius = fovRadius
             FOVCircle.Visible = true
-            FOVCircle.Color = getgenv().AstraTargetPart and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
+            FOVCircle.Color = silentTargetPart and Color3.fromRGB(0, 255, 0) or Color3.fromRGB(255, 255, 255)
         else
             FOVCircle.Visible = false
         end
@@ -2326,8 +2336,8 @@ local function updateSystem()
 
                 if v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton") then
                     processText(v, myName, myDisp)
-                    if not v:GetAttribute("AstraInfectado") then
-                        v:SetAttribute("AstraInfectado", true)
+                    if not v:GetAttribute(infectAttrName) then
+                        v:SetAttribute(infectAttrName, true)
                         v:GetPropertyChangedSignal("Text"):Connect(function()
                             if isWorkspaceLooping and v.Text ~= spoofNameText and v.Text ~= " " and not string.find(v.Text, spoofNameText) and not string.find(v.Text, "%[Content Creator%]") then
                                 originalData[v] = nil
@@ -2671,10 +2681,10 @@ local function refreshProfessionalESP()
             local root = char:FindFirstChild("HumanoidRootPart")
             local head = char:FindFirstChild("Head")
             local hum = char:FindFirstChild("Humanoid")
-            
+
             if root and head and hum and hum.Health > 0 then
                 currentActive[plr] = true
-                
+
                 if not professionalEspDrawings[plr] and hasDrawing then
                     local bLines = {}
                     for i = 1, 4 do
@@ -2696,7 +2706,7 @@ local function refreshProfessionalESP()
                     nameText.Outline = true
                     nameText.Color = enemyOutlineColor
                     nameText.Transparency = 0.9
-                    
+
                     professionalEspDrawings[plr] = { box = bLines, tracer = tracer, nameText = nameText }
                 end
 
@@ -2958,7 +2968,7 @@ local shaderAjustes = {
     Desenfoque = 2,        
     SuavidadSombras = 0.1, 
     ColorSaturacion = 0.15,
-    
+
     PinkRosa = 0.8,
     PinkMorado = 0.7,
     PinkSaturacion = 0.4,
@@ -2967,7 +2977,7 @@ local shaderAjustes = {
 
 local function ToggleNubesYAtmo(apagar, tag)
     local Lighting = game:GetService("Lighting")
-    
+
     for _, obj in ipairs(Lighting:GetChildren()) do
         if obj:IsA("Atmosphere") then
             if apagar then
@@ -2987,7 +2997,7 @@ local function ToggleNubesYAtmo(apagar, tag)
             end
         end
     end
-    
+
     local function checkClouds(parentObj)
         if not parentObj then return end
         for _, obj in ipairs(parentObj:GetChildren()) do
@@ -3007,7 +3017,7 @@ local function ToggleNubesYAtmo(apagar, tag)
             end
         end
     end
-    
+
     checkClouds(workspace)
     checkClouds(workspace:FindFirstChildOfClass("Terrain"))
 end
@@ -3015,14 +3025,14 @@ end
 local function UpdatePinkHourVibe()
     if not pinkActivo then return end
     local Lighting = game:GetService("Lighting")
-    
+
     local rosa = shaderAjustes.PinkRosa
     local morado = shaderAjustes.PinkMorado
-    
+
     local r = math.clamp(math.floor(255 - (100 * morado)), 0, 255)
     local g = math.clamp(math.floor(255 - (155 * rosa) - (200 * morado)), 0, 255)
     local b = 255
-    
+
     for _, effect in ipairs(pinkEffects) do
         if effect:IsA("ColorCorrectionEffect") then
             effect.TintColor = Color3.fromRGB(r, g, b)
@@ -3032,12 +3042,12 @@ local function UpdatePinkHourVibe()
             effect.Intensity = shaderAjustes.PinkNeon
         end
     end
-    
+
     Lighting.ColorShift_Top = Color3.fromRGB(math.floor(255 - (50 * morado)), math.floor(50 + (50 * (1-rosa))), math.floor(150 + (105 * morado)))
     Lighting.ColorShift_Bottom = Color3.fromRGB(math.floor(30 + (70 * rosa)), 0, math.floor(50 + (80 * morado)))
     Lighting.OutdoorAmbient = Color3.fromRGB(math.floor(50 + (80 * rosa)), 0, math.floor(80 + (80 * morado)))
     Lighting.Ambient = Color3.fromRGB(math.floor(60 + (30 * rosa)), math.floor(20 * (1-morado)), math.floor(80 + (40 * morado)))
-    
+
     Lighting.ExposureCompensation = 0.1 - (0.25 * morado)
 end
 
@@ -3090,7 +3100,7 @@ UIElements.TogNight = Tabs.Graficos:Toggle({
             end
 
             ToggleNubesYAtmo(true, "Night")
-            
+
             if Terrain and not Terrain:GetAttribute("OrigWaterSavedNight") then
                 Terrain:SetAttribute("OrigWaveSize", Terrain.WaterWaveSize) Terrain:SetAttribute("OrigWaveSpeed", Terrain.WaterWaveSpeed) Terrain:SetAttribute("OrigReflectance", Terrain.WaterReflectance) Terrain:SetAttribute("OrigTransparency", Terrain.WaterTransparency) Terrain:SetAttribute("OrigWaterColor", Terrain.WaterColor) Terrain:SetAttribute("OrigWaterSavedNight", true)
             end
@@ -3138,7 +3148,7 @@ UIElements.TogPink = Tabs.Graficos:Toggle({
             if not Lighting:GetAttribute("OrigSavedPink") then
                 Lighting:SetAttribute("OrigBrightP", Lighting.Brightness) Lighting:SetAttribute("OrigCSBP", Lighting.ColorShift_Bottom) Lighting:SetAttribute("OrigCSTP", Lighting.ColorShift_Top) Lighting:SetAttribute("OrigOAP", Lighting.OutdoorAmbient) Lighting:SetAttribute("OrigTimeP", Lighting.ClockTime) Lighting:SetAttribute("OrigFogCP", Lighting.FogColor) Lighting:SetAttribute("OrigFogEP", Lighting.FogEnd) Lighting:SetAttribute("OrigAmbientP", Lighting.Ambient) Lighting:SetAttribute("OrigExpP", Lighting.ExposureCompensation) Lighting:SetAttribute("OrigShadowP", Lighting.ShadowSoftness) Lighting:SetAttribute("OrigSavedPink", true)
             end
-            
+
             ToggleNubesYAtmo(true, "Pink")
 
             for _, v in ipairs(pinkEffects) do pcall(function() v:Destroy() end) end table.clear(pinkEffects)
@@ -3152,13 +3162,13 @@ UIElements.TogPink = Tabs.Graficos:Toggle({
             local sunRays = Instance.new("SunRaysEffect") sunRays.Intensity = 0.08 sunRays.Spread = 0.8 sunRays.Parent = Lighting table.insert(pinkEffects, sunRays)
 
             local sky = Instance.new("Sky") sky.Name = "AstraPinkSky" sky.SkyboxUp = "rbxassetid://323493360" sky.SkyboxLf = "rbxassetid://323494252" sky.SkyboxBk = "rbxassetid://323494035" sky.SkyboxFt = "rbxassetid://323494130" sky.SkyboxDn = "rbxassetid://323494368" sky.SkyboxRt = "rbxassetid://323494067" sky.SunAngularSize = 14 sky.StarCount = 3000 sky.Parent = Lighting table.insert(pinkEffects, sky)
-            
+
             Lighting.Brightness = 2.0 
             Lighting.ClockTime = 6.7 
             Lighting.FogColor = Color3.fromRGB(120, 20, 150) 
             Lighting.FogEnd = 1200 
             Lighting.ShadowSoftness = 0.2 
-            
+
             UpdatePinkHourVibe()
 
             showBottomMessage("Pink Hour: ON")
