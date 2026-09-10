@@ -301,7 +301,7 @@ end
 local function createFloatingBtn(name, startPos, internalId)
     local btn = Instance.new("TextButton")
     btn.Name = internalId or name
-    -- Estilo unificado = Fling Murder (carmesí)
+    -- Estilo unificado = dorado / oro
     local w = _G.FloatingBtnWidth or 110
     local h = _G.FloatingBtnHeight or 42
     if _G.FloatingButtonsShape == "Square" then
@@ -309,7 +309,7 @@ local function createFloatingBtn(name, startPos, internalId)
     end
     btn.Size = UDim2.new(0, w, 0, h)
     btn.Position = startPos
-    btn.BackgroundColor3 = Color3.fromRGB(200, 0, 40)
+    btn.BackgroundColor3 = Color3.fromRGB(200, 150, 30)
     btn.BackgroundTransparency = math.clamp(_G.FloatingBtnTransparency or 0, 0, 0.5)
     btn.Text = name
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -332,8 +332,8 @@ local function createFloatingBtn(name, startPos, internalId)
 
     local bg = Instance.new("UIGradient")
     bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 130, 20)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 210, 60))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
     })
     bg.Rotation = 45
     bg.Parent = btn
@@ -375,12 +375,12 @@ local function UpdateFloatingButtonsShape(shape)
         end
         btn.TextSize = isSquare and 10 or 13
         -- Mantener apariencia Fling Murder
-        btn.BackgroundColor3 = Color3.fromRGB(200, 0, 40)
+        btn.BackgroundColor3 = Color3.fromRGB(200, 150, 30)
         local grad = btn:FindFirstChildOfClass("UIGradient")
         if grad then
             grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 130, 20)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 210, 60))
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
             })
             grad.Rotation = 45
         end
@@ -535,17 +535,20 @@ local MainSection = Window:Section({ Title = "Funciones Principales", Opened = t
 local TrollSection = Window:Section({ Title = "Configs y Extra", Opened = true})
 
 local Tabs = {
+    -- Principal: info + combate + farm
     Info = MainSection:Tab({ Title = "Info", Icon = "solar:info-circle-bold" }),
-    ESP = MainSection:Tab({ Title = "ESP", Icon = "solar:eye-bold" }),
-    Sheriff = MainSection:Tab({ Title = "Sheriff", Icon = "solar:target-bold" }),
     Murderer = MainSection:Tab({ Title = "Murderer", Icon = "solar:danger-bold" }),
+    Sheriff = MainSection:Tab({ Title = "Sheriff", Icon = "solar:target-bold" }),
+    Troll = TrollSection:Tab({ Title = "Troll", Icon = "solar:ghost-bold" }),
     AutoFarm = MainSection:Tab({ Title = "AutoFarm", Icon = "solar:dollar-bold" }),
+    ESP = MainSection:Tab({ Title = "ESP", Icon = "solar:eye-bold" }),
+    -- Utilidades
     Movimiento = MainSection:Tab({ Title = "Movement", Icon = "solar:running-bold" }),
     Teleport = MainSection:Tab({ Title = "Teleport", Icon = "solar:map-point-bold" }),
     Bubbles = MainSection:Tab({ Title = "Bubbles", Icon = "solar:widget-bold" }),
+    -- Extra
     Graficos = MainSection:Tab({ Title = "Graphics", Icon = "solar:palette-bold" }),
     Emotes = TrollSection:Tab({ Title = "Emotes", Icon = "solar:smile-circle-bold" }),
-    Troll = TrollSection:Tab({ Title = "Troll", Icon = "solar:ghost-bold" }),
     Config = TrollSection:Tab({ Title = "Config", Icon = "solar:settings-bold" })
 }
 pcall(function() Tabs.Info:Select() end)
