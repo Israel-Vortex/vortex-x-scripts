@@ -284,8 +284,8 @@ Window:EditOpenButton({
 })
 
 pcall(function()
-    Window:Label({
-        Title = "3.2.7",
+    Window:Tag({
+        Title = "v3.2.7",
         Icon = "github",
         Color = Color3.fromRGB(220, 170, 40)
     })
@@ -994,8 +994,8 @@ local function createBubbleButton(name, text, posY)
 
     local bg = Instance.new("UIGradient")
     bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 30, 10))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
     })
     bg.Rotation = 45
     bg.Parent = btn
