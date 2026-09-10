@@ -6,7 +6,6 @@ local BASE_URL = "https://raw.githubusercontent.com/Israel-Vortex/vortex-x-scrip
 
 -- Diccionario con los PlaceIds y sus respectivos archivos .lua
 local games = {
-    [93978595733734]  = "V-DISTRICT.lua",
     [135856908115931] = "DMVSS.lua",
     [142823291]       = "MM2.lua",
     [286090429]       = "Arsenal.lua",
