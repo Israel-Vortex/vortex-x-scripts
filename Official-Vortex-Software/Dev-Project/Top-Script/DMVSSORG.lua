@@ -253,11 +253,11 @@ task.wait(1)
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex x Software [DMvSS]",
-    Icon = "rbxassetid://80571845178865",
+    Icon = "rbxassetid://118833096342184",
     IconSize = "35",
     Author = "By Israelcc & Novak",
     Folder = "VortexXSoftware",
-    Background = "rbxassetid://129234239237449",
+    Background = "rbxassetid://133044138027516",
     Size = UDim2.fromOffset(680, 520),
     MinSize = Vector2.new(480, 360),
     MaxSize = Vector2.new(1100, 800),
@@ -270,13 +270,13 @@ local Window = WindUI:CreateWindow({
 
 Window:EditOpenButton({
     Title = "VXS",
-    Icon = "rbxassetid://80571845178865",
+    Icon = "rbxassetid://118833096342184",
     CornerRadius = UDim.new(1, 0),
     StrokeThickness = 2,
     Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 30)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(230, 0, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 90))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
     }),
     OnlyMobile = true,
     Enabled = true,
@@ -287,53 +287,53 @@ pcall(function()
     Window:Label({
         Title = "3.2.7",
         Icon = "github",
-        Color = Color3.fromRGB(230, 0, 50)
+        Color = Color3.fromRGB(220, 170, 40)
     })
 end)
 
 WindUI:AddTheme({
-    Name = "VortexCrimsonSolid",
-    Accent = Color3.fromRGB(255, 45, 95),
+    Name = "VortexGoldSolid",
+    Accent = Color3.fromRGB(255, 195, 45),
     Background = Color3.fromRGB(12, 12, 14),
     BackgroundTransparency = 0,
-    Outline = Color3.fromRGB(255, 55, 100),
+    Outline = Color3.fromRGB(255, 210, 70),
     Text = Color3.fromRGB(255, 255, 255),
     Placeholder = Color3.fromRGB(190, 190, 200),
-    Button = Color3.fromRGB(230, 20, 70),
-    Icon = Color3.fromRGB(255, 70, 110),
+    Button = Color3.fromRGB(210, 160, 35),
+    Icon = Color3.fromRGB(255, 200, 60),
     Hover = Color3.fromRGB(255, 255, 255),
     WindowBackground = Color3.fromRGB(14, 14, 16),
-    WindowShadow = Color3.fromRGB(255, 40, 90),
+    WindowShadow = Color3.fromRGB(255, 185, 50),
     DialogBackground = Color3.fromRGB(18, 18, 22),
     DialogBackgroundTransparency = 0,
     DialogTitle = Color3.fromRGB(255, 255, 255),
     DialogContent = Color3.fromRGB(235, 235, 240),
-    DialogIcon = Color3.fromRGB(255, 70, 110),
+    DialogIcon = Color3.fromRGB(255, 200, 60),
     WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
     WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
     WindowTopbarAuthor = Color3.fromRGB(210, 210, 220),
-    WindowTopbarIcon = Color3.fromRGB(255, 70, 110),
+    WindowTopbarIcon = Color3.fromRGB(255, 200, 60),
     TabBackground = Color3.fromRGB(20, 20, 24),
     TabTitle = Color3.fromRGB(255, 255, 255),
-    TabIcon = Color3.fromRGB(255, 80, 120),
+    TabIcon = Color3.fromRGB(255, 205, 70),
     ElementBackground = Color3.fromRGB(24, 24, 30),
     ElementTitle = Color3.fromRGB(255, 255, 255),
     ElementDesc = Color3.fromRGB(200, 200, 210),
-    ElementIcon = Color3.fromRGB(255, 80, 120),
+    ElementIcon = Color3.fromRGB(255, 205, 70),
     PopupBackground = Color3.fromRGB(18, 18, 22),
     PopupBackgroundTransparency = 0,
     PopupTitle = Color3.fromRGB(255, 255, 255),
     PopupContent = Color3.fromRGB(230, 230, 235),
-    PopupIcon = Color3.fromRGB(255, 80, 120),
-    Toggle = Color3.fromRGB(255, 45, 95),
+    PopupIcon = Color3.fromRGB(255, 205, 70),
+    Toggle = Color3.fromRGB(255, 195, 45),
     ToggleBar = Color3.fromRGB(40, 40, 50),
     Checkbox = Color3.fromRGB(40, 40, 50),
     CheckboxIcon = Color3.fromRGB(255, 255, 255),
-    Slider = Color3.fromRGB(255, 45, 95),
+    Slider = Color3.fromRGB(255, 195, 45),
     SliderThumb = Color3.fromRGB(255, 255, 255),
 })
 
-WindUI:SetTheme("VortexCrimsonSolid")
+WindUI:SetTheme("VortexGoldSolid")
 Window:SetToggleKey(Enum.KeyCode.K)
 Window:OnClose(function() end)
 
@@ -782,7 +782,7 @@ end)
 ConfigTab:Input({
     Title = "Background Image ID",
     Desc = "Introduce el ID de Roblox (ej: rbxassetid://...) para cambiar el fondo",
-    Value = "rbxassetid://129234239237449",
+    Value = "rbxassetid://133044138027516",
     Placeholder = "rbxassetid://...",
     Callback = function(input)
         pcall(function()
@@ -994,8 +994,8 @@ local function createBubbleButton(name, text, posY)
 
     local bg = Instance.new("UIGradient")
     bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 30, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 50)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 30, 10))
     })
     bg.Rotation = 45
     bg.Parent = btn
@@ -1686,7 +1686,7 @@ UIElements.SliMacroShoot = Tabs.Aim:Slider({
 local deadZoneFrame = Instance.new("Frame")
 deadZoneFrame.Size = UDim2.new(0, 150, 0, 150)
 deadZoneFrame.Position = UDim2.new(0.8, -75, 0.8, -75) 
-deadZoneFrame.BackgroundColor3 = Color3.fromRGB(255, 50, 50) 
+deadZoneFrame.BackgroundColor3 = Color3.fromRGB(255, 200, 50) 
 deadZoneFrame.BackgroundTransparency = 0.5
 deadZoneFrame.Visible = false
 deadZoneFrame.ZIndex = 100
@@ -2117,7 +2117,7 @@ task.spawn(function()
                     end
 
                     box.Size = hrp.Size
-                    box.Color3 = Color3.fromRGB(255, 30, 80)
+                    box.Color3 = Color3.fromRGB(255, 190, 40)
                     box.Transparency = hitboxInvisible and 1 or 0.3
                     box.Visible = not hitboxInvisible
                 else
@@ -2160,7 +2160,7 @@ local espEnabled = false
 local allyEspEnabled = false
 local professionalEspEnabled = false
 local outlineEnabled = true
-local enemyOutlineColor = Color3.fromRGB(255, 30, 80)
+local enemyOutlineColor = Color3.fromRGB(255, 190, 40)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 local professionalEspDrawings = {}
 
@@ -2885,7 +2885,7 @@ visualsTab:Keybind({
 visualsTab:Colorpicker({
     Title = "Outline & Elements Color",
     Desc = "Color del ESP de enemigos (Highlight, líneas, caja y nombre)",
-    Default = Color3.fromRGB(255, 30, 80),
+    Default = Color3.fromRGB(255, 190, 40),
     Callback = function(colorVal)
         enemyOutlineColor = colorVal
         for plr, hl in pairs(enemyEspMap) do
