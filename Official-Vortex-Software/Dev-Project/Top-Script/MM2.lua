@@ -102,7 +102,7 @@ combatFloorDisc.Anchored = true
 combatFloorDisc.CanCollide = false
 combatFloorDisc.Transparency = 0.6
 combatFloorDisc.Material = Enum.Material.Neon
-combatFloorDisc.Color = Color3.fromRGB(255, 50, 50)
+combatFloorDisc.Color = Color3.fromRGB(255, 200, 50)
 combatFloorDisc.Parent = nil
 
 local function getCombatHRP(plr)
@@ -326,14 +326,14 @@ local function createFloatingBtn(name, startPos, internalId)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 0
-    stroke.Color = Color3.fromRGB(255, 30, 80)
+    stroke.Color = Color3.fromRGB(255, 190, 40)
     stroke.Transparency = 1
     stroke.Parent = btn
 
     local bg = Instance.new("UIGradient")
     bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 30)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 130, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 210, 60))
     })
     bg.Rotation = 45
     bg.Parent = btn
@@ -379,8 +379,8 @@ local function UpdateFloatingButtonsShape(shape)
         local grad = btn:FindFirstChildOfClass("UIGradient")
         if grad then
             grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 0, 30)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 85))
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 130, 20)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 210, 60))
             })
             grad.Rotation = 45
         end
@@ -435,11 +435,11 @@ task.wait(0.8)
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex x Software [MM2]",
-    Icon = "rbxassetid://80571845178865",
+    Icon = "rbxassetid://118833096342184",
     IconSize = 35,
     Author = "By Israelcc & Novak",
     Folder = "VortexXSoftwareMM2",
-    Background = "rbxassetid://129234239237449",
+    Background = "rbxassetid://133044138027516",
     Size = UDim2.fromOffset(680, 520),
     Resizable = true,
     HideSearchBar = true,
@@ -450,13 +450,13 @@ local Window = WindUI:CreateWindow({
 pcall(function()
     Window:EditOpenButton({
         Title = "VXS",
-        Icon = "rbxassetid://80571845178865",
+        Icon = "rbxassetid://118833096342184",
         CornerRadius = UDim.new(1, 0),
         StrokeThickness = 2,
         Color = ColorSequence.new({
-            ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 30)),
-            ColorSequenceKeypoint.new(0.4, Color3.fromRGB(230, 0, 50)),
-            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 90))
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+            ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
         }),
         OnlyMobile = true,
         Enabled = true,
@@ -465,52 +465,52 @@ pcall(function()
 end)
 
 pcall(function()
-    Window:Tag({ Title = "v3.3.41", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
+    Window:Tag({ Title = "v3.3.41", Icon = "github", Color = Color3.fromRGB(220, 170, 40) })
 end)
 
 pcall(function()
     WindUI:AddTheme({
-        Name = "VortexCrimsonSolid",
-        Accent = Color3.fromRGB(255, 45, 95),
+        Name = "VortexGoldSolid",
+        Accent = Color3.fromRGB(255, 195, 45),
         Background = Color3.fromRGB(12, 12, 14),
         BackgroundTransparency = 0,
-        Outline = Color3.fromRGB(255, 55, 100),
+        Outline = Color3.fromRGB(255, 210, 70),
         Text = Color3.fromRGB(255, 255, 255),
         Placeholder = Color3.fromRGB(190, 190, 200),
-        Button = Color3.fromRGB(230, 20, 70),
-        Icon = Color3.fromRGB(255, 70, 110),
+        Button = Color3.fromRGB(210, 160, 35),
+        Icon = Color3.fromRGB(255, 200, 60),
         Hover = Color3.fromRGB(255, 255, 255),
         WindowBackground = Color3.fromRGB(14, 14, 16),
-        WindowShadow = Color3.fromRGB(255, 40, 90),
+        WindowShadow = Color3.fromRGB(255, 185, 50),
         DialogBackground = Color3.fromRGB(18, 18, 22),
         DialogBackgroundTransparency = 0,
         DialogTitle = Color3.fromRGB(255, 255, 255),
         DialogContent = Color3.fromRGB(235, 235, 240),
-        DialogIcon = Color3.fromRGB(255, 70, 110),
+        DialogIcon = Color3.fromRGB(255, 200, 60),
         WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
         WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
         WindowTopbarAuthor = Color3.fromRGB(210, 210, 220),
-        WindowTopbarIcon = Color3.fromRGB(255, 70, 110),
+        WindowTopbarIcon = Color3.fromRGB(255, 200, 60),
         TabBackground = Color3.fromRGB(20, 20, 24),
         TabTitle = Color3.fromRGB(255, 255, 255),
-        TabIcon = Color3.fromRGB(255, 80, 120),
+        TabIcon = Color3.fromRGB(255, 205, 70),
         ElementBackground = Color3.fromRGB(24, 24, 30),
         ElementTitle = Color3.fromRGB(255, 255, 255),
         ElementDesc = Color3.fromRGB(200, 200, 210),
-        ElementIcon = Color3.fromRGB(255, 80, 120),
+        ElementIcon = Color3.fromRGB(255, 205, 70),
         PopupBackground = Color3.fromRGB(18, 18, 22),
         PopupBackgroundTransparency = 0,
         PopupTitle = Color3.fromRGB(255, 255, 255),
         PopupContent = Color3.fromRGB(230, 230, 235),
-        PopupIcon = Color3.fromRGB(255, 80, 120),
-        Toggle = Color3.fromRGB(255, 45, 95),
+        PopupIcon = Color3.fromRGB(255, 205, 70),
+        Toggle = Color3.fromRGB(255, 195, 45),
         ToggleBar = Color3.fromRGB(40, 40, 50),
         Checkbox = Color3.fromRGB(40, 40, 50),
         CheckboxIcon = Color3.fromRGB(255, 255, 255),
-        Slider = Color3.fromRGB(255, 45, 95),
+        Slider = Color3.fromRGB(255, 195, 45),
         SliderThumb = Color3.fromRGB(255, 255, 255),
     })
-    WindUI:SetTheme("VortexCrimsonSolid")
+    WindUI:SetTheme("VortexGoldSolid")
 end)
 
 pcall(function() Window:SetToggleKey(Enum.KeyCode.RightAlt) end)
@@ -1030,7 +1030,7 @@ Tabs.Graficos:Slider({ Title = "Resplandor", Step = 0.05, Value = {Min = 0.0, Ma
 local espColors = {
     Innocent = Color3.fromRGB(0, 255, 0),
     Sheriff = Color3.fromRGB(0, 150, 255),
-    Murderer = Color3.fromRGB(255, 0, 0)
+    Murderer = Color3.fromRGB(255, 190, 40)
 }
 local notifyGunDropEnabled = false
 local gunDroppedNotified = false
@@ -3627,7 +3627,7 @@ end)
 Tabs.Config:Input({
     Title = "ID de Imagen de Fondo",
     Desc = "Introduce el ID de Roblox (ej: rbxassetid://...) para cambiar el fondo.",
-    Value = "rbxassetid://129234239237449",
+    Value = "rbxassetid://133044138027516",
     Placeholder = "rbxassetid://...",
     Callback = function(input)
         pcall(function() Window:SetBackground(input) end)
@@ -5812,7 +5812,7 @@ PredictionCrosshair.Size = UDim2.new(0, 12, 0, 12)
 
 PredictionCrosshair.AnchorPoint = Vector2.new(0.5, 0.5)
 
-PredictionCrosshair.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+PredictionCrosshair.BackgroundColor3 = Color3.fromRGB(255, 190, 40)
 
 PredictionCrosshair.BackgroundTransparency = 0.1
 
@@ -6248,7 +6248,7 @@ RunService:BindToRenderStep("NathalyAimbotVisuals", Enum.RenderPriority.Camera.V
                 local origin = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head") and LocalPlayer.Character.Head.Position or Camera.CFrame.Position
                 
                 -- Cambia el color de la mira si el tiro está limpio
-                local cColor = IsTrajectoryClear(origin, predictedPos, targetChar) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 0, 0)
+                local cColor = IsTrajectoryClear(origin, predictedPos, targetChar) and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 190, 40)
                 
                 CrossDot.BackgroundColor3 = cColor
                 cV.BackgroundColor3 = cColor
