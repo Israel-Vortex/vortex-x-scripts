@@ -1,4 +1,4 @@
--- Vortex X Software [MM2] - WindUI (sin telemetría Onyx)
+-- Vortex X Sage [MM2] - WindUI (sin telemetría Onyx)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -418,7 +418,7 @@ local LocalPlayer = player
 
 pcall(function()
     WindUI:Notify({
-        Title = "Vortex x Software",
+        Title = "Vortex X Sage",
         Content = "Iniciando sesión... Por favor, espere.",
         Duration = 3
     })
@@ -426,7 +426,7 @@ end)
 task.wait(1.5)
 pcall(function()
     WindUI:Notify({
-        Title = "Vortex x Software",
+        Title = "Vortex X Sage",
         Content = "Acceso concedido, " .. tostring(LocalPlayer.Name) .. "! Cargando interfaz...",
         Duration = 2
     })
@@ -434,13 +434,15 @@ end)
 task.wait(0.8)
 
 local Window = WindUI:CreateWindow({
-    Title = "Vortex x Software [MM2]",
+    Title = "Vortex X Sage [MM2]",
     Icon = "rbxassetid://118833096342184",
     IconSize = 35,
     Author = "By Israelcc & Novak",
-    Folder = "VortexXSoftwareMM2",
+    Folder = "VortexXSageMM2",
     Background = "rbxassetid://133044138027516",
     Size = UDim2.fromOffset(680, 520),
+    MinSize = Vector2.new(480, 360),
+    MaxSize = Vector2.new(1100, 800),
     Resizable = true,
     HideSearchBar = true,
     Transparent = false,
@@ -524,7 +526,7 @@ pcall(function() Window:OnClose(function() end) end)
 local function sendNotification(text)
     pcall(function()
         WindUI:Notify({
-            Title = "Vortex x Software",
+            Title = "Vortex X Sage",
             Content = tostring(text),
             Duration = 2.5
         })
@@ -579,7 +581,7 @@ end)
 Tabs.Info:Section({ Title = "Acerca del Script" })
 
 Tabs.Info:Paragraph({
-    Title = "Vortex X Software [MM2]",
+    Title = "Vortex X Sage [MM2]",
     Desc = "Script multi-executor para Murder Mystery 2.\nIncluye ESP de roles, Sheriff/Murder tools, AutoFarm, movimiento, teleports, emotes y botones flotantes.\nCompatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrolladores: Israelcc & Novak\nUI: WindUI\nVersión: 3.3.41"
 })
 
@@ -4320,7 +4322,7 @@ task.spawn(function()
 
     while task.wait(0.3) do
 
-        if not AdaptiveTuning.Enabled then continue end
+        if AdaptiveTuning.Enabled then
 
         local now = tick()
 
@@ -4373,6 +4375,8 @@ task.spawn(function()
                 AdaptiveTuning.BufferBias = AdaptiveTuning.BufferBias * 0.98
 
             end
+
+        end
 
         end
 
