@@ -115,6 +115,7 @@ end)
 -- ==========================================
 local spoofedSizes = {}
 local spoofedCanCollide = {}
+local spoofedWalkSpeeds = {}
 local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 local function _randName(len)
@@ -188,6 +189,8 @@ pcall(function()
             if spoofSize and key == "Size" then return spoofSize end
             local spoofCollide = spoofedCanCollide[self]
             if spoofCollide ~= nil and key == "CanCollide" then return spoofCollide end
+            local spoofWS = spoofedWalkSpeeds[self]
+            if spoofWS ~= nil and key == "WalkSpeed" then return spoofWS end
         end
         return oldIndex(self, key)
     end
@@ -236,7 +239,7 @@ if not WindUI then
 end
 
 WindUI:Notify({
-    Title = "Vortex x Software",
+    Title = "Vortex X Sage",
     Content = "Iniciando sesión... Por favor, espere.",
     Duration = 3
 })
@@ -244,7 +247,7 @@ WindUI:Notify({
 task.wait(2)
 
 WindUI:Notify({
-    Title = "Vortex x Software",
+    Title = "Vortex X Sage",
     Content = "Acceso concedido, " .. LocalPlayer.Name .. "! Interfaz de carga...",
     Duration = 2
 })
@@ -252,11 +255,11 @@ WindUI:Notify({
 task.wait(1)
 
 local Window = WindUI:CreateWindow({
-    Title = "Vortex x Software [DMvSS]",
+    Title = "Vortex X Sage [DMvSS]",
     Icon = "rbxassetid://118833096342184",
     IconSize = "35",
     Author = "By Israelcc & Novak",
-    Folder = "VortexXSoftware",
+    Folder = "VortexXSage",
     Background = "rbxassetid://133044138027516",
     Size = UDim2.fromOffset(680, 520),
     MinSize = Vector2.new(480, 360),
@@ -341,7 +344,7 @@ Window:OnClose(function() end)
 -- HELPER FUNCTIONS FOR COMBAT MODULE
 -- ==========================================
 local function showBottomMessage(msg)
-    WindUI:Notify({ Title = "Vortex x Software", Content = msg, Duration = 2 })
+    WindUI:Notify({ Title = "Vortex X Sage", Content = msg, Duration = 2 })
 end
 
 -- forward refs (FPS/Ping + bubbles)
@@ -432,7 +435,7 @@ InfoTab:Select()
 InfoTab:Section({ Title = "Acerca del Script" })
 
 InfoTab:Paragraph({
-    Title = "Vortex X Software [DMvSS]",
+    Title = "Vortex X Sage [DMvSS]",
     Desc = "Script multi-executor para Duels (DMvSS).\nIncluye combate, ESP, visuales, farm, emotes y configuraciones.\nCompatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrolladores: Israelcc & Novak\nUI: WindUI\nVersión: 3.2.7"
 })
 
@@ -1067,7 +1070,7 @@ local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
 
     WindUI:Notify({
-        Title = "Vortex x Software",
+        Title = "Vortex X Sage",
         Content = "Ghost Mode: " .. (invisState.isInvisible and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
@@ -1187,7 +1190,7 @@ local function executeDesyncLogic()
     desyncState.isDesynced = not desyncState.isDesynced
 
     WindUI:Notify({
-        Title = "Vortex x Software",
+        Title = "Vortex X Sage",
         Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"),
         Duration = 2
     })
@@ -1330,6 +1333,323 @@ local Tabs = { Aim = combatTab }
 -- AutoFarm tab (Popular, debajo de Combat)
 local farmTab = mainSection:Tab({ Title = "AutoFarm", Icon = "coins", ShowTabTitle = true, Border = true })
 Tabs.Farm = farmTab
+
+-- ==========================================
+-- MOVEMENT TAB (Popular) - Speed / Fly / Inf Jump con spoof
+-- ==========================================
+local movementTab = mainSection:Tab({ Title = "Movement", Icon = "zap", ShowTabTitle = true, Border = true })
+Tabs.Movement = movementTab
+
+local moveSpeedEnabled = false
+local moveSpeedValue = 28
+local moveFlyEnabled = false
+local moveFlySpeed = 80
+local moveInfJumpEnabled = false
+local moveNoclipEnabled = false
+local moveNoclipConn = nil
+local moveSpeedGlitchEnabled = false
+local moveSpeedGlitchConn = nil
+local moveGlitchJumpConn = nil
+local moveFlyBV, moveFlyBG = nil, nil
+local moveConns = {}
+
+local function moveGetChar()
+    return LocalPlayer.Character
+end
+
+local function moveGetHum()
+    local c = moveGetChar()
+    return c and c:FindFirstChildOfClass("Humanoid")
+end
+
+local function moveGetRoot()
+    local c = moveGetChar()
+    return c and c:FindFirstChild("HumanoidRootPart")
+end
+
+local function setProtectedWalkSpeed(hum, realSpeed)
+    if not hum then return end
+    -- Valor real alto; a scripts/AC que lean sin checkcaller les devolvemos 16
+    if not spoofedWalkSpeeds[hum] then
+        spoofedWalkSpeeds[hum] = 16
+    end
+    pcall(function()
+        hum.WalkSpeed = realSpeed
+    end)
+end
+
+local function clearWalkSpeedSpoof(hum)
+    if hum and spoofedWalkSpeeds[hum] then
+        spoofedWalkSpeeds[hum] = nil
+        pcall(function()
+            if hum.Parent then hum.WalkSpeed = 16 end
+        end)
+    end
+end
+
+local function stopFlyMovers()
+    if moveFlyBV then pcall(function() moveFlyBV:Destroy() end) moveFlyBV = nil end
+    if moveFlyBG then pcall(function() moveFlyBG:Destroy() end) moveFlyBG = nil end
+    local hum = moveGetHum()
+    if hum then
+        pcall(function()
+            hum.PlatformStand = false
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+        end)
+    end
+end
+
+local function startFlyMovers()
+    stopFlyMovers()
+    local root = moveGetRoot()
+    if not root then return end
+    local ok = pcall(function()
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = _gameLikeName()
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Velocity = Vector3.zero
+        bv.Parent = root
+        moveFlyBV = bv
+        local bg = Instance.new("BodyGyro")
+        bg.Name = _gameLikeName()
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.P = 9e4
+        bg.CFrame = root.CFrame
+        bg.Parent = root
+        moveFlyBG = bg
+    end)
+    if not ok then stopFlyMovers() end
+end
+
+movementTab:Section({ Title = "Movimiento protegido" })
+movementTab:Paragraph({
+    Title = "Aviso",
+    Desc = "Speed usa spoof de WalkSpeed. Fly e Inf Jump usan nombres random. Aun asi el server puede detectar movimiento raro."
+})
+
+movementTab:Toggle({
+    Title = "Velocidad (Speed)",
+    Default = false,
+    Callback = function(state)
+        moveSpeedEnabled = state
+        local hum = moveGetHum()
+        if state then
+            -- apaga glitch para no chocar
+            if moveSpeedGlitchEnabled then
+                moveSpeedGlitchEnabled = false
+                if moveSpeedGlitchConn then moveSpeedGlitchConn:Disconnect(); moveSpeedGlitchConn = nil end
+                if moveGlitchJumpConn then moveGlitchJumpConn:Disconnect(); moveGlitchJumpConn = nil end
+            end
+            setProtectedWalkSpeed(hum, moveSpeedValue)
+        else
+            clearWalkSpeedSpoof(hum)
+        end
+        showBottomMessage(state and ("Speed ON: " .. tostring(moveSpeedValue)) or "Speed OFF")
+    end
+})
+
+movementTab:Slider({
+    Title = "Valor de velocidad",
+    Value = { Min = 16, Max = 120, Default = 28 },
+    Callback = function(v)
+        moveSpeedValue = v
+        if moveSpeedEnabled then
+            setProtectedWalkSpeed(moveGetHum(), moveSpeedValue)
+        end
+    end
+})
+
+movementTab:Toggle({
+    Title = "Vuelo (Fly)",
+    Default = false,
+    Callback = function(state)
+        moveFlyEnabled = state
+        if state then
+            startFlyMovers()
+        else
+            stopFlyMovers()
+        end
+        showBottomMessage(state and "Fly ON" or "Fly OFF")
+    end
+})
+
+movementTab:Slider({
+    Title = "Velocidad de vuelo",
+    Value = { Min = 20, Max = 250, Default = 80 },
+    Callback = function(v)
+        moveFlySpeed = v
+    end
+})
+
+movementTab:Toggle({
+    Title = "Salto infinito",
+    Default = false,
+    Callback = function(state)
+        moveInfJumpEnabled = state
+        showBottomMessage(state and "Inf Jump ON" or "Inf Jump OFF")
+    end
+})
+
+-- Noclip
+movementTab:Toggle({
+    Title = "Noclip",
+    Default = false,
+    Callback = function(state)
+        moveNoclipEnabled = state
+        if state then
+            if not moveNoclipConn then
+                moveNoclipConn = RunService.Stepped:Connect(function()
+                    if not moveNoclipEnabled then return end
+                    local char = moveGetChar()
+                    if not char then return end
+                    for _, part in pairs(char:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.CanCollide = false
+                        end
+                    end
+                end)
+            end
+            showBottomMessage("Noclip ON")
+        else
+            if moveNoclipConn then
+                moveNoclipConn:Disconnect()
+                moveNoclipConn = nil
+            end
+            showBottomMessage("Noclip OFF")
+        end
+    end
+})
+
+-- Glitch de velocidad (igual que MM2: velocidad en aire, 16 en suelo)
+movementTab:Toggle({
+    Title = "Glitch de Velocidad",
+    Desc = "Velocidad al saltar/caer; normal en el suelo. Se apaga el Speed permanente.",
+    Default = false,
+    Callback = function(state)
+        moveSpeedGlitchEnabled = state
+        if state then
+            if moveSpeedEnabled then
+                moveSpeedEnabled = false
+                clearWalkSpeedSpoof(moveGetHum())
+            end
+            if not moveGlitchJumpConn then
+                moveGlitchJumpConn = UserInputService.JumpRequest:Connect(function()
+                    if not moveSpeedGlitchEnabled then return end
+                    local hum = moveGetHum()
+                    if hum then
+                        -- velocidad justo antes de despegar (con spoof)
+                        setProtectedWalkSpeed(hum, moveSpeedValue)
+                    end
+                end)
+            end
+            if not moveSpeedGlitchConn then
+                moveSpeedGlitchConn = RunService.Stepped:Connect(function()
+                    if not moveSpeedGlitchEnabled then return end
+                    local hum = moveGetHum()
+                    if not hum then return end
+                    local st = hum:GetState()
+                    local inAir = (st == Enum.HumanoidStateType.Jumping or st == Enum.HumanoidStateType.Freefall)
+                    if inAir then
+                        if hum.WalkSpeed ~= moveSpeedValue then
+                            setProtectedWalkSpeed(hum, moveSpeedValue)
+                        end
+                    else
+                        if not moveSpeedEnabled and hum.WalkSpeed ~= 16 then
+                            clearWalkSpeedSpoof(hum)
+                            pcall(function() hum.WalkSpeed = 16 end)
+                        end
+                    end
+                end)
+            end
+            showBottomMessage("Speed Glitch ON")
+        else
+            if moveSpeedGlitchConn then
+                moveSpeedGlitchConn:Disconnect()
+                moveSpeedGlitchConn = nil
+            end
+            if moveGlitchJumpConn then
+                moveGlitchJumpConn:Disconnect()
+                moveGlitchJumpConn = nil
+            end
+            if not moveSpeedEnabled then
+                clearWalkSpeedSpoof(moveGetHum())
+            end
+            showBottomMessage("Speed Glitch OFF")
+        end
+    end
+})
+
+-- Loop movimiento
+task.spawn(function()
+    while true do
+        task.wait(0.05)
+        pcall(function()
+            if moveSpeedEnabled then
+                local hum = moveGetHum()
+                if hum and hum.WalkSpeed ~= moveSpeedValue then
+                    setProtectedWalkSpeed(hum, moveSpeedValue)
+                end
+            end
+            if moveFlyEnabled then
+                local root = moveGetRoot()
+                local hum = moveGetHum()
+                if root then
+                    if not moveFlyBV or moveFlyBV.Parent ~= root then
+                        startFlyMovers()
+                    end
+                    if hum then
+                        pcall(function() hum.PlatformStand = true end)
+                    end
+                    local cam = workspace.CurrentCamera
+                    if cam and moveFlyBV then
+                        local dir = Vector3.zero
+                        if not UserInputService:GetFocusedTextBox() then
+                            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
+                                dir -= Vector3.yAxis
+                            end
+                        end
+                        if dir.Magnitude > 0.1 then
+                            moveFlyBV.Velocity = dir.Unit * moveFlySpeed
+                        else
+                            moveFlyBV.Velocity = Vector3.zero
+                        end
+                        if moveFlyBG then
+                            local flat = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+                            if flat.Magnitude > 0.05 then
+                                moveFlyBG.CFrame = CFrame.new(root.Position, root.Position + flat)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+table.insert(moveConns, UserInputService.JumpRequest:Connect(function()
+    if not moveInfJumpEnabled then return end
+    local hum = moveGetHum()
+    if hum then
+        pcall(function()
+            hum:ChangeState(Enum.HumanoidStateType.Jumping)
+        end)
+    end
+end))
+
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.4)
+    if moveSpeedEnabled then
+        setProtectedWalkSpeed(moveGetHum(), moveSpeedValue)
+    end
+    if moveFlyEnabled then
+        startFlyMovers()
+    end
+end)
 
 local UIElements = {}
 
@@ -3367,4 +3687,4 @@ Tabs.Farm:Toggle({
     end
 })
 
-print("[Vortex] DMvSS v3.2.7 loaded")
+print("[Vortex X Sage] DMvSS v3.2.7 loaded")
