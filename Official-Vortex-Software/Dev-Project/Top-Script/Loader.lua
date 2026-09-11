@@ -2,11 +2,11 @@ if not game:IsLoaded() then
     game.Loaded:Wait()
 end
 
-local BASE_URL = "https://raw.githubusercontent.com/Israel-Vortex/vortex-x-scripts/refs/heads/main/Official-Vortex-Software/Vortex-Devs/"
+local BASE_URL = "https://raw.githubusercontent.com/Israel-Vortex/vortex-x-scripts/refs/heads/main/Official-Vortex-Software/Dev-Project/Top-Script/"
 
 -- Diccionario con los PlaceIds y sus respectivos archivos .lua
 local games = {
-    [135856908115931] = "DMVSS.lua",
+    [135856908115931] = "Duels.lua",
     [142823291]       = "MM2.lua",
     [286090429]       = "Arsenal.lua",
     [125927821145949] = "MOUNTAIN.lua",
