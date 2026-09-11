@@ -2334,18 +2334,35 @@ local function updateSystem()
                     return
                 end
 
-                if v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton") then
-                    processText(v, myName, myDisp)
-                    if not v:GetAttribute(infectAttrName) then
-                        v:SetAttribute(infectAttrName, true)
-                        v:GetPropertyChangedSignal("Text"):Connect(function()
-                            if isWorkspaceLooping and v.Text ~= spoofNameText and v.Text ~= " " and not string.find(v.Text, spoofNameText) and not string.find(v.Text, "%[Content Creator%]") then
-                                originalData[v] = nil
-                                processText(v, myName, myDisp)
-                            end
-                        end)
-                    end
+                if not (v:IsA("TextLabel") or v:IsA("TextBox") or v:IsA("TextButton")) then
+                    return
                 end
+
+                -- Protección: no reinfectar el mismo label
+                if v:GetAttribute(infectAttrName) then
+                    return
+                end
+                v:SetAttribute(infectAttrName, true)
+
+                local function checkAndReplace()
+                    if not isWorkspaceLooping then
+                        return
+                    end
+                    local txt = v.Text
+                    if not txt or txt == "" then
+                        return
+                    end
+                    -- Si el juego resetea el texto al nombre real, re-aplicar spoof
+                    if txt ~= spoofNameText and txt ~= " "
+                        and not string.find(txt, spoofNameText, 1, true)
+                        and not string.find(txt, "[Content Creator]", 1, true) then
+                        originalData[v] = nil
+                    end
+                    processText(v, myName, myDisp)
+                end
+
+                checkAndReplace()
+                v:GetPropertyChangedSignal("Text"):Connect(checkAndReplace)
             end
 
             local pGui = player:FindFirstChild("PlayerGui")
