@@ -164,7 +164,7 @@ local COLORS = {
         money = Color3.fromRGB(60, 255, 90),
         default = Color3.fromRGB(0, 225, 255),
         extra = Color3.fromRGB(255, 255, 255),
-        player = Color3.fromRGB(255, 40, 140),
+        player = Color3.fromRGB(255, 190, 50),
         stroke = Color3.fromRGB(0, 0, 0),
         hexDistance = "00E5FF",
         hexLuck = "FFC400",
@@ -213,75 +213,102 @@ local PARSE_MULTIPLIERS = { k = 1e3, m = 1e6, b = 1e9, t = 1e12, qa = 1e15 }
 local CONTAINER_NAMES = { "DroppedCrystals", "Crystals" }
 
 -- Configuración y Carga de WindUI
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+local WindUI
+do
+    local urls = {
+        "https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua",
+        "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
+    }
+    for _, url in ipairs(urls) do
+        local ok, res = pcall(function()
+            return loadstring(game:HttpGet(url))()
+        end)
+        if ok and res then
+            WindUI = res
+            break
+        end
+    end
+end
+if not WindUI then
+    warn("[Vortex] No se pudo cargar WindUI")
+    return
+end
 
-WindUI:Notify({ Title = "Vortex x Software", Content = "Iniciando sesion... Por favor espera.", Duration = 3 })
+WindUI:Notify({ Title = "Vortex X Sage", Content = "Iniciando sesion... Por favor espera.", Duration = 3 })
 task.wait(3)
-WindUI:Notify({ Title = "Vortex x Software", Content = "Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...", Duration = 2 })
+WindUI:Notify({ Title = "Vortex X Sage", Content = "Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...", Duration = 2 })
 task.wait(2)
 
 WindUI:AddTheme({
-    Name = "VortexCrimsonSolid",
-    Accent = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 45 }),
-    Background = Color3.fromRGB(12, 12, 12), BackgroundTransparency = 0, Outline = Color3.fromRGB(255, 30, 80),
-    Text = Color3.fromRGB(245, 245, 245), Placeholder = Color3.fromRGB(150, 150, 150), Button = Color3.fromRGB(210, 15, 60),
-    Icon = Color3.fromRGB(255, 50, 90), Hover = Color3.fromRGB(255, 255, 255),
+    Name = "VortexGoldSolid",
+    Accent = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(160, 110, 20), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 195, 45), Transparency = 0 } }, { Rotation = 45 }),
+    Background = Color3.fromRGB(12, 12, 12), BackgroundTransparency = 0, Outline = Color3.fromRGB(255, 195, 45),
+    Text = Color3.fromRGB(245, 245, 245), Placeholder = Color3.fromRGB(150, 150, 150), Button = Color3.fromRGB(210, 160, 35),
+    Icon = Color3.fromRGB(255, 205, 70), Hover = Color3.fromRGB(255, 255, 255),
     WindowBackground = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(16, 16, 16), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(10, 10, 10), Transparency = 0 } }, { Rotation = 45 }),
-    WindowShadow = Color3.fromRGB(255, 30, 80), DialogBackground = Color3.fromRGB(22, 22, 22), DialogBackgroundTransparency = 0,
-    DialogTitle = Color3.fromRGB(255, 255, 255), DialogContent = Color3.fromRGB(220, 220, 220), DialogIcon = Color3.fromRGB(255, 50, 90),
+    WindowShadow = Color3.fromRGB(255, 195, 45), DialogBackground = Color3.fromRGB(22, 22, 22), DialogBackgroundTransparency = 0,
+    DialogTitle = Color3.fromRGB(255, 255, 255), DialogContent = Color3.fromRGB(220, 220, 220), DialogIcon = Color3.fromRGB(255, 205, 70),
     WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255), WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
-    WindowTopbarAuthor = Color3.fromRGB(180, 180, 180), WindowTopbarIcon = Color3.fromRGB(255, 50, 90),
-    TabBackground = Color3.fromRGB(20, 20, 20), TabTitle = Color3.fromRGB(240, 240, 240), TabIcon = Color3.fromRGB(255, 50, 90),
+    WindowTopbarAuthor = Color3.fromRGB(180, 180, 180), WindowTopbarIcon = Color3.fromRGB(255, 205, 70),
+    TabBackground = Color3.fromRGB(20, 20, 20), TabTitle = Color3.fromRGB(240, 240, 240), TabIcon = Color3.fromRGB(255, 205, 70),
     ElementBackground = Color3.fromRGB(22, 22, 22), ElementTitle = Color3.fromRGB(255, 255, 255), ElementDesc = Color3.fromRGB(170, 170, 170),
-    ElementIcon = Color3.fromRGB(255, 50, 90), PopupBackground = Color3.fromRGB(22, 22, 22), PopupBackgroundTransparency = 0,
-    PopupTitle = Color3.fromRGB(255, 255, 255), PopupContent = Color3.fromRGB(200, 200, 200), PopupIcon = Color3.fromRGB(255, 50, 90),
-    Toggle = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 90 }),
+    ElementIcon = Color3.fromRGB(255, 205, 70), PopupBackground = Color3.fromRGB(22, 22, 22), PopupBackgroundTransparency = 0,
+    PopupTitle = Color3.fromRGB(255, 255, 255), PopupContent = Color3.fromRGB(200, 200, 200), PopupIcon = Color3.fromRGB(255, 205, 70),
+    Toggle = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(160, 110, 20), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 195, 45), Transparency = 0 } }, { Rotation = 90 }),
     ToggleBar = Color3.fromRGB(30, 30, 30), Checkbox = Color3.fromRGB(30, 30, 30), CheckboxIcon = Color3.fromRGB(255, 255, 255),
-    Slider = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(150, 0, 30), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 30, 80), Transparency = 0 } }, { Rotation = 0 }),
+    Slider = WindUI:Gradient({ ["0"] = { Color = Color3.fromRGB(160, 110, 20), Transparency = 0 }, ["100"] = { Color = Color3.fromRGB(255, 195, 45), Transparency = 0 } }, { Rotation = 0 }),
     SliderThumb = Color3.fromRGB(255, 255, 255)
 })
-WindUI:SetTheme("VortexCrimsonSolid")
+WindUI:SetTheme("VortexGoldSolid")
 
 local Window = WindUI:CreateWindow({
-    Title = "Vortex x Software [MINE A MOUNTAIN]",
-    Icon = "rbxassetid://80571845178865",
+    Title = "Vortex X Sage [MINE A MOUNTAIN]",
+    Icon = "rbxassetid://118833096342184",
     IconSize = 35,
     Author = "by ISRAEL CC",
-    Folder = "VortexXSoftwareMineAMountain",
-    Background = "rbxassetid://129234239237449",
-    Resizable = false,
+    Folder = "VortexXSageMineAMountain",
+    Background = "rbxassetid://133044138027516",
+    Size = UDim2.fromOffset(680, 520),
+    MinSize = Vector2.new(480, 360),
+    MaxSize = Vector2.new(1100, 800),
+    Resizable = true,
     HideSearchBar = true,
     Transparent = false,
-    Theme = "VortexCrimsonSolid",
+    Theme = "VortexGoldSolid",
     User = { Enabled = true, Anonymous = false }
 })
 
 Window:EditOpenButton({
     Title = "VXS",
-    Icon = "rbxassetid://80571845178865",
+    Icon = "rbxassetid://118833096342184",
     CornerRadius = UDim.new(1, 0),
     StrokeThickness = 2,
     Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 0, 30)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(230, 0, 50)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 50, 90))
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
     }),
     OnlyMobile = true,
     Enabled = true,
     Draggable = true
 })
 
-Window:Tag({ Title = "v1.3.4", Icon = "github", Color = Color3.fromRGB(230, 0, 50) })
+Window:Tag({ Title = "v1.3.4", Icon = "github", Color = Color3.fromRGB(220, 170, 40) })
 Window:SetToggleKey(Enum.KeyCode.RightAlt)
 
+local mainSection = Window:Section({ Title = "Principal", Opened = true })
+local extraSection = Window:Section({ Title = "Extra", Opened = true })
+
 local Tabs = {
-        Crystals = Window:Tab({ Title = "Crystals", Icon = "gem" }),
-        Players = Window:Tab({ Title = "Players", Icon = "users" }),
-        Boulders = Window:Tab({ Title = "Boulders", Icon = "mountain" }),
-        Teleports = Window:Tab({ Title = "Teleports", Icon = "crosshair" }),
-        Farming = Window:Tab({ Title = "Farming", Icon = "pickaxe" }),
-        Movement = Window:Tab({ Title = "Movement", Icon = "zap" }),
-        Settings = Window:Tab({ Title = "Settings", Icon = "settings" }),
+        -- Principal
+        Farming = mainSection:Tab({ Title = "Farming", Icon = "pickaxe" }),
+        Crystals = mainSection:Tab({ Title = "Crystals", Icon = "gem" }),
+        Teleports = mainSection:Tab({ Title = "Teleports", Icon = "crosshair" }),
+        Boulders = mainSection:Tab({ Title = "Boulders", Icon = "mountain" }),
+        -- Extra
+        Players = extraSection:Tab({ Title = "Players", Icon = "users" }),
+        Movement = extraSection:Tab({ Title = "Movement", Icon = "zap" }),
+        Settings = extraSection:Tab({ Title = "Settings", Icon = "settings" }),
 }
 
 local EspHolder = Instance.new("Folder")
@@ -346,8 +373,8 @@ local function formatShort(n, prefix)
 
         local index = 0
         while n >= 1000 and index < #SUFFIXES - 1 do
-                n /= 1000
-                index += 1
+                n = n / (1000)
+                index = index + (1)
         end
 
         return string.format("%s%s%.2f%s", sign, prefix, n, SUFFIXES[index + 1])
@@ -514,19 +541,19 @@ local function combinedLuckMult(inst)
         if type(extra) == "string" and extra ~= "" then
                 for name in string.gmatch(extra, "[^,]+") do
                         if name ~= "" then
-                                multiplier *= mutationLuck(name)
+                                multiplier = multiplier * (mutationLuck(name))
                         end
                 end
         end
 
         if getAttr(inst, "IsBloodCrystal") == true then
-                multiplier *= LUCK.blood
+                multiplier = multiplier * (LUCK.blood)
         end
 
         if getAttr(inst, "AdminMutation") == "Radioactive" and mutation ~= "Radioactive" then
                 local hasRadioactive = type(extra) == "string" and extra:find("Radioactive", 1, true) ~= nil
                 if not hasRadioactive then
-                        multiplier *= mutationLuck("Radioactive")
+                        multiplier = multiplier * (mutationLuck("Radioactive"))
                 end
         end
 
@@ -543,7 +570,7 @@ local function computeLuck(inst)
         local base = (LUCK.rarity[tier] or LUCK.rarity[1]) * math.min(weight, LUCK.cap) ^ LUCK.exponent * LUCK.base
 
         if getAttr(inst, "BombCrystal") == true then
-                base *= LUCK.bomb
+                base = base * (LUCK.bomb)
         end
 
         return base * combinedLuckMult(inst)
@@ -637,7 +664,7 @@ local function backpackCapacity()
 
         local base = realStat("CarryWeight") or 10
         if ownsGamepass("CarryKgPlus4") then
-                base *= 4
+                base = base * (4)
         end
 
         local total = base + (realStat("CarryWeightBonus") or 0)
@@ -660,7 +687,7 @@ local function backpackWeight()
                         if child:IsA("Tool") and getAttr(child, "Tier") ~= nil then
                                 local kg = tonumber(getAttr(child, "WeightKg"))
                                 if kg then
-                                        total += kg
+                                        total = total + (kg)
                                 end
                         end
                 end
@@ -848,7 +875,7 @@ local function destroyEntry(inst, entry)
         end
 
         espCache[inst] = nil
-        espCount -= 1
+        espCount = espCount - (1)
         statsDirty = true
 end
 
@@ -951,7 +978,7 @@ local function untrackCrystal(inst)
         end
 
         registry[inst] = nil
-        registryCount -= 1
+        registryCount = registryCount - (1)
         dirty[inst] = nil
         candidates[inst] = nil
         statsDirty = true
@@ -966,7 +993,7 @@ local function trackCrystal(inst)
 
         local conns = {}
         registry[inst] = conns
-        registryCount += 1
+        registryCount = registryCount + (1)
         statsDirty = true
 
         local ok = pcall(function()
@@ -1037,7 +1064,7 @@ local function syncCrystal(inst)
 
                 entry = result
                 espCache[inst] = entry
-                espCount += 1
+                espCount = espCount + (1)
                 statsDirty = true
         end
 
@@ -1234,7 +1261,7 @@ local espConn = RunService.Heartbeat:Connect(function(deltaTime)
                 end
         end
 
-        sweepAccumulator += deltaTime
+        sweepAccumulator = sweepAccumulator + (deltaTime)
         if sweepAccumulator >= ESP.sweep then
                 sweepAccumulator = 0
                 local ok, err = pcall(function()
@@ -1246,7 +1273,7 @@ local espConn = RunService.Heartbeat:Connect(function(deltaTime)
                 end
         end
 
-        distanceAccumulator += deltaTime
+        distanceAccumulator = distanceAccumulator + (deltaTime)
         if distanceAccumulator >= PACE.distance then
                 distanceAccumulator = 0
                 local ok, err = pcall(updateDistances)
@@ -1860,7 +1887,7 @@ local function unfavoriteAll()
                                         child:SetAttribute("Favorited", false)
                                 end)
                                 fireRemote(ToggleFavorite, child, false)
-                                cleared += 1
+                                cleared = cleared + (1)
                         end
                 end
         end
@@ -1970,8 +1997,8 @@ local function pickupStep()
                         claimed[entry.inst] = now
 
                         if grabCrystal(entry.inst, entry.prompt) then
-                                budget -= entry.weight
-                                grabs += 1
+                                budget = budget - (entry.weight)
+                                grabs = grabs + (1)
                         end
                 end
         end
@@ -2175,7 +2202,7 @@ local schedulerConn = RunService.Heartbeat:Connect(function(deltaTime)
         end
 
         if instantPromptActive then
-                instantAccumulator += deltaTime
+                instantAccumulator = instantAccumulator + (deltaTime)
                 if instantAccumulator >= PICK.instantTick then
                         instantAccumulator = 0
                         local ok, err = pcall(refreshInstantPrompts)
@@ -2201,7 +2228,7 @@ local schedulerConn = RunService.Heartbeat:Connect(function(deltaTime)
                 end
         end
 
-        statsAccumulator += deltaTime
+        statsAccumulator = statsAccumulator + (deltaTime)
         if statsAccumulator >= PACE.stats then
                 statsAccumulator = 0
                 local ok, err = pcall(updateBackpackLabel)
@@ -2720,7 +2747,7 @@ do
                                 grabbed[prompt] = now
 
                                 if firePrompt(prompt) then
-                                        fired += 1
+                                        fired = fired + (1)
                                         notify(string.format("Runa obtenida: %s", runeTitle(owner)), 2, "zap")
                                 end
                         end)
@@ -2787,7 +2814,7 @@ do
                         local count = 0
 
                         eachRune(root.Position, radius or GRAB_RANGE, function()
-                                count += 1
+                                count = count + (1)
                         end)
 
                         return count
@@ -2803,7 +2830,7 @@ do
 
                 mountainConn = RunService.Heartbeat:Connect(function(deltaTime)
                         if boulderEsp then
-                                boulderClock += deltaTime
+                                boulderClock = boulderClock + (deltaTime)
                                 if boulderClock >= BOULDER_STEP then
                                         boulderClock = 0
                                         local ok, err = pcall(syncBoulders)
@@ -2814,7 +2841,7 @@ do
                         end
 
                         if autoGrab then
-                                grabClock += deltaTime
+                                grabClock = grabClock + (deltaTime)
                                 if grabClock >= GRAB_STEP then
                                         grabClock = 0
                                         local ok, err = pcall(grabRunes)
@@ -2937,11 +2964,11 @@ do
                                 for _, entry in ipairs(FLY_KEYS) do
                                         if UserInputService:IsKeyDown(entry.key) then
                                                 if entry.axis == "look" then
-                                                        direction += frame.LookVector * entry.sign
+                                                        direction = direction + (frame.LookVector * entry.sign)
                                                 elseif entry.axis == "right" then
-                                                        direction += frame.RightVector * entry.sign
+                                                        direction = direction + (frame.RightVector * entry.sign)
                                                 else
-                                                        direction += Vector3.yAxis * entry.sign
+                                                        direction = direction + (Vector3.yAxis * entry.sign)
                                                 end
                                         end
                                 end
@@ -3225,10 +3252,10 @@ do
                         if delta.Magnitude <= math.max(span, SNAP_GAP) then
                                 cursor = goalFrame.Position
                         else
-                                cursor += delta.Unit * span
+                                cursor = cursor + (delta.Unit * span)
                         end
 
-                        streamClock += deltaTime
+                        streamClock = streamClock + (deltaTime)
                         if streamClock >= STREAM_GAP then
                                 streamClock = 0
                                 requestStream(goalFrame.Position)
