@@ -17,7 +17,7 @@ if _G.MusicTesterCleanup then
 	_G.MusicTesterCleanup = nil
 end
 
-local LIB_URL = "https://raw.githubusercontent.com/Ryshub/music/main/lib.lua"
+local LIB_URL = "https://raw.github.com/Israel-Vortex/vortex-x-scripts/blob/main/Music%2FSega%2FVortexHub%2FSega-Vortex%2Flib.lua"
 local ICONS_URL = "https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"
 local ICON_PACK = "sfsymbols"
 local SAVE_DIR = "VortexXSage/music"
