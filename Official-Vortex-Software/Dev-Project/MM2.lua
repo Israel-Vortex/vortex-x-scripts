@@ -56,6 +56,7 @@ local gunAimbotTeamCheck = true
 local silentAimEnabled = false
 local silentAimHitChance = 100
 local touchFlingEnabled = false
+local touchFlingThread = nil
 local coinAutoCollect = false
 local autoGetDroppedGun = false
 local lastRoleAnnounced = nil 
@@ -3442,15 +3443,57 @@ Tabs.Troll:Button({
 
 Tabs.Troll:Section({ Title = "Touch y Protección" })
 
+
+-- ===================== TOUCH / FLING (lógica exacta del Multi-Hack) =====================
+local flingEnabled = false
+local flingThread = nil
+
+local function startFling()
+    local lp = Players.LocalPlayer
+    local c, hrp, vel, movel = nil, nil, nil, 0.1
+    while flingEnabled and flingEnabled == true do
+        RunService.Heartbeat:Wait()
+        c = lp.Character
+        hrp = c and c:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            vel = hrp.Velocity
+            hrp.Velocity = vel * 10000 + Vector3.new(0, 10000, 0)
+            RunService.RenderStepped:Wait()
+            hrp.Velocity = vel
+            RunService.Stepped:Wait()
+            hrp.Velocity = vel + Vector3.new(0, movel, 0)
+            movel = -movel
+        end
+    end
+end
+
 Tabs.Troll:Toggle({
     Title = "Touch Fling",
-    Desc = "Gira a velocidad extrema y lanza a quien te toque.",
+    Desc = "Fling por contacto (misma lógica Multi-Hack).",
     Value = false,
     Callback = function(val)
+        flingEnabled = val
         touchFlingEnabled = val
-        sendNotification(val and "Touch Fling: ON" or "Touch Fling: OFF")
+        if flingEnabled then
+            if flingThread and coroutine.status(flingThread) == "running" then
+                pcall(function() coroutine.close(flingThread) end)
+            end
+            flingThread = coroutine.create(startFling)
+            coroutine.resume(flingThread)
+            sendNotification("Touch Fling: ON")
+        else
+            flingEnabled = false
+            touchFlingEnabled = false
+            if flingThread and coroutine.status(flingThread) == "running" then
+                pcall(function() coroutine.close(flingThread) end)
+                flingThread = nil
+            end
+            sendNotification("Touch Fling: OFF")
+        end
     end
 })
+
+
 
 -- Anti-Fling: keep the style already used in THIS script (not mm2)
 UIElements.ToggleAntiFling = Tabs.Troll:Toggle({
@@ -3491,21 +3534,6 @@ UIElements.ToggleAntiFling = Tabs.Troll:Toggle({
         end
     end
 })
-
--- Touch Fling loop (from mm2)
-RunService.Heartbeat:Connect(function()
-    if touchFlingEnabled and not isFlingingActive then
-        pcall(function()
-            local char = player.Character
-            local hrp = char and char:FindFirstChild("HumanoidRootPart")
-            if hrp then
-                local vel = hrp.AssemblyLinearVelocity
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 999999, 0)
-                hrp.AssemblyLinearVelocity = Vector3.new(vel.X, 9999, vel.Z)
-            end
-        end)
-    end
-end)
 
 Tabs.Bubbles:Section({ Title = "Editar / Mover" })
 
