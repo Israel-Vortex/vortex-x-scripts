@@ -246,14 +246,7 @@ WindUI:Notify({
 
 task.wait(2)
 
-WindUI:Notify({
-    Title = "Vortex X Sage",
-    Content = "Acceso concedido, " .. LocalPlayer.Name .. "! Interfaz de carga...",
-    Duration = 2
-})
-
-task.wait(1)
-
+WindUI
 local Window = WindUI:CreateWindow({
     Title = "Vortex X Sage [DMvSS]",
     Icon = "rbxassetid://118833096342184",
