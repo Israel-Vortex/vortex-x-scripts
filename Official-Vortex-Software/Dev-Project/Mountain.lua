@@ -234,10 +234,12 @@ if not WindUI then
     return
 end
 
-WindUI:Notify({ Title = "Vortex X Sage", Content = "Iniciando sesion... Por favor espera.", Duration = 3 })
-task.wait(3)
-WindUI:Notify({ Title = "Vortex X Sage", Content = "Acceso Concedido, " .. LocalPlayer.Name .. "! Cargando interfaz...", Duration = 2 })
-task.wait(2)
+WindUI:Notify({
+    Title = "Login VortexHub",
+    Content = "Login VortexHub",
+    Duration = 2
+})
+task.wait(0.4)
 
 WindUI:AddTheme({
     Name = "VortexGoldSolid",
