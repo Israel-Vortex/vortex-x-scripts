@@ -240,7 +240,7 @@ end
 
 WindUI:Notify({
     Title = "Vortex X Sage",
-    Content = "Iniciando sesión... Por favor, espere.",
+    Content = "Login VortexHub.",
     Duration = 3
 })
 
