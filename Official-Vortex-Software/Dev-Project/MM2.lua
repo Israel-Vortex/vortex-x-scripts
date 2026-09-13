@@ -640,17 +640,86 @@ Tabs.Info:Paragraph({
 Tabs.Info:Section({ Title = "FPS y Ping" })
 
 local showFpsPing = false
--- FPS label may already exist elsewhere; toggle only notifies if not present
+local fpsScreenGui = nil
+local fpsPingLabel = nil
+local fpsPingConn = nil
+
+local function ensureFpsPingGui()
+    if fpsScreenGui and fpsScreenGui.Parent then return end
+    local parent = (gethui and gethui()) or CoreGui or player:FindFirstChildOfClass("PlayerGui")
+    fpsScreenGui = Instance.new("ScreenGui")
+    fpsScreenGui.Name = "VortexFpsPing"
+    fpsScreenGui.ResetOnSpawn = false
+    fpsScreenGui.IgnoreGuiInset = true
+    fpsScreenGui.DisplayOrder = 9990
+    fpsScreenGui.Enabled = false
+    fpsScreenGui.Parent = parent
+
+    local frame = Instance.new("Frame")
+    frame.Name = "Box"
+    frame.AnchorPoint = Vector2.new(1, 0)
+    frame.Position = UDim2.new(1, -12, 0, 10)
+    frame.Size = UDim2.fromOffset(128, 44)
+    frame.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+    frame.BackgroundTransparency = 0.15
+    frame.BorderSizePixel = 0
+    frame.Parent = fpsScreenGui
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
+    local st = Instance.new("UIStroke", frame)
+    st.Color = Color3.fromRGB(255, 200, 55)
+    st.Thickness = 1.2
+    st.Transparency = 0.35
+
+    fpsPingLabel = Instance.new("TextLabel")
+    fpsPingLabel.Name = "Text"
+    fpsPingLabel.BackgroundTransparency = 1
+    fpsPingLabel.Size = UDim2.fromScale(1, 1)
+    fpsPingLabel.Font = Enum.Font.GothamBold
+    fpsPingLabel.TextSize = 13
+    fpsPingLabel.TextColor3 = Color3.fromRGB(255, 220, 90)
+    fpsPingLabel.Text = "FPS: --\nPing: --"
+    fpsPingLabel.TextYAlignment = Enum.TextYAlignment.Center
+    fpsPingLabel.Parent = frame
+end
+
+local function startFpsPingLoop()
+    if fpsPingConn then return end
+    local last = tick()
+    local frames = 0
+    local fps = 0
+    fpsPingConn = RunService.RenderStepped:Connect(function()
+        if not showFpsPing then return end
+        frames = frames + 1
+        local now = tick()
+        if now - last >= 0.5 then
+            fps = math.floor(frames / (now - last) + 0.5)
+            frames = 0
+            last = now
+            local ping = 0
+            pcall(function()
+                ping = math.floor(player:GetNetworkPing() * 1000 + 0.5)
+            end)
+            if fpsPingLabel then
+                fpsPingLabel.Text = string.format("FPS: %d\nPing: %d ms", fps, ping)
+            end
+        end
+    end)
+end
+
 Tabs.Info:Toggle({
     Title = "Mostrar FPS y Ping",
-    Desc = "Activa o desactiva el contador de FPS y Ping en pantalla.",
+    Desc = "Muestra un contador de FPS y Ping en la esquina.",
     Default = false,
     Callback = function(state)
         showFpsPing = state
-        pcall(function()
-            if fpsPingLabel then fpsPingLabel.Visible = state end
-            if fpsScreenGui then fpsScreenGui.Enabled = state end
-        end)
+        ensureFpsPingGui()
+        startFpsPingLoop()
+        if fpsScreenGui then
+            fpsScreenGui.Enabled = state
+        end
+        if fpsPingLabel then
+            fpsPingLabel.Visible = state
+        end
         sendNotification(state and "FPS/Ping: ON" or "FPS/Ping: OFF")
     end
 })
