@@ -418,13 +418,13 @@ end
 local LocalPlayer = player
 
 pcall(function()
-    WindUI:Notify({
-        Title = "Vortex X Sage",
-        Content = Login VortexHub.",
-        Duration = 3
-    })
+WindUI:Notify({
+    Title = "Login VortexHub",
+    Content = "Login VortexHub",
+    Duration = 2
+})
 end)
-task.wait(0.8)
+task.wait(0.4)
 
 local Window = WindUI:CreateWindow({
     Title = "Vortex X Sage [MM2]",
