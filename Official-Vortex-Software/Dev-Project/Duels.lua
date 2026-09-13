@@ -239,53 +239,12 @@ if not WindUI then
 end
 
 WindUI:Notify({
-    Title = "Vortex X Sage",
-    Content = "Login VortexHub.",
-    Duration = 3
+    Title = "Login VortexHub",
+    Content = "Login VortexHub",
+    Duration = 2
 })
 
-task.wait(2)
-
-WindUI
-local Window = WindUI:CreateWindow({
-    Title = "Vortex X Sage [DMvSS]",
-    Icon = "rbxassetid://118833096342184",
-    IconSize = "35",
-    Author = "By Israelcc & Novak",
-    Folder = "VortexXSage",
-    Background = "rbxassetid://133044138027516",
-    Size = UDim2.fromOffset(680, 520),
-    MinSize = Vector2.new(480, 360),
-    MaxSize = Vector2.new(1100, 800),
-    Resizable = true,
-    HideSearchBar = true,
-    Transparent = false,
-    Theme = "Dark",
-    User = { Enabled = true, Anonymous = false }
-})
-
-Window:EditOpenButton({
-    Title = "VXS",
-    Icon = "rbxassetid://118833096342184",
-    CornerRadius = UDim.new(1, 0),
-    StrokeThickness = 2,
-    Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
-        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
-    }),
-    OnlyMobile = true,
-    Enabled = true,
-    Draggable = true,
-})
-
-pcall(function()
-    Window:Tag({
-        Title = "v3.2.7",
-        Icon = "github",
-        Color = Color3.fromRGB(220, 170, 40)
-    })
-end)
+task.wait(0.4)
 
 WindUI:AddTheme({
     Name = "VortexGoldSolid",
@@ -330,8 +289,59 @@ WindUI:AddTheme({
 })
 
 WindUI:SetTheme("VortexGoldSolid")
+
+local Window = WindUI:CreateWindow({
+    Title = "Vortex X Sage [DMvSS]",
+    Icon = "rbxassetid://118833096342184",
+    IconSize = "35",
+    Author = "By Israelcc & Novak",
+    Folder = "VortexXSage",
+    Background = "rbxassetid://133044138027516",
+    Size = UDim2.fromOffset(680, 520),
+    MinSize = Vector2.new(480, 360),
+    MaxSize = Vector2.new(1100, 800),
+    Resizable = true,
+    HideSearchBar = true,
+    Transparent = false,
+    Theme = "VortexGoldSolid",
+    User = { Enabled = true, Anonymous = false }
+})
+
+Window:EditOpenButton({
+    Title = "VXS",
+    Icon = "rbxassetid://118833096342184",
+    CornerRadius = UDim.new(1, 0),
+    StrokeThickness = 2,
+    Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+        ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
+    }),
+    OnlyMobile = true,
+    Enabled = true,
+    Draggable = true,
+})
+
+pcall(function()
+    Window:Tag({
+        Title = "v3.2.7",
+        Icon = "github",
+        Color = Color3.fromRGB(220, 170, 40)
+    })
+end)
+
+
 Window:SetToggleKey(Enum.KeyCode.K)
 Window:OnClose(function() end)
+
+-- Deja que WindUI termine de montar la ventana antes de crear tabs/toggles
+task.wait(0.35)
+local UI_READY = false
+task.defer(function()
+    task.wait(0.15)
+    UI_READY = true
+end)
+
 
 -- ==========================================
 -- HELPER FUNCTIONS FOR COMBAT MODULE
@@ -354,7 +364,6 @@ local function makeDraggable(trigger, target, canDragFn)
             dragging = true
             dragStart = input.Position
             startPos = target.Position
-            input.UserInputConsumed = true
         end
     end)
     trigger.InputChanged:Connect(function(input)
@@ -494,17 +503,58 @@ InfoTab:Section({ Title = "Monitor" })
 
 InfoTab:Toggle({
     Title = "Mostrar FPS y Ping",
-    Desc = "Activa o desactiva el contador fijo de FPS y Ping (no se mueve con las bubbles).",
-    Default = false,
+    Desc = "Contador FPS/Ping en la esquina (caja dorada).",
+    Value = false,
     Callback = function(state)
-        showFpsPing = state
-        if fpsPingLabel then
-            fpsPingLabel.Visible = state
-        end
-        if fpsScreenGui then
-            fpsScreenGui.Enabled = state
-        end
-        showBottomMessage(state and "FPS/Ping: ON" or "FPS/Ping: OFF")
+        task.spawn(function()
+            showFpsPing = state and true or false
+            -- Si el GUI aún no existe (carga), créalo al vuelo
+            if not fpsScreenGui or not fpsScreenGui.Parent then
+                pcall(function()
+                    local parent = (gethui and gethui()) or CoreGui
+                    if not parent then
+                        parent = LocalPlayer:FindFirstChildOfClass("PlayerGui")
+                    end
+                    fpsScreenGui = Instance.new("ScreenGui")
+                    fpsScreenGui.Name = "VortexFpsPing"
+                    fpsScreenGui.ResetOnSpawn = false
+                    fpsScreenGui.IgnoreGuiInset = true
+                    fpsScreenGui.DisplayOrder = 99950
+                    fpsScreenGui.Parent = parent
+                    local box = Instance.new("Frame")
+                    box.AnchorPoint = Vector2.new(1, 0)
+                    box.Position = UDim2.new(1, -12, 0, 10)
+                    box.Size = UDim2.fromOffset(128, 44)
+                    box.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+                    box.BackgroundTransparency = 0.15
+                    box.BorderSizePixel = 0
+                    box.Parent = fpsScreenGui
+                    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 10)
+                    local st = Instance.new("UIStroke", box)
+                    st.Color = Color3.fromRGB(255, 200, 55)
+                    st.Thickness = 1.2
+                    st.Transparency = 0.35
+                    fpsPingLabel = Instance.new("TextLabel")
+                    fpsPingLabel.BackgroundTransparency = 1
+                    fpsPingLabel.Size = UDim2.fromScale(1, 1)
+                    fpsPingLabel.Font = Enum.Font.GothamBold
+                    fpsPingLabel.TextSize = 13
+                    fpsPingLabel.TextColor3 = Color3.fromRGB(255, 220, 90)
+                    fpsPingLabel.Text = "FPS: --\nPing: --"
+                    fpsPingLabel.TextYAlignment = Enum.TextYAlignment.Center
+                    fpsPingLabel.Parent = box
+                end)
+            end
+            if fpsScreenGui then
+                fpsScreenGui.Enabled = showFpsPing
+            end
+            if fpsPingLabel then
+                fpsPingLabel.Visible = true
+            end
+            pcall(function()
+                showBottomMessage(showFpsPing and "FPS/Ping: ON" or "FPS/Ping: OFF")
+            end)
+        end)
     end
 })
 
@@ -916,34 +966,55 @@ if not bubblesScreenGui.Parent then
 end
 _protectInstance(bubblesScreenGui)
 
--- FPS / Ping en GUI aparte (fijo, no se mueve con bubbles)
-showFpsPing = false
+-- FPS / Ping (estilo MM2: caja dorada esquina)
 fpsScreenGui = Instance.new("ScreenGui")
-fpsScreenGui.Name = _randName(12)
+fpsScreenGui.Name = "VortexFpsPing"
 fpsScreenGui.ResetOnSpawn = false
 fpsScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 fpsScreenGui.IgnoreGuiInset = true
-fpsScreenGui.DisplayOrder = 10
-_protectInstance(fpsScreenGui)
-_setHiddenParent(fpsScreenGui)
+fpsScreenGui.DisplayOrder = 99950
+fpsScreenGui.Enabled = false
+pcall(function()
+    if gethui then
+        fpsScreenGui.Parent = gethui()
+    else
+        fpsScreenGui.Parent = CoreGui
+    end
+end)
+if not fpsScreenGui.Parent then
+    pcall(function()
+        fpsScreenGui.Parent = LocalPlayer:FindFirstChildOfClass("PlayerGui") or LocalPlayer:WaitForChild("PlayerGui")
+    end)
+end
+
+local fpsBox = Instance.new("Frame")
+fpsBox.Name = "Box"
+fpsBox.AnchorPoint = Vector2.new(1, 0)
+fpsBox.Position = UDim2.new(1, -12, 0, 10)
+fpsBox.Size = UDim2.fromOffset(128, 44)
+fpsBox.BackgroundColor3 = Color3.fromRGB(14, 14, 18)
+fpsBox.BackgroundTransparency = 0.15
+fpsBox.BorderSizePixel = 0
+fpsBox.Parent = fpsScreenGui
+Instance.new("UICorner", fpsBox).CornerRadius = UDim.new(0, 10)
+local fpsStroke = Instance.new("UIStroke", fpsBox)
+fpsStroke.Color = Color3.fromRGB(255, 200, 55)
+fpsStroke.Thickness = 1.2
+fpsStroke.Transparency = 0.35
 
 fpsPingLabel = Instance.new("TextLabel")
-fpsPingLabel.Name = "FpsPingDisplay"
-fpsPingLabel.Size = UDim2.new(0, 80, 0, 36)
-fpsPingLabel.AnchorPoint = Vector2.new(1, 0)
-fpsPingLabel.Position = UDim2.new(1, -28, 0, 18) -- lado derecho, no pegado al borde
-fpsPingLabel.BackgroundTransparency = 1 -- sin fondo
-fpsPingLabel.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-fpsPingLabel.BorderSizePixel = 0
-fpsPingLabel.TextColor3 = Color3.fromRGB(0, 255, 128)
+fpsPingLabel.Name = "Text"
+fpsPingLabel.BackgroundTransparency = 1
+fpsPingLabel.Size = UDim2.fromScale(1, 1)
 fpsPingLabel.Font = Enum.Font.GothamBold
-fpsPingLabel.TextSize = 12
-fpsPingLabel.Text = "FPS: 60\nPing: 0"
-fpsPingLabel.TextXAlignment = Enum.TextXAlignment.Right
-fpsPingLabel.TextYAlignment = Enum.TextYAlignment.Top
-fpsPingLabel.Visible = false -- apagado por default
+fpsPingLabel.TextSize = 13
+fpsPingLabel.TextColor3 = Color3.fromRGB(255, 220, 90)
+fpsPingLabel.Text = "FPS: --\nPing: --"
+fpsPingLabel.TextYAlignment = Enum.TextYAlignment.Center
+fpsPingLabel.TextXAlignment = Enum.TextXAlignment.Center
+fpsPingLabel.Visible = true
 fpsPingLabel.Active = false
-fpsPingLabel.Parent = fpsScreenGui
+fpsPingLabel.Parent = fpsBox
 
 local lastTick = tick()
 local frameCount = 0
@@ -951,13 +1022,15 @@ RunService.RenderStepped:Connect(function()
     if not showFpsPing then return end
     frameCount = frameCount + 1
     local currentTick = tick()
-    if currentTick - lastTick >= 1 then
-        local fps = math.floor(frameCount / (currentTick - lastTick))
+    if currentTick - lastTick >= 0.5 then
+        local fps = math.floor(frameCount / (currentTick - lastTick) + 0.5)
         local ping = 0
         pcall(function()
-            ping = math.floor(LocalPlayer:GetNetworkPing() * 1000)
+            ping = math.floor(LocalPlayer:GetNetworkPing() * 1000 + 0.5)
         end)
-        fpsPingLabel.Text = string.format("FPS: %d\nPing: %d", fps, ping)
+        if fpsPingLabel then
+            fpsPingLabel.Text = string.format("FPS: %d\nPing: %d ms", fps, ping)
+        end
         frameCount = 0
         lastTick = currentTick
     end
@@ -1996,42 +2069,106 @@ UIElements.SliMacroShoot = Tabs.Aim:Slider({
     Callback = function(v) macroShootDelay = v end
 })
 
+-- Zona muerta en ScreenGui real (NO en Folder ProtectedGui — si no, no se ve)
+local deadZoneGui = Instance.new("ScreenGui")
+deadZoneGui.Name = "VortexDeadZone"
+deadZoneGui.ResetOnSpawn = false
+deadZoneGui.IgnoreGuiInset = true
+deadZoneGui.DisplayOrder = 100000
+deadZoneGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+deadZoneGui.Enabled = true
+pcall(function()
+    if gethui then
+        deadZoneGui.Parent = gethui()
+    else
+        deadZoneGui.Parent = CoreGui
+    end
+end)
+if not deadZoneGui.Parent then
+    pcall(function()
+        deadZoneGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+    end)
+end
+
 local deadZoneFrame = Instance.new("Frame")
+deadZoneFrame.Name = "DeadZone"
 deadZoneFrame.Size = UDim2.new(0, 150, 0, 150)
-deadZoneFrame.Position = UDim2.new(0.8, -75, 0.8, -75) 
-deadZoneFrame.BackgroundColor3 = Color3.fromRGB(255, 200, 50) 
-deadZoneFrame.BackgroundTransparency = 0.5
-deadZoneFrame.Visible = false
+deadZoneFrame.Position = UDim2.new(0.75, 0, 0.7, 0)
+deadZoneFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+deadZoneFrame.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
+deadZoneFrame.BackgroundTransparency = 1
+deadZoneFrame.Visible = true
 deadZoneFrame.ZIndex = 100
-deadZoneFrame.Parent = screenGui 
+deadZoneFrame.Active = false
+deadZoneFrame.Parent = deadZoneGui
 Instance.new("UICorner", deadZoneFrame).CornerRadius = UDim.new(0, 16)
 
 local dzStroke = Instance.new("UIStroke", deadZoneFrame)
 dzStroke.Color = Color3.fromRGB(255, 255, 255)
-dzStroke.Thickness = 2
+dzStroke.Thickness = 2.5
+dzStroke.Transparency = 0.1
 
-local dzLabel = Instance.new("TextLabel", deadZoneFrame)
+local dzLabel = Instance.new("TextLabel")
 dzLabel.Size = UDim2.new(1, 0, 1, 0)
 dzLabel.BackgroundTransparency = 1
 dzLabel.Text = "ZONA MUERTA\n(Arrastrar)"
-dzLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+dzLabel.TextColor3 = Color3.fromRGB(20, 20, 20)
 dzLabel.Font = Enum.Font.GothamBold
 dzLabel.TextSize = 14
 dzLabel.TextWrapped = true
+dzLabel.TextTransparency = 1
+dzLabel.ZIndex = 101
+dzLabel.Parent = deadZoneFrame
+dzStroke.Transparency = 1
 
-makeDraggable(deadZoneFrame, deadZoneFrame)
+local deadZoneShowEnabled = false
+makeDraggable(deadZoneFrame, deadZoneFrame, function()
+    return deadZoneShowEnabled == true
+end)
 
 UIElements.TogDeadZone = Tabs.Aim:Toggle({
-    Title = "Mostrar/Acomodar Zona Muerta", 
+    Title = "Mostrar/Acomodar Zona Muerta",
+    Desc = "Visible y arrastrable solo con esto ON. Si está OFF, queda fija.",
     Value = false,
-    Callback = function(s) deadZoneFrame.Visible = s end
+    Callback = function(s)
+        task.spawn(function()
+            local on = s and true or false
+            deadZoneShowEnabled = on
+            pcall(function()
+                if not deadZoneGui.Parent then
+                    if gethui then
+                        deadZoneGui.Parent = gethui()
+                    else
+                        deadZoneGui.Parent = CoreGui
+                    end
+                end
+                deadZoneGui.Enabled = true
+                if on then
+                    deadZoneFrame.BackgroundTransparency = 0.35
+                    dzLabel.TextTransparency = 0
+                    dzStroke.Transparency = 0.1
+                    deadZoneFrame.Active = true
+                else
+                    deadZoneFrame.BackgroundTransparency = 1
+                    dzLabel.TextTransparency = 1
+                    dzStroke.Transparency = 1
+                    deadZoneFrame.Active = false
+                end
+            end)
+            pcall(function()
+                showBottomMessage(on and "Zona Muerta: visible (puedes arrastrar)" or "Zona Muerta: fija y oculta")
+            end)
+        end)
+    end
 })
 
 UIElements.SliDeadZone = Tabs.Aim:Slider({
-    Title = "Tamaño de Zona Muerta", 
+    Title = "Tamaño de Zona Muerta",
     Step = 1,
-    Value = {Min = 80, Max = 400, Default = 150}, 
-    Callback = function(v) deadZoneFrame.Size = UDim2.new(0, v, 0, v) end
+    Value = {Min = 80, Max = 400, Default = 150},
+    Callback = function(v)
+        deadZoneFrame.Size = UDim2.new(0, v, 0, v)
+    end
 })
 
 Tabs.Aim:Divider()
@@ -3680,4 +3817,7 @@ Tabs.Farm:Toggle({
     end
 })
 
+UI_READY = true
+-- Pequeña pausa final para que los toggles respondan al primer clic
+task.wait(0.1)
 print("[Vortex X Sage] DMvSS v3.2.7 loaded")
