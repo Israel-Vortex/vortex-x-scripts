@@ -420,16 +420,8 @@ local LocalPlayer = player
 pcall(function()
     WindUI:Notify({
         Title = "Vortex X Sage",
-        Content = "Iniciando sesión... Por favor, espere.",
+        Content = Login VortexHub.",
         Duration = 3
-    })
-end)
-task.wait(1.5)
-pcall(function()
-    WindUI:Notify({
-        Title = "Vortex X Sage",
-        Content = "Acceso concedido, " .. tostring(LocalPlayer.Name) .. "! Cargando interfaz...",
-        Duration = 2
     })
 end)
 task.wait(0.8)
