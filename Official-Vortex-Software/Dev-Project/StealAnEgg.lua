@@ -4428,22 +4428,13 @@ pcall(function()
 		Draggable = true,
 	})
 end)
--- Notificaciones de bienvenida Vortex
+-- Notificación de bienvenida
 pcall(function()
 	iData.value1:Notify({
-		Title = "Vortex X Sage",
-		Content = "Iniciando Steal an Egg…",
+		Title = "Login VortexHub",
+		Content = "Login VortexHub",
 		Duration = 2,
 	})
-end)
-task.delay(0.6, function()
-	pcall(function()
-		iData.value1:Notify({
-			Title = "Vortex X Sage",
-			Content = "Acceso concedido, " .. tostring(iData.value9.Name) .. "!",
-			Duration = 2.5,
-		})
-	end)
 end)
 local function secondaryPcall()
 	for _, item in ipairs({
