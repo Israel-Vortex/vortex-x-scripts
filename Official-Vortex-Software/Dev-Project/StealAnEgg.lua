@@ -4292,6 +4292,7 @@ local function aM(...) h.alive = false pcall(Ik)pcall(Ak)pcall(function(...) y:S
 end
 
 
+
 -- ==========================================
 -- VORTEX X SAGE [Steal An Egg] - WindUI
 -- ==========================================
@@ -4323,10 +4324,39 @@ local Window = WindUI:CreateWindow({
 	Transparent = false,
 	Theme = "VortexGoldSolid",
 	User = { Enabled = true, Anonymous = false },
+	OpenButton = {
+		Title = "VXS",
+		Icon = "",
+		CornerRadius = UDim.new(0, 16),
+		StrokeThickness = 2,
+		Color = ColorSequence.new(
+			Color3.fromRGB(255, 200, 50),
+			Color3.fromRGB(255, 160, 20)
+		),
+		OnlyMobile = false,
+		Enabled = true,
+		Draggable = true,
+	},
 })
 
 pcall(function()
 	Window:Tag({ Title = "v1.0", Icon = "egg", Color = Color3.fromRGB(255, 200, 50) })
+end)
+
+pcall(function()
+	Window:EditOpenButton({
+		Title = "VXS",
+		Icon = "",
+		CornerRadius = UDim.new(0, 16),
+		StrokeThickness = 2,
+		Color = ColorSequence.new(
+			Color3.fromRGB(255, 200, 50),
+			Color3.fromRGB(255, 160, 20)
+		),
+		OnlyMobile = false,
+		Enabled = true,
+		Draggable = true,
+	})
 end)
 
 pcall(function()
@@ -4339,7 +4369,7 @@ local toolsSec = Window:Section({ Title = "Tools", Opened = true })
 local InfoTab = mainSec:Tab({ Title = "Info", Icon = "info" })
 InfoTab:Paragraph({
 	Title = "Vortex X Sage [Steal An Egg]",
-	Desc = "Auto steal (tween/teleport), place, hatch, treadmill, godmode, zone & rarity filters.\nBasado en lógica Dice Hub adaptada a WindUI.\nAutor: Israelcc",
+	Desc = "Auto steal (tween/teleport), place, hatch, treadmill, godmode, zone & rarity filters.\nLogica completa del hub original adaptada a WindUI.\nAutor: Israelcc",
 })
 InfoTab:Paragraph({
 	Title = "Discord",
@@ -4348,11 +4378,11 @@ InfoTab:Paragraph({
 
 local StealTab = mainSec:Tab({ Title = "Auto Steal", Icon = "zap" })
 local PlaceTab = mainSec:Tab({ Title = "Place & Hatch", Icon = "package" })
+local SelectTab = mainSec:Tab({ Title = "Egg Select", Icon = "list" })
 local CharTab = toolsSec:Tab({ Title = "Character", Icon = "user" })
-local SelectTab = toolsSec:Tab({ Title = "Egg Select", Icon = "list" })
 local SettingsTab = toolsSec:Tab({ Title = "Settings", Icon = "settings" })
 
--- AUTO STEAL
+-- AUTO STEAL (mismas funciones T4 / N4 / l4 / Q4)
 StealTab:Section({ Title = "Modes" })
 StealTab:Toggle({
 	Title = "Auto Steal (Tween)",
@@ -4449,6 +4479,84 @@ PlaceTab:Toggle({
 	end,
 })
 
+-- EGG SELECT (Principal) — listas multi-select, no toggles
+SelectTab:Section({ Title = "Filtros de farm" })
+SelectTab:Paragraph({
+	Title = "Como usar",
+	Desc = "Elige zonas y rarezas en las listas. Secret+ puede saltarse el filtro de zona si alwaysCollectSecretPlus esta activo.",
+})
+
+local function buildSelectedList(map, order)
+	local out = {}
+	if type(map) ~= "table" then return out end
+	for _, name in ipairs(order) do
+		if map[name] == true then
+			out[#out + 1] = name
+		end
+	end
+	return out
+end
+
+local function applyMultiSelect(map, order, selected)
+	if type(map) ~= "table" then map = {} end
+	local set = {}
+	if type(selected) == "table" then
+		for _, v in pairs(selected) do
+			if type(v) == "string" then set[v] = true end
+			if type(v) == "table" and type(v.Title) == "string" then set[v.Title] = true end
+		end
+		-- WindUI a veces pasa array de strings
+		for i = 1, #selected do
+			local v = selected[i]
+			if type(v) == "string" then set[v] = true end
+		end
+	elseif type(selected) == "string" then
+		set[selected] = true
+	end
+	for _, name in ipairs(order) do
+		map[name] = set[name] == true
+	end
+	return map
+end
+
+SelectTab:Dropdown({
+	Title = "Zonas objetivo",
+	Desc = "Lista multi-select de zonas a farmear.",
+	Values = M,
+	Value = buildSelectedList(h.selectedZones, M),
+	Multi = true,
+	AllowNone = true,
+	Callback = function(selected)
+		if not h.selectedZones then h.selectedZones = {} end
+		applyMultiSelect(h.selectedZones, M, selected)
+		pcall(x)
+	end,
+})
+
+SelectTab:Dropdown({
+	Title = "Rarezas objetivo",
+	Desc = "Lista multi-select de rarezas a recolectar.",
+	Values = X,
+	Value = buildSelectedList(h.selectedRarities, X),
+	Multi = true,
+	AllowNone = true,
+	Callback = function(selected)
+		if not h.selectedRarities then h.selectedRarities = {} end
+		applyMultiSelect(h.selectedRarities, X, selected)
+		pcall(x)
+	end,
+})
+
+SelectTab:Toggle({
+	Title = "Always Steal Secret+",
+	Desc = "Siempre roba Secret/Eternal/Divine aunque la zona no este seleccionada.",
+	Value = h.alwaysCollectSecretPlus ~= false,
+	Callback = function(state)
+		h.alwaysCollectSecretPlus = state
+		pcall(x)
+	end,
+})
+
 -- CHARACTER
 CharTab:Section({ Title = "Safety" })
 CharTab:Toggle({
@@ -4487,34 +4595,6 @@ CharTab:Slider({
 		pcall(Y, h.glideSpeed)
 	end,
 })
-
--- EGG SELECT zones
-SelectTab:Section({ Title = "Zones" })
-for _, zone in ipairs(M) do
-	local z = zone
-	SelectTab:Toggle({
-		Title = z,
-		Value = h.selectedZones and h.selectedZones[z] == true,
-		Callback = function(state)
-			if not h.selectedZones then h.selectedZones = {} end
-			h.selectedZones[z] = state == true
-			pcall(x)
-		end,
-	})
-end
-SelectTab:Section({ Title = "Rarities" })
-for _, rar in ipairs(X) do
-	local rr = rar
-	SelectTab:Toggle({
-		Title = rr,
-		Value = h.selectedRarities and h.selectedRarities[rr] == true,
-		Callback = function(state)
-			if not h.selectedRarities then h.selectedRarities = {} end
-			h.selectedRarities[rr] = state == true
-			pcall(x)
-		end,
-	})
-end
 
 -- SETTINGS
 SettingsTab:Toggle({
