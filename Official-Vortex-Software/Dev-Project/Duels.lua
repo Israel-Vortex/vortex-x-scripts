@@ -945,8 +945,8 @@ local function setCharacterTransparency(char, transparency)
 end
 
 local bannableTab = mainSection:Tab({
-    Title = "Bannable",
-    Icon = "shield-alert",
+    Title = "Bubbles",
+    Icon = "circle-dot",
     ShowTabTitle = true,
     Border = true
 })
@@ -1400,6 +1400,149 @@ local Tabs = { Aim = combatTab }
 local farmTab = mainSection:Tab({ Title = "AutoFarm", Icon = "coins", ShowTabTitle = true, Border = true })
 Tabs.Farm = farmTab
 
+-- =====================================
+-- ========== AUTO FARM: Auto Teleport (pads) ==========
+-- =====================================
+local PLATFORM_ROWS = { "Right Platforms", "Left Platforms" }
+local PAD_TABLE = {
+	["Right Platforms"] = {
+		["1v1"] = { zone = "PadZone1", Main = "Pad1", Alt = "Pad2" },
+		["2v2"] = { zone = "PadZone2", Main = "Pad1", Alt = "Pad2" },
+		["3v3"] = { zone = "PadZone3", Main = "Pad1", Alt = "Pad2" },
+		["4v4"] = { zone = "PadZone4", Main = "Pad1", Alt = "Pad2" },
+	},
+	["Left Platforms"] = {
+		["1v1"] = { zone = "PadZone5", Main = "Pad1", Alt = "Pad2" },
+		["2v2"] = { zone = "PadZone6", Main = "Pad1", Alt = "Pad2" },
+		["3v3"] = { zone = "PadZone7", Main = "Pad1", Alt = "Pad2" },
+		["4v4"] = { zone = "PadZone8", Main = "Pad1", Alt = "Pad2" },
+	},
+}
+local AutoTP = {
+	Main = false,
+	Alt = false,
+	DuelType = "1v1",
+	PlatformRow = "Right Platforms",
+	EventFarm = false,
+	_lastMove = 0,
+}
+
+local function getPadPart(role)
+	local row = PAD_TABLE[AutoTP.PlatformRow] and AutoTP.PlatformRow or "Right Platforms"
+	local duel = PAD_TABLE[row][AutoTP.DuelType] and AutoTP.DuelType or "1v1"
+	local entry = PAD_TABLE[row][duel]
+	if not entry then return nil end
+	local padZones = workspace:FindFirstChild("PadZones")
+	local zone = padZones and padZones:FindFirstChild(entry.zone)
+	local container = zone and zone:FindFirstChild(entry[role] or entry.Main)
+	local pad = container and container:FindFirstChild("Pad")
+	return (pad and pad:IsA("BasePart")) and pad or nil
+end
+
+local function isOnPad(role)
+	local pad = getPadPart(role)
+	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if not (pad and hrp) then return false end
+	local lp = pad.CFrame:PointToObjectSpace(hrp.Position)
+	local half = pad.Size / 2
+	return math.abs(lp.X) <= half.X + 0.5 and math.abs(lp.Z) <= half.Z + 0.5
+		and lp.Y >= -(half.Y + 6) and lp.Y <= (half.Y + 14)
+end
+
+local function teleportToPad(role)
+	if role == "Main" and not AutoTP.Main then return end
+	if role == "Alt" and not AutoTP.Alt then return end
+	local pad = getPadPart(role)
+	if not pad or isOnPad(role) then return end
+	if os.clock() - AutoTP._lastMove < 0.5 then return end
+	AutoTP._lastMove = os.clock()
+	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+	if hum then pcall(function() hum:MoveTo(pad.Position) end) end
+	if hrp then
+		pcall(function()
+			hrp.CFrame = pad.CFrame + Vector3.new(0, 3, 0)
+		end)
+	end
+end
+
+task.spawn(function()
+	while task.wait(0.5) do
+		if AutoTP.Main then teleportToPad("Main") end
+		if AutoTP.Alt then teleportToPad("Alt") end
+	end
+end)
+
+Tabs.Farm:Section({ Title = "Auto Teleport (Pads)" })
+Tabs.Farm:Toggle({
+	Title = "Auto Teleport Main",
+	Desc = "Va al pad principal segun duel type y fila.",
+	Value = false,
+	Callback = function(state)
+		AutoTP.Main = state
+		if state then AutoTP.Alt = false end
+		showBottomMessage(state and "Auto TP Main: ON" or "Auto TP Main: OFF")
+	end,
+})
+Tabs.Farm:Toggle({
+	Title = "Auto Teleport Alt",
+	Desc = "Va al pad alterno (solo uno a la vez).",
+	Value = false,
+	Callback = function(state)
+		AutoTP.Alt = state
+		if state then AutoTP.Main = false end
+		showBottomMessage(state and "Auto TP Alt: ON" or "Auto TP Alt: OFF")
+	end,
+})
+Tabs.Farm:Dropdown({
+	Title = "Duel Type",
+	Values = { "1v1", "2v2", "3v3", "4v4" },
+	Value = "1v1",
+	Callback = function(value)
+		AutoTP.DuelType = value or "1v1"
+	end,
+})
+Tabs.Farm:Dropdown({
+	Title = "Platform Row",
+	Values = PLATFORM_ROWS,
+	Value = "Right Platforms",
+	Callback = function(value)
+		AutoTP.PlatformRow = value or "Right Platforms"
+	end,
+})
+Tabs.Farm:Toggle({
+	Title = "Event Farm (Spawnables)",
+	Desc = "Toca drops del evento automaticamente.",
+	Value = false,
+	Callback = function(state)
+		AutoTP.EventFarm = state
+		if state then
+			task.spawn(function()
+				while AutoTP.EventFarm do
+					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+					local spawnables = workspace:FindFirstChild("SpawnablesClient")
+					if hrp and spawnables and firetouchinterest then
+						for _, spawn in ipairs(spawnables:GetChildren()) do
+							local touch = spawn:FindFirstChild("Touch", true)
+							if touch and touch:IsA("BasePart") then
+								pcall(function()
+									firetouchinterest(hrp, touch, 0)
+									firetouchinterest(hrp, touch, 1)
+								end)
+							end
+						end
+					end
+					task.wait(0.45)
+				end
+			end)
+		end
+	end,
+})
+
+
+
+
+
 -- ==========================================
 -- MOVEMENT TAB (Popular) - Speed / Fly / Inf Jump con spoof
 -- ==========================================
@@ -1717,11 +1860,16 @@ LocalPlayer.CharacterAdded:Connect(function()
     end
 end)
 
+
 local UIElements = {}
+
+do -- [SCOPE] Aim
 
 local autoShootEnabled = false
 local autoShootCuchilloEnabled = false
 local autoShootTargetPart = "Cabeza"
+local triggerbotEnabled = false
+local triggerbotBusy = false
 
 local silentAimManualEnabled = false
 local silentAimFovEnabled = false
@@ -1919,10 +2067,9 @@ local function setKillAllState(state)
         task.spawn(function()
             while killAllEnabled do
                 local myChar = player.Character
-
                 if not myChar or not myChar:FindFirstChild("HumanoidRootPart") or not player:FindFirstChild("Backpack") then
                     task.wait(0.5)
-                    continue 
+                    continue
                 end
 
                 if not estaEnLobby() and esVulnerable(myChar) then
@@ -1932,8 +2079,25 @@ local function setKillAllState(state)
                     if myHrp and myHum and myHum.Health > 0 then
                         local posicionOriginal = myHrp.CFrame
 
+                        -- Movimiento protegido: sin PlatformStand (muy detectable)
+                        local function softMoveTo(cf)
+                            if not myHrp or not myHrp.Parent then return end
+                            pcall(function()
+                                -- congelar velocidad antes/despues para menos flags de TP
+                                myHrp.AssemblyLinearVelocity = Vector3.zero
+                                myHrp.AssemblyAngularVelocity = Vector3.zero
+                                if myChar.PrimaryPart then
+                                    myChar:PivotTo(cf)
+                                else
+                                    myHrp.CFrame = cf
+                                end
+                                myHrp.AssemblyLinearVelocity = Vector3.zero
+                                myHrp.AssemblyAngularVelocity = Vector3.zero
+                            end)
+                        end
+
                         for _, p in ipairs(Players:GetPlayers()) do
-                            if not killAllEnabled then break end 
+                            if not killAllEnabled then break end
 
                             if p ~= player and isEnemy(p) and p.Character then
                                 if esVulnerable(p.Character) then
@@ -1944,26 +2108,32 @@ local function setKillAllState(state)
                                         local distanciaAlEnemigo = (posicionOriginal.Position - enemyHrp.Position).Magnitude
 
                                         if distanciaAlEnemigo <= killAllRango then
-                                            enemyHrp.Size = Vector3.new(30, 30, 30)
-                                            enemyHrp.CanCollide = false
+                                            -- Hitbox temporal con spoof (misma proteccion que Combat)
+                                            pcall(function()
+                                                setSpoofedSize(enemyHrp, Vector3.new(18, 18, 18))
+                                                setSpoofedCollide(enemyHrp, false)
+                                            end)
 
-                                            local failSafe = 0 
+                                            local failSafe = 0
+                                            while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 200 do
+                                                if not myHrp.Parent or myHum.Health <= 0 then break end
+                                                -- reaplicar spoof por si el server resetea
+                                                pcall(function()
+                                                    if enemyHrp and enemyHrp.Parent then
+                                                        setSpoofedSize(enemyHrp, Vector3.new(18, 18, 18))
+                                                        setSpoofedCollide(enemyHrp, false)
+                                                    end
+                                                end)
 
-                                            while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
-                                                myHum.PlatformStand = true 
-
-                                                myHrp.CFrame = enemyHrp.CFrame * CFrame.new(0, -2, 0)
-                                                myHrp.AssemblyLinearVelocity = Vector3.zero 
-                                                myHrp.AssemblyAngularVelocity = Vector3.zero
+                                                local targetCf = enemyHrp.CFrame * CFrame.new(0, -1.5, 0.5)
+                                                softMoveTo(targetCf)
 
                                                 pcall(function()
                                                     local arma = myChar:FindFirstChildOfClass("Tool")
-
                                                     if arma and esLaPistola(arma) then
                                                         myHum:UnequipTools()
                                                         arma = nil
                                                     end
-
                                                     if not arma then
                                                         local backpack = player:FindFirstChild("Backpack")
                                                         if backpack then
@@ -1971,29 +2141,27 @@ local function setKillAllState(state)
                                                                 if item:IsA("Tool") and not esLaPistola(item) then
                                                                     myHum:EquipTool(item)
                                                                     arma = item
-                                                                    task.wait(0.05)
+                                                                    task.wait(0.04)
                                                                     break
                                                                 end
                                                             end
                                                         end
                                                     end
-
                                                     if arma then
                                                         arma:Activate()
                                                     end
                                                 end)
 
-                                                task.wait(0.03)
+                                                task.wait(0.04)
                                                 failSafe = failSafe + 1
                                             end
 
-                                            if myHum then
-                                                myHum.PlatformStand = false
-                                            end
-
+                                            -- restaurar hitbox con el mismo restore del combate
                                             pcall(function()
-                                                local arma = myChar:FindFirstChildOfClass("Tool")
-                                                if arma then arma:Deactivate() end
+                                                if enemyHrp and enemyHrp.Parent then
+                                                    restoreSize(enemyHrp)
+                                                    restoreCollide(enemyHrp)
+                                                end
                                             end)
                                         end
                                     end
@@ -2001,22 +2169,24 @@ local function setKillAllState(state)
                             end
                         end
 
-                        if killAllEnabled and myHrp then
-                            myHrp.CFrame = posicionOriginal
-                            myHrp.AssemblyLinearVelocity = Vector3.zero
-                            myHrp.AssemblyAngularVelocity = Vector3.zero
-                            task.wait(0.2) 
+                        if killAllEnabled and myHrp and myHrp.Parent then
+                            softMoveTo(posicionOriginal)
+                            task.wait(0.15)
                         end
                     end
                 end
-                task.wait(0.1) 
+                task.wait(0.12)
             end
         end)
     else
         showBottomMessage("Kill All: DESACTIVADO")
         pcall(function()
-            local myHum = player.Character and player.Character:FindFirstChild("Humanoid")
-            if myHum then myHum.PlatformStand = false end
+            local myChar = player.Character
+            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
+            if myHrp then
+                myHrp.AssemblyLinearVelocity = Vector3.zero
+                myHrp.AssemblyAngularVelocity = Vector3.zero
+            end
         end)
     end
 end
@@ -2204,6 +2374,22 @@ UIElements.DropAutoShootPart = Tabs.Aim:Dropdown({
         if asTargetIniciado then showBottomMessage("AutoShoot Target: " .. Value) end
         asTargetIniciado = true
     end
+})
+
+UIElements.TogTriggerbot = Tabs.Aim:Toggle({
+    Title = "Triggerbot",
+    Desc = "Al detectar enemigo: equipa la pistola y dispara (misma logica de Auto Shoot).",
+    Value = false,
+    Callback = function(Value)
+        triggerbotEnabled = Value == true
+        showBottomMessage(Value and "Triggerbot: ACTIVADO" or "Triggerbot: DESACTIVADO")
+        if not Value then
+            triggerbotBusy = false
+            if not autoShootEnabled and not autoShootCuchilloEnabled and not silentAimManualEnabled and not silentAimFovEnabled then
+                pcall(function() silentTargetPart = nil end)
+            end
+        end
+    end,
 })
 
 Tabs.Aim:Divider()
@@ -2466,6 +2652,113 @@ task.spawn(function()
     end
 end)
 
+-- Triggerbot: detecta enemigo, equipa pistola y dispara (logica tipo Auto Shoot)
+task.spawn(function()
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+
+    while task.wait(0.08) do
+        if not triggerbotEnabled or estaEnLobby() or triggerbotBusy then
+            continue
+        end
+
+        local char = LocalPlayer.Character
+        if not char or not char:FindFirstChild("HumanoidRootPart") then
+            continue
+        end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if not hum or hum.Health <= 0 then
+            continue
+        end
+
+        local myPos = char.HumanoidRootPart.Position
+        local headPos = char:FindFirstChild("Head") and char.Head.Position or myPos
+        local objetivosPotenciales = {}
+
+        for _, p in ipairs(Players:GetPlayers()) do
+            if isEnemy(p) and p.Character then
+                local enemyHum = p.Character:FindFirstChild("Humanoid")
+                if enemyHum and enemyHum.Health > 0 then
+                    local partesAEscanear = {}
+                    if autoShootTargetPart == "Cabeza" then
+                        partesAEscanear = {"Head"}
+                    elseif autoShootTargetPart == "Torso" then
+                        partesAEscanear = {"UpperTorso", "Torso", "HumanoidRootPart"}
+                    else
+                        partesAEscanear = {"Head", "UpperTorso", "LowerTorso", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
+                    end
+                    for _, partName in ipairs(partesAEscanear) do
+                        local part = p.Character:FindFirstChild(partName)
+                        if part and part:IsA("BasePart") then
+                            table.insert(objetivosPotenciales, {
+                                Part = part,
+                                Dist = (part.Position - myPos).Magnitude,
+                                Char = p.Character,
+                            })
+                        end
+                    end
+                end
+            end
+        end
+
+        if #objetivosPotenciales == 0 then
+            if not autoShootEnabled and not silentAimManualEnabled and not silentAimFovEnabled then
+                silentTargetPart = nil
+            end
+            continue
+        end
+
+        table.sort(objetivosPotenciales, function(a, b) return a.Dist < b.Dist end)
+
+        local closestTargetPart = nil
+        for _, obj in ipairs(objetivosPotenciales) do
+            params.FilterDescendantsInstances = {char, obj.Char}
+            local visible = not workspace:Raycast(headPos, obj.Part.Position - headPos, params)
+            if visible then
+                closestTargetPart = obj.Part
+                break
+            end
+        end
+
+        if not closestTargetPart then
+            continue
+        end
+
+        -- Enemigo a la vista: equipar pistola y disparar
+        triggerbotBusy = true
+        silentTargetPart = closestTargetPart
+
+        pcall(function()
+            local arma = char:FindFirstChildOfClass("Tool")
+            if arma and not esLaPistola(arma) then
+                hum:UnequipTools()
+                arma = nil
+                task.wait(0.03)
+            end
+
+            if not arma or not esLaPistola(arma) then
+                local pistola = obtenerPistola()
+                if pistola then
+                    hum:EquipTool(pistola)
+                    task.wait(macroEquipDelay or 0.04)
+                    arma = pistola
+                end
+            end
+
+            if arma and arma.Parent == char and esLaPistola(arma) then
+                arma:Activate()
+                task.wait(0.02)
+                if arma.Parent == char then
+                    arma:Deactivate()
+                end
+                task.wait(macroShootDelay or 0.08)
+            end
+        end)
+
+        triggerbotBusy = false
+    end
+end)
+
 task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
@@ -2600,6 +2893,10 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
+
+end -- [SCOPE] Aim
+
+do -- [SCOPE] Visuals
 -- ==========================================
 -- TAB VISUAL (ESP ENEMIGO / ESP ALIADO / PROFESIONAL)
 -- ==========================================
@@ -2609,10 +2906,32 @@ Tabs.Vis = visualsTab
 local espEnabled = false
 local allyEspEnabled = false
 local professionalEspEnabled = false
+local professionalSkeletonEnabled = true
 local outlineEnabled = true
 local enemyOutlineColor = Color3.fromRGB(255, 190, 40)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 local professionalEspDrawings = {}
+local SKELETON_BONES = {
+	{"Head", "UpperTorso"},
+	{"UpperTorso", "LowerTorso"},
+	{"UpperTorso", "LeftUpperArm"},
+	{"LeftUpperArm", "LeftLowerArm"},
+	{"LeftLowerArm", "LeftHand"},
+	{"UpperTorso", "RightUpperArm"},
+	{"RightUpperArm", "RightLowerArm"},
+	{"RightLowerArm", "RightHand"},
+	{"LowerTorso", "LeftUpperLeg"},
+	{"LeftUpperLeg", "LeftLowerLeg"},
+	{"LeftLowerLeg", "LeftFoot"},
+	{"LowerTorso", "RightUpperLeg"},
+	{"RightUpperLeg", "RightLowerLeg"},
+	{"RightLowerLeg", "RightFoot"},
+	{"Head", "Torso"},
+	{"Torso", "Left Arm"},
+	{"Torso", "Right Arm"},
+	{"Torso", "Left Leg"},
+	{"Torso", "Right Leg"},
+}
 
 
 -- =====================================
@@ -3120,9 +3439,14 @@ end)
 local function removeSingleProfDrawings(plr)
     local drawings = professionalEspDrawings[plr]
     if drawings then
-        if drawings.box then for _, line in ipairs(drawings.box) do if line then line:Remove() end end end
-        if drawings.tracer then drawings.tracer:Remove() end
-        if drawings.nameText then drawings.nameText:Remove() end
+        if drawings.box then for _, line in ipairs(drawings.box) do if line then pcall(function() line:Remove() end) end end end
+        if drawings.tracer then pcall(function() drawings.tracer:Remove() end) end
+        if drawings.nameText then pcall(function() drawings.nameText:Remove() end) end
+        if drawings.skeleton then
+            for _, line in ipairs(drawings.skeleton) do
+                if line then pcall(function() line:Remove() end) end
+            end
+        end
         professionalEspDrawings[plr] = nil
     end
 end
@@ -3174,7 +3498,16 @@ local function refreshProfessionalESP()
                     nameText.Color = enemyOutlineColor
                     nameText.Transparency = 0.9
 
-                    professionalEspDrawings[plr] = { box = bLines, tracer = tracer, nameText = nameText }
+                    local skLines = {}
+                    for i = 1, #SKELETON_BONES do
+                        local l = Drawing.new("Line")
+                        l.Thickness = 1.4
+                        l.Color = enemyOutlineColor
+                        l.Transparency = 0.85
+                        l.Visible = false
+                        skLines[i] = l
+                    end
+                    professionalEspDrawings[plr] = { box = bLines, tracer = tracer, nameText = nameText, skeleton = skLines }
                 end
 
                 local drawings = professionalEspDrawings[plr]
@@ -3182,6 +3515,7 @@ local function refreshProfessionalESP()
                     local bLines = drawings.box
                     local tracer = drawings.tracer
                     local nameText = drawings.nameText
+                    local skLines = drawings.skeleton
 
                     local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
                     local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
@@ -3215,6 +3549,34 @@ local function refreshProfessionalESP()
                     elseif bLines and nameText then
                         for _, l in ipairs(bLines) do l.Visible = false end
                         nameText.Visible = false
+                    end
+
+                    if skLines and professionalSkeletonEnabled then
+                        for i, pair in ipairs(SKELETON_BONES) do
+                            local line = skLines[i]
+                            if line then
+                                local a = char:FindFirstChild(pair[1])
+                                local b = char:FindFirstChild(pair[2])
+                                if a and b and a:IsA("BasePart") and b:IsA("BasePart") then
+                                    local p1, o1 = Camera:WorldToViewportPoint(a.Position)
+                                    local p2, o2 = Camera:WorldToViewportPoint(b.Position)
+                                    if o1 and o2 and p1.Z > 0 and p2.Z > 0 then
+                                        line.From = Vector2.new(p1.X, p1.Y)
+                                        line.To = Vector2.new(p2.X, p2.Y)
+                                        line.Color = enemyOutlineColor
+                                        line.Visible = true
+                                    else
+                                        line.Visible = false
+                                    end
+                                else
+                                    line.Visible = false
+                                end
+                            end
+                        end
+                    elseif skLines then
+                        for _, line in ipairs(skLines) do
+                            if line then line.Visible = false end
+                        end
                     end
                 end
             else
@@ -3330,11 +3692,29 @@ visualsTab:Keybind({
 
 local profEspToggleRef = visualsTab:Toggle({
     Title = "Professional ESP",
-    Desc = "ESP Unificado 2D (Caja + Líneas + Nombre de Jugador)",
+    Desc = "ESP 2D: caja + tracer + nombre + skeleton",
     Default = false,
     Callback = function(val)
         professionalEspEnabled = val
         if not val then clearProfessionalESP() end
+    end
+})
+
+visualsTab:Toggle({
+    Title = "Skeleton ESP",
+    Desc = "Huesos del enemigo (requiere Professional ESP activo).",
+    Default = true,
+    Callback = function(val)
+        professionalSkeletonEnabled = val == true
+        if not val then
+            for _, drawings in pairs(professionalEspDrawings) do
+                if drawings and drawings.skeleton then
+                    for _, line in ipairs(drawings.skeleton) do
+                        if line then line.Visible = false end
+                    end
+                end
+            end
+        end
     end
 })
 
@@ -3365,6 +3745,11 @@ visualsTab:Colorpicker({
                 if drawings.box then
                     for i = 1, #drawings.box do
                         if drawings.box[i] then drawings.box[i].Color = colorVal end
+                    end
+                end
+                if drawings.skeleton then
+                    for i = 1, #drawings.skeleton do
+                        if drawings.skeleton[i] then drawings.skeleton[i].Color = colorVal end
                     end
                 end
             end
@@ -3414,6 +3799,11 @@ RunService.RenderStepped:Connect(function()
     if professionalEspEnabled then refreshProfessionalESP() end
 end)
 
+
+
+end -- [SCOPE] Visuals
+
+do -- [SCOPE] Graphics+Farm
 -- ==========================================
 -- GRAPHICS TAB (MODOS VISUALES / SHADERS)
 -- ==========================================
@@ -3766,56 +4156,7 @@ Tabs.Graficos:Slider({
 })
 
 
--- =====================================
--- ========== AUTO FARM (lógica) ==========
--- =====================================
-
-local AutoFarmActivo = false
-local autoFarmLoopRunning = false
-
-Tabs.Farm:Section({ Title = "Opciones de Recolección" })
-
-Tabs.Farm:Toggle({
-    Title = "Auto Farm",
-    Value = false,
-    Callback = function(state)
-        AutoFarmActivo = state
-        if AutoFarmActivo and not autoFarmLoopRunning then
-            autoFarmLoopRunning = true
-            task.spawn(function()
-                local container = workspace:FindFirstChild("SpawnablesClient")
-                if not container then
-                    container = workspace:WaitForChild("SpawnablesClient", 10)
-                end
-                if not container then
-                    showBottomMessage("Auto Farm: No se encontró SpawnablesClient")
-                    AutoFarmActivo = false
-                    autoFarmLoopRunning = false
-                    return
-                end
-
-                while AutoFarmActivo do
-                    for _, obj in ipairs(container:GetChildren()) do
-                        if not AutoFarmActivo then break end
-                        local touchPart = obj:FindFirstChild("Touch")
-                        if touchPart and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                            pcall(function()
-                                if firetouchinterest then
-                                    firetouchinterest(player.Character.HumanoidRootPart, touchPart, 0)
-                                    firetouchinterest(player.Character.HumanoidRootPart, touchPart, 1)
-                                end
-                            end)
-                        end
-                    end
-                    task.wait(0.45)
-                end
-                autoFarmLoopRunning = false
-            end)
-        elseif not state then
-            AutoFarmActivo = false
-        end
-    end
-})
+end -- [SCOPE] Graphics+Farm
 
 UI_READY = true
 -- Pequeña pausa final para que los toggles respondan al primer clic
