@@ -457,6 +457,7 @@ InfoTab:Paragraph({
 
 InfoTab:Button({
     Title = "Copiar enlace de Discord",
+    Desc = "Copia el invite de Discord de Vortex al portapapeles.",
     Callback = function()
         pcall(function()
             if setclipboard then
@@ -718,6 +719,7 @@ emotesTab:Section({ Title = "Paquetes Completos" })
 local selectedBundleCompleto = "Ninguno"
 emotesTab:Dropdown({
     Title = "Elegir Paquete",
+    Desc = "Elige un set completo de animaciones de movimiento.",
     Values = animList,
     Value = "Ninguno",
     Callback = function(Value)
@@ -727,6 +729,7 @@ emotesTab:Dropdown({
 
 emotesTab:Button({
     Title = "Aplicar Paquete Completo",
+    Desc = "Aplica todas las animaciones del paquete seleccionado.",
     Callback = function()
         if selectedBundleCompleto == "Ninguno" then return end
         task.spawn(function()
@@ -739,6 +742,7 @@ emotesTab:Button({
 
 emotesTab:Button({
     Title = "Restaurar Default",
+    Desc = "Vuelve a las animaciones originales del juego.",
     Callback = function()
         task.spawn(function()
             local defaultAnims = misAnimacionesOriginales or {
@@ -759,15 +763,16 @@ local mixParts = {
     Jump = "Ninguno", Fall = "Ninguno", Climb = "Ninguno"
 }
 
-emotesTab:Dropdown({ Title = "Reposo", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
-emotesTab:Dropdown({ Title = "Caminar", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
-emotesTab:Dropdown({ Title = "Correr", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
-emotesTab:Dropdown({ Title = "Saltar", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
-emotesTab:Dropdown({ Title = "Caer", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
-emotesTab:Dropdown({ Title = "Escalar", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
+emotesTab:Dropdown({ Title = "Reposo", Desc = "Animacion de idle (cuando estas quieto).", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
+emotesTab:Dropdown({ Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
+emotesTab:Dropdown({ Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
+emotesTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
+emotesTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
+emotesTab:Dropdown({ Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
 
 emotesTab:Button({
     Title = "Combinar y Aplicar",
+    Desc = "Mezcla las animaciones elegidas arriba y las aplica.",
     Callback = function()
         task.spawn(function()
             local customMix = {}
@@ -814,6 +819,7 @@ local ConfigTab = extraSection:Tab({ Title = "Config", Icon = "settings", ShowTa
 ConfigTab:Toggle({
     Flag = "ToggleTest",
     Title = "Toggle Panel Background",
+    Desc = "Muestra u oculta el fondo del panel de la UI.",
     Value = not Window.HidePanelBackground,
     Default = true,
     Callback = function(state)
@@ -870,6 +876,7 @@ ConfigTab:Space()
 
 ConfigTab:Button({
     Title = "Save Config",
+    Desc = "Guarda tu configuracion actual del script.",
     Icon = "",
     Justify = "Center",
     Callback = function()
@@ -890,6 +897,7 @@ ConfigTab:Space()
 
 ConfigTab:Button({
     Title = "Load Config",
+    Desc = "Carga la ultima configuracion guardada.",
     Icon = "",
     Justify = "Center",
     Callback = function()
@@ -952,7 +960,7 @@ local bannableTab = mainSection:Tab({
 })
 
 bannableTab:Divider()
-bannableTab:Paragraph({ Title = "Floating Controls (Bubbles)", Desc = "" })
+bannableTab:Paragraph({ Title = "Floating Controls (Bubbles)", Desc = "Botones flotantes para activar funciones rapido." })
 
 editBubblesState = false
 local bubblesScreenGui = Instance.new("ScreenGui")
@@ -1092,7 +1100,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Divider()
-bannableTab:Paragraph({ Title = "Bubbles Visibility", Desc = "" })
+bannableTab:Paragraph({ Title = "Bubbles Visibility", Desc = "Muestra u oculta cada bubble en pantalla." })
 
 bannableTab:Toggle({
     Title = "Show Bubble Ghost (GST)",
@@ -1130,7 +1138,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Divider()
-bannableTab:Paragraph({ Title = "PC Keybinds (Ghost, Desync & Kill All)", Desc = "" })
+bannableTab:Paragraph({ Title = "PC Keybinds (Ghost, Desync & Kill All)", Desc = "Atajos de teclado en PC para Ghost, Desync y Kill All." })
 
 local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
@@ -1496,6 +1504,7 @@ Tabs.Farm:Toggle({
 })
 Tabs.Farm:Dropdown({
 	Title = "Duel Type",
+	Desc = "Tipo de duelo del pad al que te teletransporta (1v1 a 4v4).",
 	Values = { "1v1", "2v2", "3v3", "4v4" },
 	Value = "1v1",
 	Callback = function(value)
@@ -1504,6 +1513,7 @@ Tabs.Farm:Dropdown({
 })
 Tabs.Farm:Dropdown({
 	Title = "Platform Row",
+	Desc = "Fila de plataformas (izquierda o derecha) para el Auto TP.",
 	Values = PLATFORM_ROWS,
 	Value = "Right Platforms",
 	Callback = function(value)
@@ -1638,6 +1648,7 @@ movementTab:Paragraph({
 
 movementTab:Toggle({
     Title = "Velocidad (Speed)",
+    Desc = "Aumenta tu velocidad de movimiento (con spoof anti-deteccion).",
     Default = false,
     Callback = function(state)
         moveSpeedEnabled = state
@@ -1659,6 +1670,7 @@ movementTab:Toggle({
 
 movementTab:Slider({
     Title = "Valor de velocidad",
+    Desc = "Que tan rapido te mueves con Speed activo.",
     Value = { Min = 16, Max = 120, Default = 28 },
     Callback = function(v)
         moveSpeedValue = v
@@ -1670,6 +1682,7 @@ movementTab:Slider({
 
 movementTab:Toggle({
     Title = "Vuelo (Fly)",
+    Desc = "Te permite volar libremente por el mapa.",
     Default = false,
     Callback = function(state)
         moveFlyEnabled = state
@@ -1684,6 +1697,7 @@ movementTab:Toggle({
 
 movementTab:Slider({
     Title = "Velocidad de vuelo",
+    Desc = "Velocidad al usar Fly.",
     Value = { Min = 20, Max = 250, Default = 80 },
     Callback = function(v)
         moveFlySpeed = v
@@ -1692,6 +1706,7 @@ movementTab:Slider({
 
 movementTab:Toggle({
     Title = "Salto infinito",
+    Desc = "Puedes saltar sin limite en el aire.",
     Default = false,
     Callback = function(state)
         moveInfJumpEnabled = state
@@ -1702,6 +1717,7 @@ movementTab:Toggle({
 -- Noclip
 movementTab:Toggle({
     Title = "Noclip",
+    Desc = "Atraviesa paredes y objetos del mapa.",
     Default = false,
     Callback = function(state)
         moveNoclipEnabled = state
@@ -2039,7 +2055,7 @@ pcall(function()
 end)
 
 Tabs.Aim:Divider()
-Tabs.Aim:Paragraph({ Title = "Kill All", Desc = "" })
+Tabs.Aim:Paragraph({ Title = "Kill All", Desc = "Modo agresivo: ataca enemigos en rango (riesgo de ban)." })
 
 local function esVulnerable(char)
     if not char then return false end
@@ -2079,23 +2095,6 @@ local function setKillAllState(state)
                     if myHrp and myHum and myHum.Health > 0 then
                         local posicionOriginal = myHrp.CFrame
 
-                        -- Movimiento protegido: sin PlatformStand (muy detectable)
-                        local function softMoveTo(cf)
-                            if not myHrp or not myHrp.Parent then return end
-                            pcall(function()
-                                -- congelar velocidad antes/despues para menos flags de TP
-                                myHrp.AssemblyLinearVelocity = Vector3.zero
-                                myHrp.AssemblyAngularVelocity = Vector3.zero
-                                if myChar.PrimaryPart then
-                                    myChar:PivotTo(cf)
-                                else
-                                    myHrp.CFrame = cf
-                                end
-                                myHrp.AssemblyLinearVelocity = Vector3.zero
-                                myHrp.AssemblyAngularVelocity = Vector3.zero
-                            end)
-                        end
-
                         for _, p in ipairs(Players:GetPlayers()) do
                             if not killAllEnabled then break end
 
@@ -2108,32 +2107,36 @@ local function setKillAllState(state)
                                         local distanciaAlEnemigo = (posicionOriginal.Position - enemyHrp.Position).Magnitude
 
                                         if distanciaAlEnemigo <= killAllRango then
-                                            -- Hitbox temporal con spoof (misma proteccion que Combat)
+                                            -- Solo proteccion de hitbox (spoof como combate); resto del Kill All original
+                                            -- Hitbox grande (spoof) + estar debajo a distancia
                                             pcall(function()
-                                                setSpoofedSize(enemyHrp, Vector3.new(18, 18, 18))
+                                                setSpoofedSize(enemyHrp, Vector3.new(40, 40, 40))
                                                 setSpoofedCollide(enemyHrp, false)
                                             end)
 
                                             local failSafe = 0
-                                            while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 200 do
-                                                if not myHrp.Parent or myHum.Health <= 0 then break end
-                                                -- reaplicar spoof por si el server resetea
+                                            while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
+                                                myHum.PlatformStand = true
+                                                -- Debajo del enemigo, distancia vertical larga (mas dificil que te maten)
+                                                myHrp.CFrame = enemyHrp.CFrame * CFrame.new(0, -12, 0)
+                                                myHrp.AssemblyLinearVelocity = Vector3.zero
+                                                myHrp.AssemblyAngularVelocity = Vector3.zero
+
                                                 pcall(function()
                                                     if enemyHrp and enemyHrp.Parent then
-                                                        setSpoofedSize(enemyHrp, Vector3.new(18, 18, 18))
+                                                        setSpoofedSize(enemyHrp, Vector3.new(40, 40, 40))
                                                         setSpoofedCollide(enemyHrp, false)
                                                     end
                                                 end)
 
-                                                local targetCf = enemyHrp.CFrame * CFrame.new(0, -1.5, 0.5)
-                                                softMoveTo(targetCf)
-
                                                 pcall(function()
                                                     local arma = myChar:FindFirstChildOfClass("Tool")
+
                                                     if arma and esLaPistola(arma) then
                                                         myHum:UnequipTools()
                                                         arma = nil
                                                     end
+
                                                     if not arma then
                                                         local backpack = player:FindFirstChild("Backpack")
                                                         if backpack then
@@ -2141,22 +2144,26 @@ local function setKillAllState(state)
                                                                 if item:IsA("Tool") and not esLaPistola(item) then
                                                                     myHum:EquipTool(item)
                                                                     arma = item
-                                                                    task.wait(0.04)
+                                                                    task.wait(0.05)
                                                                     break
                                                                 end
                                                             end
                                                         end
                                                     end
+
                                                     if arma then
                                                         arma:Activate()
                                                     end
                                                 end)
 
-                                                task.wait(0.04)
+                                                task.wait(0.03)
                                                 failSafe = failSafe + 1
                                             end
 
-                                            -- restaurar hitbox con el mismo restore del combate
+                                            if myHum then
+                                                myHum.PlatformStand = false
+                                            end
+
                                             pcall(function()
                                                 if enemyHrp and enemyHrp.Parent then
                                                     restoreSize(enemyHrp)
@@ -2169,30 +2176,27 @@ local function setKillAllState(state)
                             end
                         end
 
-                        if killAllEnabled and myHrp and myHrp.Parent then
-                            softMoveTo(posicionOriginal)
-                            task.wait(0.15)
+                        if killAllEnabled and myHrp then
+                            myHrp.CFrame = posicionOriginal
+                            task.wait(0.2)
                         end
                     end
                 end
-                task.wait(0.12)
+                task.wait(0.1)
             end
         end)
     else
         showBottomMessage("Kill All: DESACTIVADO")
-        pcall(function()
-            local myChar = player.Character
-            local myHrp = myChar and myChar:FindFirstChild("HumanoidRootPart")
-            if myHrp then
-                myHrp.AssemblyLinearVelocity = Vector3.zero
-                myHrp.AssemblyAngularVelocity = Vector3.zero
-            end
-        end)
+        local myChar = player.Character
+        if myChar then
+            local myHum = myChar:FindFirstChild("Humanoid")
+            if myHum then myHum.PlatformStand = false end
+        end
     end
 end
 
 UIElements.TogKillAll = Tabs.Aim:Toggle({ 
-    Title = "Activar Kill All (advertensia expulsa al usarlo Beta)",
+    Title = "Activar Kill All (Posible Ban si te reportan)",
     Desc = "Mata a todos los enemigos con cuchillo.",
     Value = false,
     Callback = function(Value)
@@ -2223,126 +2227,8 @@ UIElements.TogMacro = Tabs.Aim:Toggle({
     Callback = function(s) macroActivo = s end
 })
 
-UIElements.SliMacroEquip = Tabs.Aim:Slider({
-    Title = "Delay al Equipar",
-    Desc = "Sube esto si la pistola no alcanza a salir. (Segundos)",
-    Step = 0.01,
-    Value = {Min = 0.01, Max = 0.50, Default = 0.04},
-    Callback = function(v) macroEquipDelay = v end
-})
-
-UIElements.SliMacroShoot = Tabs.Aim:Slider({
-    Title = "Delay de Disparo",
-    Desc = "Sube esto si el tiro no cuenta daño. (Segundos)",
-    Step = 0.01,
-    Value = {Min = 0.05, Max = 0.80, Default = 0.10},
-    Callback = function(v) macroShootDelay = v end
-})
-
--- Zona muerta en ScreenGui real (NO en Folder ProtectedGui — si no, no se ve)
-local deadZoneGui = Instance.new("ScreenGui")
-deadZoneGui.Name = "VortexDeadZone"
-deadZoneGui.ResetOnSpawn = false
-deadZoneGui.IgnoreGuiInset = true
-deadZoneGui.DisplayOrder = 100000
-deadZoneGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-deadZoneGui.Enabled = true
-pcall(function()
-    if gethui then
-        deadZoneGui.Parent = gethui()
-    else
-        deadZoneGui.Parent = CoreGui
-    end
-end)
-if not deadZoneGui.Parent then
-    pcall(function()
-        deadZoneGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-    end)
-end
-
-local deadZoneFrame = Instance.new("Frame")
-deadZoneFrame.Name = "DeadZone"
-deadZoneFrame.Size = UDim2.new(0, 150, 0, 150)
-deadZoneFrame.Position = UDim2.new(0.75, 0, 0.7, 0)
-deadZoneFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-deadZoneFrame.BackgroundColor3 = Color3.fromRGB(255, 200, 50)
-deadZoneFrame.BackgroundTransparency = 1
-deadZoneFrame.Visible = true
-deadZoneFrame.ZIndex = 100
-deadZoneFrame.Active = false
-deadZoneFrame.Parent = deadZoneGui
-Instance.new("UICorner", deadZoneFrame).CornerRadius = UDim.new(0, 16)
-
-local dzStroke = Instance.new("UIStroke", deadZoneFrame)
-dzStroke.Color = Color3.fromRGB(255, 255, 255)
-dzStroke.Thickness = 2.5
-dzStroke.Transparency = 0.1
-
-local dzLabel = Instance.new("TextLabel")
-dzLabel.Size = UDim2.new(1, 0, 1, 0)
-dzLabel.BackgroundTransparency = 1
-dzLabel.Text = "ZONA MUERTA\n(Arrastrar)"
-dzLabel.TextColor3 = Color3.fromRGB(20, 20, 20)
-dzLabel.Font = Enum.Font.GothamBold
-dzLabel.TextSize = 14
-dzLabel.TextWrapped = true
-dzLabel.TextTransparency = 1
-dzLabel.ZIndex = 101
-dzLabel.Parent = deadZoneFrame
-dzStroke.Transparency = 1
-
-local deadZoneShowEnabled = false
-makeDraggable(deadZoneFrame, deadZoneFrame, function()
-    return deadZoneShowEnabled == true
-end)
-
-UIElements.TogDeadZone = Tabs.Aim:Toggle({
-    Title = "Mostrar/Acomodar Zona Muerta",
-    Desc = "Visible y arrastrable solo con esto ON. Si está OFF, queda fija.",
-    Value = false,
-    Callback = function(s)
-        task.spawn(function()
-            local on = s and true or false
-            deadZoneShowEnabled = on
-            pcall(function()
-                if not deadZoneGui.Parent then
-                    if gethui then
-                        deadZoneGui.Parent = gethui()
-                    else
-                        deadZoneGui.Parent = CoreGui
-                    end
-                end
-                deadZoneGui.Enabled = true
-                if on then
-                    deadZoneFrame.BackgroundTransparency = 0.35
-                    dzLabel.TextTransparency = 0
-                    dzStroke.Transparency = 0.1
-                    deadZoneFrame.Active = true
-                else
-                    deadZoneFrame.BackgroundTransparency = 1
-                    dzLabel.TextTransparency = 1
-                    dzStroke.Transparency = 1
-                    deadZoneFrame.Active = false
-                end
-            end)
-            pcall(function()
-                showBottomMessage(on and "Zona Muerta: visible (puedes arrastrar)" or "Zona Muerta: fija y oculta")
-            end)
-        end)
-    end
-})
-
-UIElements.SliDeadZone = Tabs.Aim:Slider({
-    Title = "Tamaño de Zona Muerta",
-    Step = 1,
-    Value = {Min = 80, Max = 400, Default = 150},
-    Callback = function(v)
-        deadZoneFrame.Size = UDim2.new(0, v, 0, v)
-    end
-})
-
 Tabs.Aim:Divider()
-Tabs.Aim:Paragraph({ Title = "Auto Shoot", Desc = "" })
+Tabs.Aim:Paragraph({ Title = "Auto Shoot", Desc = "Disparo automatico al detectar enemigos." })
 
 UIElements.TogAutoShoot = Tabs.Aim:Toggle({
     Title = "Auto Shoot",
@@ -2367,6 +2253,7 @@ UIElements.TogAutoShootCuchillo = Tabs.Aim:Toggle({
 local asTargetIniciado = false
 UIElements.DropAutoShootPart = Tabs.Aim:Dropdown({
     Title = "Target: Parte del cuerpo (Auto Shoot)",
+    Desc = "A que parte del enemigo apunta el Auto Shoot / Triggerbot.",
     Values = {"Cabeza", "Torso", "Cuerpo Completo"},
     Value = "Cabeza",
     Callback = function(Value)
@@ -2393,7 +2280,7 @@ UIElements.TogTriggerbot = Tabs.Aim:Toggle({
 })
 
 Tabs.Aim:Divider()
-Tabs.Aim:Paragraph({ Title = "Silent Aim & FOV", Desc = "" })
+Tabs.Aim:Paragraph({ Title = "Silent Aim & FOV", Desc = "Redireccion de balas y campo de vision." })
 
 UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
     Title = "Silent Aim",
@@ -2411,6 +2298,7 @@ UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
 local aimTargetIniciado = false
 UIElements.DropSilentAimPart = Tabs.Aim:Dropdown({
     Title = "Target: Parte del cuerpo",
+    Desc = "Parte del cuerpo a la que redirige el Silent Aim.",
     Values = {"Cabeza", "Torso", "Cuerpo Completo"},
     Value = "Cabeza",
     Callback = function(Value)
@@ -2443,14 +2331,15 @@ UIElements.TogShowFOV = Tabs.Aim:Toggle({
 })
 
 UIElements.SliFOVSize = Tabs.Aim:Slider({
-    Title = "Tamaño del FOV", 
+    Title = "Tamaño del FOV",
+    Desc = "Radio del circulo FOV del Silent Aim en pantalla.",
     Step = 1,
     Value = {Min = 10, Max = 800, Default = 120}, 
     Callback = function(v) fovRadius = v end
 })
 
 Tabs.Aim:Divider()
-Tabs.Aim:Paragraph({ Title = "Expandir Hitbox", Desc = "" })
+Tabs.Aim:Paragraph({ Title = "Expandir Hitbox", Desc = "Aumenta el tamaño de la hitbox de los enemigos." })
 
 UIElements.TogHitbox = Tabs.Aim:Toggle({
     Title = "Aumentar Hitbox",
@@ -2556,13 +2445,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then 
         ejecutarAccionMacro()
     elseif input.UserInputType == Enum.UserInputType.Touch then
-        local pos = input.Position
-        local dzPos = deadZoneFrame.AbsolutePosition
-        local dzSize = deadZoneFrame.AbsoluteSize
-        local tocoZonaMuerta = (pos.X >= dzPos.X) and (pos.X <= dzPos.X + dzSize.X) and (pos.Y >= dzPos.Y) and (pos.Y <= dzPos.Y + dzSize.Y)
-        if not tocoZonaMuerta then 
-            toquesPantalla[input] = {posicion = input.Position, tiempo = tick()} 
-        end
+        toquesPantalla[input] = {posicion = input.Position, tiempo = tick()}
     end
 end)
 
