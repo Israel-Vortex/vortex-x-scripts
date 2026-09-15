@@ -4371,25 +4371,16 @@ InfoTab:Select()
 InfoTab:Section({ Title = "Acerca del Script" })
 InfoTab:Paragraph({
 	Title = "Vortex X Sage [Steal An Egg]",
-	Desc = "Script multi-executor para Steal an Egg.
-Incluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.
-Compatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).
-
-Desarrollador: Israelcc
-UI: WindUI
-Versión: 1.0"
+	Desc = "Script multi-executor para Steal an Egg.\nIncluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.\nCompatible con PC y movil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersion: 1.0",
 })
 InfoTab:Paragraph({
 	Title = "Desarrollador",
-	Desc = "Israelcc
-Desarrollo principal, mantenimiento y actualizaciones."
+	Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones.",
 })
 InfoTab:Divider()
 InfoTab:Paragraph({
-	Title = "Únete a nuestro Discord",
-	Desc = "Comunidad oficial para soporte y actualizaciones.
-
-https://discord.gg/Fn74MpzFUn"
+	Title = "Unete a nuestro Discord",
+	Desc = "Comunidad oficial para soporte y actualizaciones.\n\nhttps://discord.gg/Fn74MpzFUn",
 })
 InfoTab:Button({
 	Title = "Copiar enlace de Discord",
