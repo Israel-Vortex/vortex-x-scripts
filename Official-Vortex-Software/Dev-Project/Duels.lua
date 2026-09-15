@@ -294,7 +294,7 @@ local Window = WindUI:CreateWindow({
     Title = "Vortex X Sage [DMvSS]",
     Icon = "rbxassetid://118833096342184",
     IconSize = "35",
-    Author = "By Israelcc & Novak",
+    Author = "By Israelcc",
     Folder = "VortexXSage",
     Background = "rbxassetid://133044138027516",
     Size = UDim2.fromOffset(680, 520),
@@ -438,12 +438,12 @@ InfoTab:Section({ Title = "Acerca del Script" })
 
 InfoTab:Paragraph({
     Title = "Vortex X Sage [DMvSS]",
-    Desc = "Script multi-executor para Duels (DMvSS).\nIncluye combate, ESP, visuales, farm, emotes y configuraciones.\nCompatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrolladores: Israelcc & Novak\nUI: WindUI\nVersión: 3.2.7"
+    Desc = "Script multi-executor para Duels (DMvSS).\nIncluye combate, ESP, visuales, farm, emotes y configuraciones.\nCompatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersión: 3.2.7"
 })
 
 InfoTab:Paragraph({
-    Title = "Desarrolladores",
-    Desc = "Israelcc & Novak\nDesarrollo principal, mantenimiento y actualizaciones."
+    Title = "Desarrollador",
+    Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones."
 })
 
 InfoTab:Divider()
@@ -2108,23 +2108,25 @@ local function setKillAllState(state)
 
                                         if distanciaAlEnemigo <= killAllRango then
                                             -- Solo proteccion de hitbox (spoof como combate); resto del Kill All original
-                                            -- Hitbox grande (spoof) + estar debajo a distancia
+                                            -- Hitbox chica (no te envuelve) + debajo/atras para cuchillar
+                                            local KILLALL_HITBOX = 12
+                                            local KILLALL_OFFSET = CFrame.new(0, -3.5, 1.5)
                                             pcall(function()
-                                                setSpoofedSize(enemyHrp, Vector3.new(40, 40, 40))
+                                                setSpoofedSize(enemyHrp, Vector3.new(KILLALL_HITBOX, KILLALL_HITBOX, KILLALL_HITBOX))
                                                 setSpoofedCollide(enemyHrp, false)
                                             end)
 
                                             local failSafe = 0
                                             while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
                                                 myHum.PlatformStand = true
-                                                -- Debajo del enemigo, distancia vertical larga (mas dificil que te maten)
-                                                myHrp.CFrame = enemyHrp.CFrame * CFrame.new(0, -12, 0)
+                                                -- Debajo del enemigo, distancia media (no tan abajo)
+                                                myHrp.CFrame = enemyHrp.CFrame * KILLALL_OFFSET
                                                 myHrp.AssemblyLinearVelocity = Vector3.zero
                                                 myHrp.AssemblyAngularVelocity = Vector3.zero
 
                                                 pcall(function()
                                                     if enemyHrp and enemyHrp.Parent then
-                                                        setSpoofedSize(enemyHrp, Vector3.new(40, 40, 40))
+                                                        setSpoofedSize(enemyHrp, Vector3.new(KILLALL_HITBOX, KILLALL_HITBOX, KILLALL_HITBOX))
                                                         setSpoofedCollide(enemyHrp, false)
                                                     end
                                                 end)
@@ -2789,7 +2791,6 @@ Tabs.Vis = visualsTab
 local espEnabled = false
 local allyEspEnabled = false
 local professionalEspEnabled = false
-local professionalSkeletonEnabled = true
 local outlineEnabled = true
 local enemyOutlineColor = Color3.fromRGB(255, 190, 40)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
@@ -3363,30 +3364,31 @@ local function refreshProfessionalESP()
                     local bLines = {}
                     for i = 1, 4 do
                         local l = Drawing.new("Line")
-                        l.Thickness = 1.5
+                        l.Thickness = 1
                         l.Color = enemyOutlineColor
-                        l.Transparency = 0.8
+                        l.Transparency = 0.55
                         bLines[i] = l
                     end
                     local tracer = Drawing.new("Line")
-                    tracer.Thickness = 1.5
+                    tracer.Thickness = 1
                     tracer.Color = enemyOutlineColor
-                    tracer.Transparency = 0.8
+                    tracer.Transparency = 0.65
 
                     local nameText = Drawing.new("Text")
                     nameText.Text = plr.Name
-                    nameText.Size = 13
+                    nameText.Size = 14
                     nameText.Center = true
                     nameText.Outline = true
+                    nameText.OutlineColor = Color3.fromRGB(0, 0, 0)
                     nameText.Color = enemyOutlineColor
-                    nameText.Transparency = 0.9
+                    nameText.Transparency = 0.15
 
                     local skLines = {}
                     for i = 1, #SKELETON_BONES do
                         local l = Drawing.new("Line")
-                        l.Thickness = 1.4
+                        l.Thickness = 1
                         l.Color = enemyOutlineColor
-                        l.Transparency = 0.85
+                        l.Transparency = 0.7
                         l.Visible = false
                         skLines[i] = l
                     end
@@ -3401,20 +3403,21 @@ local function refreshProfessionalESP()
                     local skLines = drawings.skeleton
 
                     local vector, onScreen = Camera:WorldToViewportPoint(root.Position)
-                    local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                    local legPos, legOnScreen = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3, 0))
+                    local headPos, headOnScreen = Camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.8, 0))
+                    local legPos, legOnScreen = Camera:WorldToViewportPoint(root.Position - Vector3.new(0, 3.2, 0))
 
-                    if onScreen and tracer then
-                        tracer.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                        tracer.To = Vector2.new(vector.X, vector.Y)
+                    -- Tracer desde ARRIBA del centro de pantalla hacia la cabeza
+                    if headOnScreen and tracer then
+                        tracer.From = Vector2.new(Camera.ViewportSize.X / 2, 4)
+                        tracer.To = Vector2.new(headPos.X, headPos.Y)
                         tracer.Visible = true
                     elseif tracer then
                         tracer.Visible = false
                     end
 
                     if headOnScreen and legOnScreen and bLines and nameText then
-                        local height = math.abs(headPos.Y - legPos.Y)
-                        local width = height / 2
+                        local height = math.max(math.abs(headPos.Y - legPos.Y), 18)
+                        local width = math.max(height * 0.55, 12)
                         local boxPos = Vector2.new(headPos.X - width / 2, headPos.Y)
 
                         bLines[1].From = boxPos
@@ -3427,38 +3430,41 @@ local function refreshProfessionalESP()
                         bLines[4].To = boxPos
 
                         for i = 1, 4 do bLines[i].Visible = true end
-                        nameText.Position = Vector2.new(boxPos.X + (width / 2), boxPos.Y - 16)
+                        -- Nombre mas separado arriba de la caja
+                        nameText.Position = Vector2.new(boxPos.X + (width / 2), boxPos.Y - 22)
                         nameText.Visible = true
                     elseif bLines and nameText then
                         for _, l in ipairs(bLines) do l.Visible = false end
                         nameText.Visible = false
                     end
 
-                    if skLines and professionalSkeletonEnabled then
-                        for i, pair in ipairs(SKELETON_BONES) do
-                            local line = skLines[i]
-                            if line then
-                                local a = char:FindFirstChild(pair[1])
-                                local b = char:FindFirstChild(pair[2])
-                                if a and b and a:IsA("BasePart") and b:IsA("BasePart") then
-                                    local p1, o1 = Camera:WorldToViewportPoint(a.Position)
-                                    local p2, o2 = Camera:WorldToViewportPoint(b.Position)
-                                    if o1 and o2 and p1.Z > 0 and p2.Z > 0 then
-                                        line.From = Vector2.new(p1.X, p1.Y)
-                                        line.To = Vector2.new(p2.X, p2.Y)
-                                        line.Color = enemyOutlineColor
-                                        line.Visible = true
+                    if skLines then
+                        if onScreen then
+                            for i, pair in ipairs(SKELETON_BONES) do
+                                local line = skLines[i]
+                                if line then
+                                    local a = char:FindFirstChild(pair[1])
+                                    local b = char:FindFirstChild(pair[2])
+                                    if a and b and a:IsA("BasePart") and b:IsA("BasePart") then
+                                        local p1, o1 = Camera:WorldToViewportPoint(a.Position)
+                                        local p2, o2 = Camera:WorldToViewportPoint(b.Position)
+                                        if o1 and o2 and p1.Z > 0 and p2.Z > 0 then
+                                            line.From = Vector2.new(p1.X, p1.Y)
+                                            line.To = Vector2.new(p2.X, p2.Y)
+                                            line.Color = enemyOutlineColor
+                                            line.Visible = true
+                                        else
+                                            line.Visible = false
+                                        end
                                     else
                                         line.Visible = false
                                     end
-                                else
-                                    line.Visible = false
                                 end
                             end
-                        end
-                    elseif skLines then
-                        for _, line in ipairs(skLines) do
-                            if line then line.Visible = false end
+                        else
+                            for _, line in ipairs(skLines) do
+                                if line then line.Visible = false end
+                            end
                         end
                     end
                 end
@@ -3575,29 +3581,11 @@ visualsTab:Keybind({
 
 local profEspToggleRef = visualsTab:Toggle({
     Title = "Professional ESP",
-    Desc = "ESP 2D: caja + tracer + nombre + skeleton",
+    Desc = "ESP limpio: caja, linea, nombre y huesos del enemigo.",
     Default = false,
     Callback = function(val)
         professionalEspEnabled = val
         if not val then clearProfessionalESP() end
-    end
-})
-
-visualsTab:Toggle({
-    Title = "Skeleton ESP",
-    Desc = "Huesos del enemigo (requiere Professional ESP activo).",
-    Default = true,
-    Callback = function(val)
-        professionalSkeletonEnabled = val == true
-        if not val then
-            for _, drawings in pairs(professionalEspDrawings) do
-                if drawings and drawings.skeleton then
-                    for _, line in ipairs(drawings.skeleton) do
-                        if line then line.Visible = false end
-                    end
-                end
-            end
-        end
     end
 })
 
