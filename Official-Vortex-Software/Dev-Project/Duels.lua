@@ -2108,9 +2108,8 @@ local function setKillAllState(state)
 
                                         if distanciaAlEnemigo <= killAllRango then
                                             -- Solo proteccion de hitbox (spoof como combate); resto del Kill All original
-                                            -- Hitbox chica (no te envuelve) + debajo/atras para cuchillar
-                                            local KILLALL_HITBOX = 12
-                                            local KILLALL_OFFSET = CFrame.new(0, -3.5, 1.5)
+                                            -- Casi pegado + personaje acostado (mejor cuchillo)
+                                            local KILLALL_HITBOX = 10
                                             pcall(function()
                                                 setSpoofedSize(enemyHrp, Vector3.new(KILLALL_HITBOX, KILLALL_HITBOX, KILLALL_HITBOX))
                                                 setSpoofedCollide(enemyHrp, false)
@@ -2119,8 +2118,9 @@ local function setKillAllState(state)
                                             local failSafe = 0
                                             while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
                                                 myHum.PlatformStand = true
-                                                -- Debajo del enemigo, distancia media (no tan abajo)
-                                                myHrp.CFrame = enemyHrp.CFrame * KILLALL_OFFSET
+                                                -- Offset minimo debajo + rotacion acostado (90 deg en X)
+                                                local base = enemyHrp.CFrame * CFrame.new(0, -4.5, 0.35)
+                                                myHrp.CFrame = base * CFrame.Angles(math.rad(90), 0, 0)
                                                 myHrp.AssemblyLinearVelocity = Vector3.zero
                                                 myHrp.AssemblyAngularVelocity = Vector3.zero
 
