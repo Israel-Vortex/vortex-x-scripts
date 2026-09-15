@@ -4367,13 +4367,44 @@ local mainSec = Window:Section({ Title = "Principal", Opened = true })
 local toolsSec = Window:Section({ Title = "Tools", Opened = true })
 
 local InfoTab = mainSec:Tab({ Title = "Info", Icon = "info" })
+InfoTab:Select()
+InfoTab:Section({ Title = "Acerca del Script" })
 InfoTab:Paragraph({
 	Title = "Vortex X Sage [Steal An Egg]",
-	Desc = "Auto steal (tween/teleport), place, hatch, treadmill, godmode, zone & rarity filters.\nLogica completa del hub original adaptada a WindUI.\nAutor: Israelcc",
+	Desc = "Script multi-executor para Steal an Egg.
+Incluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.
+Compatible con PC y móvil (Delta, Hydrogen, CodeX, etc.).
+
+Desarrollador: Israelcc
+UI: WindUI
+Versión: 1.0"
 })
 InfoTab:Paragraph({
-	Title = "Discord",
-	Desc = "https://discord.gg/Fn74MpzFUn",
+	Title = "Desarrollador",
+	Desc = "Israelcc
+Desarrollo principal, mantenimiento y actualizaciones."
+})
+InfoTab:Divider()
+InfoTab:Paragraph({
+	Title = "Únete a nuestro Discord",
+	Desc = "Comunidad oficial para soporte y actualizaciones.
+
+https://discord.gg/Fn74MpzFUn"
+})
+InfoTab:Button({
+	Title = "Copiar enlace de Discord",
+	Desc = "Copia el invite de Discord de Vortex al portapapeles.",
+	Callback = function()
+		pcall(function()
+			if setclipboard then setclipboard("https://discord.gg/Fn74MpzFUn")
+			elseif setclip then setclip("https://discord.gg/Fn74MpzFUn")
+			elseif toclipboard then toclipboard("https://discord.gg/Fn74MpzFUn")
+			end
+		end)
+		pcall(function()
+			WindUI:Notify({ Title = "Vortex X Sage", Content = "Link de Discord copiado!", Duration = 2 })
+		end)
+	end
 })
 
 local StealTab = mainSec:Tab({ Title = "Auto Steal", Icon = "zap" })
@@ -4632,6 +4663,269 @@ SettingsTab:Button({
 		pcall(function() Window:Destroy() end)
 	end,
 })
+
+
+local function showBottomMessage(msg)
+	pcall(function()
+		WindUI:Notify({ Title = "Vortex X Sage", Content = tostring(msg), Duration = 2 })
+	end)
+end
+
+-- =====================================
+-- ========== EMOTES / ANIMACIONES ==========
+-- (misma sección Extra, arriba de Config)
+-- =====================================
+local emotesTab = toolsSec:Tab({ Title = "Emotes", Icon = "person-standing", ShowTabTitle = true, Border = true })
+
+local animationData = {
+    ["Old School"] = { Walk = 10921244891, Run = 10921240218, Jump = 10921242013, Fall = 10921241244, SwimIdle = 10921244018, Swim = 10921243048, Idle = 10921230744, Idle2 = 10921232093, Climb = 10921229866 },
+    ["Adidas Sports"] = { Walk = 18537392113, Run = 18537384940, Jump = 18537380791, Fall = 18537367238, SwimIdle = 18537387180, Swim = 18537389531, Idle = 18537376492, Idle2 = 18537371272, Climb = 18537363391 },
+    ["Adidas Community"] = { Walk = 122150855457006, Run = 82598234841035, Jump = 75290611992385, Fall = 98600215928904, SwimIdle = 109346520324160, Swim = 133308483266208, Idle = 122257458498464, Idle2 = 102357151005774, Climb = 88763136693023 },
+    ["Adidas Aura"] = { Walk = 83842218823011, Run = 118320322718866, Jump = 109996626521204, Fall = 95603166884636, SwimIdle = 94922130551805, Swim = 134530128383903, Idle = 110211186840347, Idle2 = 114191137265065, Climb = 97824616490448 },
+    ["Wicked Popular"] = { Walk = 92072849924640, Run = 72301599441680, Jump = 104325245285198, Fall = 121152442762481, Idle = 118832222982049, Idle2 = 76049494037641, SwimIdle = 113199415118199, Swim = 99384245425157, Climb = 131326830509784 },
+    ["Elder"] = { Walk = 10921111375, Run = 10921104374, Jump = 10921107367, Fall = 10921105765, SwimIdle = 10921110146, Swim = 10921108971, Idle = 10921101664, Idle2 = 10921102574, Climb = 10921100400 },
+    ["Zombie"] = { Walk = 10921355261, Run = 616163682, Jump = 10921351278, Fall = 10921350320, SwimIdle = 10921353442, Swim = 10921352344, Idle = 10921344533, Idle2 = 10921345304, Climb = 10921343576 },
+    ["Mage"] = { Walk = 10921152678, Run = 10921148209, Jump = 10921149743, Fall = 10921148939, SwimIdle = 10921151661, Swim = 10921150788, Idle = 10921144709, Idle2 = 10921145797, Climb = 10921143404 },
+    ["Catwalk Glam"] = { Walk = 109168724482748, Run = 81024476153754, Jump = 116936326516985, Fall = 92294537340807, SwimIdle = 98854111361360, Swim = 134591743181628, Idle = 133806214992291, Idle2 = 94970088341563, Climb = 119377220967554 },
+    ["Astronaut"] = { Walk = 10921046031, Run = 10921039308, Jump = 10921042494, Fall = 10921040576, SwimIdle = 10921045006, Swim = 10921044000, Idle = 10921034824, Idle2 = 10921036806, Climb = 10921032124 },
+    ['Wicked "Dancing Through Life"'] = { Walk = 73718308412641, Run = 135515454877967, Jump = 78508480717326, Fall = 78147885297412, SwimIdle = 129183123083281, Swim = 110657013921774, Idle = 92849173543269, Idle2 = 132238900951109, Climb = 129447497744818 },
+    ["Werewolf"] = { Walk = 10921342074, Run = 10921336997, Fall = 10921337907, SwimIdle = 10921341319, Swim = 10921340419, Idle = 10921330408, Idle2 = 10921333667, Climb = 10921329322 },
+    ["Superhero"] = { Walk = 10921298616, Run = 10921291831, Jump = 10921294559, Fall = 10921293373, SwimIdle = 10921297391, Swim = 10921295495, Idle = 10921288909, Idle2 = 10921290167, Climb = 10921286911 },
+    ["Toy"] = { Walk = 10921312010, Run = 10921306285, Jump = 10921308158, Fall = 10921307241, SwimIdle = 10921310341, Swim = 10921309319, Idle = 10921301576, Climb = 10921300839 },
+    ["No Boundaries"] = { Walk = 18747074203, Run = 18747070484, Jump = 18747069148, Fall = 18747062535, SwimIdle = 18747071682, Swim = 18747073181, Idle = 18747067405, Idle2 = 18747063918, Climb = 18747060903 },
+    ["NFL"] = { Walk = 110358958299415, Run = 117333533048078, Jump = 119846112151352, Fall = 129773241321032, SwimIdle = 79090109939093, Swim = 132697394189921, Idle = 92080889861410, Idle2 = 74451233229259, Climb = 134630013742019 },
+    ["Amazon Unboxed"] = { Walk = 90478085024465, Run = 134824450619865, Jump = 121454505477205, Fall = 94788218468396, SwimIdle = 129126268464847, Swim = 105962919001086, Idle = 98281136301627, Climb = 121145883950231 },
+    ["Vampire"] = { Walk = 10921326949, Run = 10921320299, Jump = 10921322186, Fall = 10921321317, SwimIdle = 10921325443, Swim = 10921324408, Idle = 10921315373, Climb = 10921314188 },
+    ["Ninja"] = { Walk = 656121766, Run = 656118852, Jump = 656117878, Fall = 656115606, SwimIdle = 656121397, Swim = 656119721, Idle = 656117400, Idle2 = 656118341, Climb = 656114359 },
+    ["Robot"] = { Walk = 616095330, Run = 616091570, Jump = 616090535, Fall = 616087089, SwimIdle = 616094091, Swim = 616092998, Idle = 616088211, Idle2 = 616089559, Climb = 616086039 },
+    ["Levitation"] = { Walk = 616013216, Run = 616010382, Jump = 616008936, Fall = 616005863, SwimIdle = 616012453, Swim = 616011509, Idle = 616006778, Idle2 = 616008087, Climb = 616003713 },
+    ["Stylish"] = { Walk = 616146177, Run = 616140816, Jump = 616139451, Fall = 616134815, SwimIdle = 616144772, Swim = 616143378, Idle = 616136790, Idle2 = 616138447, Climb = 616133594 },
+    ["Bubbly"] = { Walk = 910034870, Run = 910025107, Jump = 910016857, Fall = 910001910, SwimIdle = 910030921, Swim = 910028158, Idle = 910004836, Idle2 = 910009958, Climb = 909997997 },
+    ["Cartoon"] = { Walk = 742640026, Run = 742638842, Jump = 742637942, Fall = 742637151, SwimIdle = 742639812, Swim = 742639220, Idle = 742637544, Idle2 = 742638445, Climb = 742636889 }
+}
+
+local function clearAllAnimations()
+    local char = player.Character
+    if not char then return end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+        track:Stop(0)
+        track:Destroy()
+    end
+    local animator = hum:FindFirstChildOfClass("Animator")
+    if animator then
+        for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+            track:Stop(0)
+            track:Destroy()
+        end
+    end
+    task.wait(0.1)
+end
+
+local animacionActualActiva = nil
+local misAnimacionesOriginales = nil
+
+local function applyCustomAnims(customData)
+    if not customData then return end
+    local char = player.Character
+    if not char then return end
+    clearAllAnimations()
+
+    local animate = char:FindFirstChild("Animate")
+    if not animate then return end
+
+    if not misAnimacionesOriginales then
+        local function getAnim(folderName, animName)
+            local folder = animate:FindFirstChild(folderName)
+            if folder then
+                local anim = folder:FindFirstChild(animName)
+                if anim and anim:IsA("Animation") then
+                    local idStr = anim.AnimationId:match("%d+")
+                    if idStr then return tonumber(idStr) end
+                end
+            end
+            return nil
+        end
+
+        misAnimacionesOriginales = {
+            Idle = getAnim("idle", "Animation1") or 507766666,
+            Idle2 = getAnim("idle", "Animation2") or 507766951,
+            Walk = getAnim("walk", "WalkAnim") or 507777826,
+            Run = getAnim("run", "RunAnim") or 507767714,
+            Jump = getAnim("jump", "JumpAnim") or 507765000,
+            Climb = getAnim("climb", "ClimbAnim") or 507765644,
+            Fall = getAnim("fall", "FallAnim") or 507767968,
+            Swim = getAnim("swim", "Swim") or 507784897,
+            SwimIdle = getAnim("swimidle", "SwimIdle") or 507785072
+        }
+    end
+
+    animate.Disabled = true
+    task.wait(0.1)
+
+    local function updateAnimation(folderName, animName, animId)
+        if not animId then return end
+        local folder = animate:FindFirstChild(folderName)
+        if folder then
+            local anim = folder:FindFirstChild(animName)
+            if anim and anim:IsA("Animation") then
+                anim.AnimationId = "rbxassetid://" .. tostring(animId)
+            end
+        end
+    end
+
+    updateAnimation("idle", "Animation1", customData.Idle)
+    updateAnimation("idle", "Animation2", customData.Idle2 or customData.Idle)
+    updateAnimation("walk", "WalkAnim", customData.Walk)
+    updateAnimation("run", "RunAnim", customData.Run)
+    updateAnimation("jump", "JumpAnim", customData.Jump)
+    updateAnimation("climb", "ClimbAnim", customData.Climb)
+    updateAnimation("fall", "FallAnim", customData.Fall)
+    updateAnimation("swim", "Swim", customData.Swim)
+    updateAnimation("swimidle", "SwimIdle", customData.SwimIdle or customData.Swim)
+
+    task.wait(0.1)
+    animate.Disabled = false
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        hum:ChangeState(Enum.HumanoidStateType.Landed)
+        task.wait(0.05)
+        hum:ChangeState(Enum.HumanoidStateType.Running)
+    end
+end
+
+task.spawn(function()
+    while task.wait(1) do
+        if animacionActualActiva then
+            local char = player.Character
+            if char then
+                local animate = char:FindFirstChild("Animate")
+                if animate then
+                    local idleFolder = animate:FindFirstChild("idle")
+                    if idleFolder then
+                        local anim1 = idleFolder:FindFirstChild("Animation1")
+                        if anim1 then
+                            local currentId = anim1.AnimationId:match("%d+")
+                            if currentId ~= tostring(animacionActualActiva.Idle) then
+                                applyCustomAnims(animacionActualActiva)
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end)
+
+local animList = {"Ninguno"}
+for name, _ in pairs(animationData) do
+    table.insert(animList, name)
+end
+table.sort(animList)
+
+emotesTab:Section({ Title = "Paquetes Completos" })
+
+local selectedBundleCompleto = "Ninguno"
+emotesTab:Dropdown({
+    Title = "Elegir Paquete",
+    Desc = "Elige un set completo de animaciones de movimiento.",
+    Values = animList,
+    Value = "Ninguno",
+    Callback = function(Value)
+        selectedBundleCompleto = Value
+    end
+})
+
+emotesTab:Button({
+    Title = "Aplicar Paquete Completo",
+    Desc = "Aplica todas las animaciones del paquete seleccionado.",
+    Callback = function()
+        if selectedBundleCompleto == "Ninguno" then return end
+        task.spawn(function()
+            showBottomMessage("Aplicando paquete: " .. selectedBundleCompleto)
+            animacionActualActiva = animationData[selectedBundleCompleto]
+            applyCustomAnims(animacionActualActiva)
+        end)
+    end
+})
+
+emotesTab:Button({
+    Title = "Restaurar Default",
+    Desc = "Vuelve a las animaciones originales del juego.",
+    Callback = function()
+        task.spawn(function()
+            local defaultAnims = misAnimacionesOriginales or {
+                Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
+                Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
+            }
+            animacionActualActiva = nil
+            applyCustomAnims(defaultAnims)
+            showBottomMessage("Animaciones de tu avatar restauradas.")
+        end)
+    end
+})
+
+emotesTab:Section({ Title = "Mezclador de Animaciones" })
+
+local mixParts = {
+    Idle = "Ninguno", Walk = "Ninguno", Run = "Ninguno",
+    Jump = "Ninguno", Fall = "Ninguno", Climb = "Ninguno"
+}
+
+emotesTab:Dropdown({ Title = "Reposo", Desc = "Animacion de idle (cuando estas quieto).", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
+emotesTab:Dropdown({ Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
+emotesTab:Dropdown({ Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
+emotesTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
+emotesTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
+emotesTab:Dropdown({ Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
+
+emotesTab:Button({
+    Title = "Combinar y Aplicar",
+    Desc = "Mezcla las animaciones elegidas arriba y las aplica.",
+    Callback = function()
+        task.spawn(function()
+            local customMix = {}
+
+            if mixParts.Idle ~= "Ninguno" and animationData[mixParts.Idle] then
+                customMix.Idle = animationData[mixParts.Idle].Idle
+                customMix.Idle2 = animationData[mixParts.Idle].Idle2
+            end
+            if mixParts.Walk ~= "Ninguno" and animationData[mixParts.Walk] then
+                customMix.Walk = animationData[mixParts.Walk].Walk
+            end
+            if mixParts.Run ~= "Ninguno" and animationData[mixParts.Run] then
+                customMix.Run = animationData[mixParts.Run].Run
+            end
+            if mixParts.Jump ~= "Ninguno" and animationData[mixParts.Jump] then
+                customMix.Jump = animationData[mixParts.Jump].Jump
+            end
+            if mixParts.Fall ~= "Ninguno" and animationData[mixParts.Fall] then
+                customMix.Fall = animationData[mixParts.Fall].Fall
+            end
+            if mixParts.Climb ~= "Ninguno" and animationData[mixParts.Climb] then
+                customMix.Climb = animationData[mixParts.Climb].Climb
+            end
+
+            local hasValues = false
+            for _, v in pairs(customMix) do
+                if v then hasValues = true break end
+            end
+
+            if hasValues then
+                showBottomMessage("Aplicando combinación de animaciones...")
+                animacionActualActiva = customMix
+                applyCustomAnims(animacionActualActiva)
+            else
+                showBottomMessage("Selecciona al menos una animación para combinar.")
+            end
+        end)
+    end
+})
+
+
 
 print("[Vortex X Sage] Steal An Egg WindUI loaded")
 
