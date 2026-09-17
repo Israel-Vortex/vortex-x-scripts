@@ -2119,7 +2119,7 @@ local function setKillAllState(state)
                                             while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
                                                 myHum.PlatformStand = true
                                                 -- Offset minimo debajo + rotacion acostado (90 deg en X)
-                                                local base = enemyHrp.CFrame * CFrame.new(0, -4.5, 0.35)
+                                                local base = enemyHrp.CFrame * CFrame.new(0, -1.2, 0.35)
                                                 myHrp.CFrame = base * CFrame.Angles(math.rad(90), 0, 0)
                                                 myHrp.AssemblyLinearVelocity = Vector3.zero
                                                 myHrp.AssemblyAngularVelocity = Vector3.zero
@@ -2537,12 +2537,13 @@ task.spawn(function()
     end
 end)
 
--- Triggerbot: detecta enemigo, equipa pistola y dispara (logica tipo Auto Shoot)
+-- Triggerbot: detecta enemigo, equipa pistola y dispara (sin tocar camara)
 task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
+    local lastShot = 0
 
-    while task.wait(0.08) do
+    while task.wait(0.1) do
         if not triggerbotEnabled or estaEnLobby() or triggerbotBusy then
             continue
         end
@@ -2555,6 +2556,11 @@ task.spawn(function()
         if not hum or hum.Health <= 0 then
             continue
         end
+
+        -- No alterar camara / FOV
+        local cam = workspace.CurrentCamera
+        local savedFOV = cam and cam.FieldOfView or nil
+        local savedSubject = cam and cam.CameraSubject or nil
 
         local myPos = char.HumanoidRootPart.Position
         local headPos = char:FindFirstChild("Head") and char.Head.Position or myPos
@@ -2570,7 +2576,7 @@ task.spawn(function()
                     elseif autoShootTargetPart == "Torso" then
                         partesAEscanear = {"UpperTorso", "Torso", "HumanoidRootPart"}
                     else
-                        partesAEscanear = {"Head", "UpperTorso", "LowerTorso", "Torso", "LeftArm", "RightArm", "LeftLeg", "RightLeg"}
+                        partesAEscanear = {"Head", "UpperTorso", "LowerTorso", "Torso"}
                     end
                     for _, partName in ipairs(partesAEscanear) do
                         local part = p.Character:FindFirstChild(partName)
@@ -2609,24 +2615,27 @@ task.spawn(function()
             continue
         end
 
-        -- Enemigo a la vista: equipar pistola y disparar
+        if os.clock() - lastShot < 0.15 then
+            continue
+        end
+
         triggerbotBusy = true
         silentTargetPart = closestTargetPart
 
         pcall(function()
             local arma = char:FindFirstChildOfClass("Tool")
-            if arma and not esLaPistola(arma) then
-                hum:UnequipTools()
-                arma = nil
-                task.wait(0.03)
-            end
-
+            -- Solo equipar si no tienes pistola; evita Unequip spam (bug de camara)
             if not arma or not esLaPistola(arma) then
                 local pistola = obtenerPistola()
                 if pistola then
-                    hum:EquipTool(pistola)
-                    task.wait(macroEquipDelay or 0.04)
-                    arma = pistola
+                    -- EquipTool sin tocar CameraSubject
+                    pcall(function()
+                        if hum and hum.Parent then
+                            hum:EquipTool(pistola)
+                        end
+                    end)
+                    task.wait(0.05)
+                    arma = char:FindFirstChildOfClass("Tool")
                 end
             end
 
@@ -2634,9 +2643,21 @@ task.spawn(function()
                 arma:Activate()
                 task.wait(0.02)
                 if arma.Parent == char then
-                    arma:Deactivate()
+                    pcall(function() arma:Deactivate() end)
                 end
-                task.wait(macroShootDelay or 0.08)
+                lastShot = os.clock()
+            end
+        end)
+
+        -- Restaurar FOV / subject si algo los cambio
+        pcall(function()
+            if cam then
+                if savedFOV and math.abs((cam.FieldOfView or 0) - savedFOV) > 0.05 then
+                    cam.FieldOfView = savedFOV
+                end
+                if savedSubject and cam.CameraSubject ~= savedSubject then
+                    cam.CameraSubject = savedSubject
+                end
             end
         end)
 
