@@ -2081,119 +2081,159 @@ local function setKillAllState(state)
     if state then
         showBottomMessage("Kill All: ACTIVADO")
         task.spawn(function()
-            while killAllEnabled do
-                local myChar = player.Character
-                if not myChar or not myChar:FindFirstChild("HumanoidRootPart") or not player:FindFirstChild("Backpack") then
-                    task.wait(0.5)
-                    continue
-                end
-
-                if not estaEnLobby() and esVulnerable(myChar) then
-                    local myHrp = myChar:FindFirstChild("HumanoidRootPart")
-                    local myHum = myChar:FindFirstChild("Humanoid")
-
-                    if myHrp and myHum and myHum.Health > 0 then
-                        local posicionOriginal = myHrp.CFrame
-
-                        for _, p in ipairs(Players:GetPlayers()) do
-                            if not killAllEnabled then break end
-
-                            if p ~= player and isEnemy(p) and p.Character then
-                                if esVulnerable(p.Character) then
-                                    local enemyHum = p.Character:FindFirstChild("Humanoid")
-                                    local enemyHrp = p.Character:FindFirstChild("HumanoidRootPart")
-
-                                    if enemyHum and enemyHum.Health > 0 and enemyHrp then
-                                        local distanciaAlEnemigo = (posicionOriginal.Position - enemyHrp.Position).Magnitude
-
-                                        if distanciaAlEnemigo <= killAllRango then
-                                            -- Solo proteccion de hitbox (spoof como combate); resto del Kill All original
-                                            -- Casi pegado + personaje acostado (mejor cuchillo)
-                                            local KILLALL_HITBOX = 10
-                                            pcall(function()
-                                                setSpoofedSize(enemyHrp, Vector3.new(KILLALL_HITBOX, KILLALL_HITBOX, KILLALL_HITBOX))
-                                                setSpoofedCollide(enemyHrp, false)
-                                            end)
-
-                                            local failSafe = 0
-                                            while killAllEnabled and p and p.Parent and enemyHum and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 300 do
-                                                myHum.PlatformStand = true
-                                                -- Offset minimo debajo + rotacion acostado (90 deg en X)
-                                                local base = enemyHrp.CFrame * CFrame.new(0, -1.2, 0.35)
-                                                myHrp.CFrame = base * CFrame.Angles(math.rad(90), 0, 0)
-                                                myHrp.AssemblyLinearVelocity = Vector3.zero
-                                                myHrp.AssemblyAngularVelocity = Vector3.zero
-
-                                                pcall(function()
-                                                    if enemyHrp and enemyHrp.Parent then
-                                                        setSpoofedSize(enemyHrp, Vector3.new(KILLALL_HITBOX, KILLALL_HITBOX, KILLALL_HITBOX))
-                                                        setSpoofedCollide(enemyHrp, false)
-                                                    end
-                                                end)
-
-                                                pcall(function()
-                                                    local arma = myChar:FindFirstChildOfClass("Tool")
-
-                                                    if arma and esLaPistola(arma) then
-                                                        myHum:UnequipTools()
-                                                        arma = nil
-                                                    end
-
-                                                    if not arma then
-                                                        local backpack = player:FindFirstChild("Backpack")
-                                                        if backpack then
-                                                            for _, item in ipairs(backpack:GetChildren()) do
-                                                                if item:IsA("Tool") and not esLaPistola(item) then
-                                                                    myHum:EquipTool(item)
-                                                                    arma = item
-                                                                    task.wait(0.05)
-                                                                    break
-                                                                end
-                                                            end
-                                                        end
-                                                    end
-
-                                                    if arma then
-                                                        arma:Activate()
-                                                    end
-                                                end)
-
-                                                task.wait(0.03)
-                                                failSafe = failSafe + 1
-                                            end
-
-                                            if myHum then
-                                                myHum.PlatformStand = false
-                                            end
-
-                                            pcall(function()
-                                                if enemyHrp and enemyHrp.Parent then
-                                                    restoreSize(enemyHrp)
-                                                    restoreCollide(enemyHrp)
-                                                end
-                                            end)
-                                        end
-                                    end
-                                end
-                            end
-                        end
-
-                        if killAllEnabled and myHrp then
-                            myHrp.CFrame = posicionOriginal
-                            task.wait(0.2)
+            local function getKnife(char)
+                if not char then return nil end
+                local tool = char:FindFirstChildOfClass("Tool")
+                if tool and not esLaPistola(tool) then return tool end
+                local bp = player:FindFirstChild("Backpack")
+                if bp then
+                    for _, item in ipairs(bp:GetChildren()) do
+                        if item:IsA("Tool") and not esLaPistola(item) then
+                            return item
                         end
                     end
                 end
-                task.wait(0.1)
+                return nil
+            end
+
+            while killAllEnabled do
+                local myChar = player.Character
+                if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then
+                    task.wait(0.25)
+                    continue
+                end
+
+                if estaEnLobby() or not esVulnerable(myChar) then
+                    task.wait(0.25)
+                    continue
+                end
+
+                local myHrp = myChar:FindFirstChild("HumanoidRootPart")
+                local myHum = myChar:FindFirstChildOfClass("Humanoid")
+                if not myHrp or not myHum or myHum.Health <= 0 then
+                    task.wait(0.25)
+                    continue
+                end
+
+                local posicionOriginal = myHrp.CFrame
+
+                -- Menos visible: transparente local
+                pcall(function()
+                    for _, part in ipairs(myChar:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.LocalTransparencyModifier = 0.85
+                        end
+                    end
+                end)
+
+                -- Equipar cuchillo UNA vez (no desequipar en bucle)
+                local knife = getKnife(myChar)
+                if knife and knife.Parent ~= myChar then
+                    pcall(function() myHum:EquipTool(knife) end)
+                    task.wait(0.06)
+                    knife = getKnife(myChar)
+                end
+
+                for _, p in ipairs(Players:GetPlayers()) do
+                    if not killAllEnabled then break end
+                    if p == player or not isEnemy(p) or not p.Character then continue end
+                    if not esVulnerable(p.Character) then continue end
+
+                    local enemyHum = p.Character:FindFirstChildOfClass("Humanoid")
+                    local enemyHrp = p.Character:FindFirstChild("HumanoidRootPart")
+                    if not enemyHum or not enemyHrp or enemyHum.Health <= 0 then continue end
+
+                    local dist = (posicionOriginal.Position - enemyHrp.Position).Magnitude
+                    if dist > killAllRango then continue end
+
+                    -- Hitbox pequenya solo en el enemigo (NO te envuelve)
+                    -- 6 studs: alcanza cuchillo sin cubrite
+                    pcall(function()
+                        setSpoofedSize(enemyHrp, Vector3.new(6, 6, 6))
+                        setSpoofedCollide(enemyHrp, false)
+                    end)
+
+                    local failSafe = 0
+                    myHum.PlatformStand = true
+
+                    while killAllEnabled and p.Parent and enemyHum.Parent and enemyHum.Health > 0 and failSafe < 120 do
+                        if not myHrp.Parent or myHum.Health <= 0 then break end
+
+                        -- Debajo / semi-enterrado + acostado (poco visible)
+                        local base = enemyHrp.CFrame * CFrame.new(0, -5.5, 0.6)
+                        myHrp.CFrame = base * CFrame.Angles(math.rad(90), 0, 0)
+                        myHrp.AssemblyLinearVelocity = Vector3.zero
+                        myHrp.AssemblyAngularVelocity = Vector3.zero
+
+                        -- Mantener cuchillo equipado (nunca forzar unequip de pistola en loop lento)
+                        local arma = myChar:FindFirstChildOfClass("Tool")
+                        if not arma or esLaPistola(arma) then
+                            local k = getKnife(myChar)
+                            if k then
+                                if arma and esLaPistola(arma) then
+                                    pcall(function() myHum:UnequipTools() end)
+                                end
+                                pcall(function() myHum:EquipTool(k) end)
+                                arma = k
+                            end
+                        end
+
+                        if arma and not esLaPistola(arma) then
+                            pcall(function()
+                                arma:Activate()
+                                -- touch del handle ayuda a registrar hit
+                                local handle = arma:FindFirstChild("Handle")
+                                if handle and enemyHrp and firetouchinterest then
+                                    firetouchinterest(handle, enemyHrp, 0)
+                                    firetouchinterest(handle, enemyHrp, 1)
+                                end
+                            end)
+                        end
+
+                        task.wait(0.02)
+                        failSafe = failSafe + 1
+                    end
+
+                    pcall(function()
+                        if enemyHrp and enemyHrp.Parent then
+                            restoreSize(enemyHrp)
+                            restoreCollide(enemyHrp)
+                        end
+                    end)
+                end
+
+                if myHum then
+                    myHum.PlatformStand = false
+                end
+                if killAllEnabled and myHrp and myHrp.Parent then
+                    myHrp.CFrame = posicionOriginal
+                    myHrp.AssemblyLinearVelocity = Vector3.zero
+                end
+                -- restaurar transparencia
+                pcall(function()
+                    for _, part in ipairs(myChar:GetDescendants()) do
+                        if part:IsA("BasePart") then
+                            part.LocalTransparencyModifier = 0
+                        end
+                    end
+                end)
+                task.wait(0.05)
             end
         end)
     else
         showBottomMessage("Kill All: DESACTIVADO")
-        local myChar = player.Character
-        if myChar then
-            local myHum = myChar:FindFirstChild("Humanoid")
+        pcall(function()
+            local myChar = player.Character
+            local myHum = myChar and myChar:FindFirstChildOfClass("Humanoid")
             if myHum then myHum.PlatformStand = false end
-        end
+            if myChar then
+                for _, part in ipairs(myChar:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.LocalTransparencyModifier = 0
+                    end
+                end
+            end
+        end)
     end
 end
 
@@ -2267,13 +2307,22 @@ UIElements.DropAutoShootPart = Tabs.Aim:Dropdown({
 
 UIElements.TogTriggerbot = Tabs.Aim:Toggle({
     Title = "Triggerbot",
-    Desc = "Al detectar enemigo: equipa la pistola y dispara (misma logica de Auto Shoot).",
+    Desc = "Al detectar enemigo: equipa la pistola y dispara (sin bloquear la camara).",
     Value = false,
     Callback = function(Value)
         triggerbotEnabled = Value == true
         showBottomMessage(Value and "Triggerbot: ACTIVADO" or "Triggerbot: DESACTIVADO")
         if not Value then
             triggerbotBusy = false
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if cam then
+                    cam.CameraType = Enum.CameraType.Custom
+                    if hum then cam.CameraSubject = hum end
+                end
+            end)
             if not autoShootEnabled and not autoShootCuchilloEnabled and not silentAimManualEnabled and not silentAimFovEnabled then
                 pcall(function() silentTargetPart = nil end)
             end
@@ -2537,14 +2586,59 @@ task.spawn(function()
     end
 end)
 
--- Triggerbot: detecta enemigo, equipa pistola y dispara (sin tocar camara)
+-- Triggerbot estable: no toca camara (FOV / subject / zoom)
 task.spawn(function()
     local params = RaycastParams.new()
     params.FilterType = Enum.RaycastFilterType.Exclude
     local lastShot = 0
+    local equippedOnce = false
 
-    while task.wait(0.1) do
-        if not triggerbotEnabled or estaEnLobby() or triggerbotBusy then
+    -- Mientras Triggerbot este ON, forzar camara libre cada frame
+    local camConn
+    local function startCamGuard()
+        if camConn then return end
+        camConn = RunService.RenderStepped:Connect(function()
+            if not triggerbotEnabled then return end
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                local char = LocalPlayer.Character
+                local hum = char and char:FindFirstChildOfClass("Humanoid")
+                if not cam then return end
+                -- Evitar Scriptable / zoom forzado del juego al equipar
+                if cam.CameraType ~= Enum.CameraType.Custom then
+                    cam.CameraType = Enum.CameraType.Custom
+                end
+                if hum and cam.CameraSubject ~= hum then
+                    cam.CameraSubject = hum
+                end
+                -- Limites de zoom normales (evita acercar/alejar raro)
+                pcall(function()
+                    LocalPlayer.CameraMinZoomDistance = math.min(LocalPlayer.CameraMinZoomDistance, 0.5)
+                    if LocalPlayer.CameraMaxZoomDistance < 32 then
+                        LocalPlayer.CameraMaxZoomDistance = 128
+                    end
+                end)
+            end)
+        end)
+    end
+    local function stopCamGuard()
+        if camConn then
+            pcall(function() camConn:Disconnect() end)
+            camConn = nil
+        end
+        equippedOnce = false
+    end
+
+    while task.wait(0.12) do
+        if not triggerbotEnabled then
+            stopCamGuard()
+            triggerbotBusy = false
+            continue
+        end
+
+        startCamGuard()
+
+        if estaEnLobby() or triggerbotBusy then
             continue
         end
 
@@ -2557,11 +2651,6 @@ task.spawn(function()
             continue
         end
 
-        -- No alterar camara / FOV
-        local cam = workspace.CurrentCamera
-        local savedFOV = cam and cam.FieldOfView or nil
-        local savedSubject = cam and cam.CameraSubject or nil
-
         local myPos = char.HumanoidRootPart.Position
         local headPos = char:FindFirstChild("Head") and char.Head.Position or myPos
         local objetivosPotenciales = {}
@@ -2570,15 +2659,15 @@ task.spawn(function()
             if isEnemy(p) and p.Character then
                 local enemyHum = p.Character:FindFirstChild("Humanoid")
                 if enemyHum and enemyHum.Health > 0 then
-                    local partesAEscanear = {}
+                    local names
                     if autoShootTargetPart == "Cabeza" then
-                        partesAEscanear = {"Head"}
+                        names = {"Head"}
                     elseif autoShootTargetPart == "Torso" then
-                        partesAEscanear = {"UpperTorso", "Torso", "HumanoidRootPart"}
+                        names = {"UpperTorso", "Torso", "HumanoidRootPart"}
                     else
-                        partesAEscanear = {"Head", "UpperTorso", "LowerTorso", "Torso"}
+                        names = {"Head", "UpperTorso", "LowerTorso", "Torso"}
                     end
-                    for _, partName in ipairs(partesAEscanear) do
+                    for _, partName in ipairs(names) do
                         local part = p.Character:FindFirstChild(partName)
                         if part and part:IsA("BasePart") then
                             table.insert(objetivosPotenciales, {
@@ -2593,9 +2682,6 @@ task.spawn(function()
         end
 
         if #objetivosPotenciales == 0 then
-            if not autoShootEnabled and not silentAimManualEnabled and not silentAimFovEnabled then
-                silentTargetPart = nil
-            end
             continue
         end
 
@@ -2604,8 +2690,7 @@ task.spawn(function()
         local closestTargetPart = nil
         for _, obj in ipairs(objetivosPotenciales) do
             params.FilterDescendantsInstances = {char, obj.Char}
-            local visible = not workspace:Raycast(headPos, obj.Part.Position - headPos, params)
-            if visible then
+            if not workspace:Raycast(headPos, obj.Part.Position - headPos, params) then
                 closestTargetPart = obj.Part
                 break
             end
@@ -2615,49 +2700,59 @@ task.spawn(function()
             continue
         end
 
-        if os.clock() - lastShot < 0.15 then
+        if os.clock() - lastShot < 0.18 then
             continue
         end
 
         triggerbotBusy = true
-        silentTargetPart = closestTargetPart
 
         pcall(function()
             local arma = char:FindFirstChildOfClass("Tool")
-            -- Solo equipar si no tienes pistola; evita Unequip spam (bug de camara)
-            if not arma or not esLaPistola(arma) then
+            local tienePistola = arma and esLaPistola(arma)
+
+            -- Equipar SOLO una vez si hace falta (EquipTool spam = camara rota)
+            if not tienePistola and not equippedOnce then
                 local pistola = obtenerPistola()
-                if pistola then
-                    -- EquipTool sin tocar CameraSubject
-                    pcall(function()
-                        if hum and hum.Parent then
-                            hum:EquipTool(pistola)
-                        end
-                    end)
-                    task.wait(0.05)
+                if pistola and hum then
+                    pcall(function() hum:EquipTool(pistola) end)
+                    equippedOnce = true
+                    task.wait(0.08)
                     arma = char:FindFirstChildOfClass("Tool")
+                    tienePistola = arma and esLaPistola(arma)
+                end
+            elseif not tienePistola then
+                -- reintentar equip silencioso si se cayo el arma
+                local pistola = obtenerPistola()
+                if pistola and hum then
+                    pcall(function() hum:EquipTool(pistola) end)
+                    task.wait(0.06)
+                    arma = char:FindFirstChildOfClass("Tool")
+                    tienePistola = arma and esLaPistola(arma)
                 end
             end
 
-            if arma and arma.Parent == char and esLaPistola(arma) then
-                arma:Activate()
-                task.wait(0.02)
-                if arma.Parent == char then
-                    pcall(function() arma:Deactivate() end)
-                end
+            if tienePistola and arma then
+                -- Target solo durante el disparo (hooks silent), luego se limpia
+                silentTargetPart = closestTargetPart
+                pcall(function() arma:Activate() end)
+                task.wait(0.025)
+                pcall(function()
+                    if arma.Parent == char then arma:Deactivate() end
+                end)
                 lastShot = os.clock()
+                -- Liberar target para no interferir con camara/mouse
+                if not silentAimManualEnabled and not silentAimFovEnabled and not autoShootEnabled then
+                    silentTargetPart = nil
+                end
             end
         end)
 
-        -- Restaurar FOV / subject si algo los cambio
+        -- Forzar camara otra vez tras el tiro
         pcall(function()
+            local cam = workspace.CurrentCamera
             if cam then
-                if savedFOV and math.abs((cam.FieldOfView or 0) - savedFOV) > 0.05 then
-                    cam.FieldOfView = savedFOV
-                end
-                if savedSubject and cam.CameraSubject ~= savedSubject then
-                    cam.CameraSubject = savedSubject
-                end
+                cam.CameraType = Enum.CameraType.Custom
+                if hum then cam.CameraSubject = hum end
             end
         end)
 
