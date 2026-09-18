@@ -231,10 +231,26 @@ local PlayersRef = _safeCloneref(Players)
 -- ==========================================
 -- WIND UI SETUP & LOGIN NOTIFICATION
 -- ==========================================
-local WindUI = loadstring(game:HttpGet("https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua"))()
+local WindUI
+do
+    local urls = {
+        "https://github.com/MrSxxo/WindUI/releases/latest/download/main.lua",
+        "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
+        "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua",
+    }
+    for _, url in ipairs(urls) do
+        local ok, res = pcall(function()
+            return loadstring(game:HttpGet(url))()
+        end)
+        if ok and res then
+            WindUI = res
+            break
+        end
+    end
+end
 
 if not WindUI then
-    warn("Could not load WindUI. Your executor might not be compatible.")
+    warn("[Vortex] No se pudo cargar WindUI")
     return
 end
 
@@ -293,7 +309,7 @@ WindUI:SetTheme("VortexGoldSolid")
 local Window = WindUI:CreateWindow({
     Title = "Vortex X Sage [DMvSS]",
     Icon = "rbxassetid://118833096342184",
-    IconSize = "35",
+    IconSize = 35,
     Author = "By Israelcc",
     Folder = "VortexXSage",
     Background = "rbxassetid://133044138027516",
@@ -1120,7 +1136,7 @@ local function createVaporStyleFab(parent, cfg)
 	FabGlow.BorderSizePixel = 0
 	FabGlow.ZIndex = Fab.ZIndex
 	FabGlow.Parent = Fab
-	Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(1, 0)
+	Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(0, 10)
 
 	local fabIco = Instance.new("ImageLabel")
 	fabIco.Name = "Icon"
@@ -1196,11 +1212,7 @@ local function createBubbleButton(name, iconName, rowY, posXOffset)
 	makeDraggable(FabBtn, Fab, function()
 		return editBubblesState == true
 	end)
-	-- expose Visible/Mouse like old TextButton
-	local proxy = Fab
-	-- wire click via FabBtn - store for external connections that use .MouseButton1Click on bubble*
-	proxy.MouseButton1Click = FabBtn.MouseButton1Click
-	-- compatibility: some code uses bubble.Visible
+	table.insert(allBubbleFabs, Fab)
 	return Fab, FabBtn
 end
 
@@ -1273,8 +1285,24 @@ bannableTab:Toggle({
 bannableTab:Divider()
 bannableTab:Paragraph({ Title = "PC Keybinds (Ghost, Desync & Kill All)", Desc = "Atajos de teclado en PC para Ghost, Desync y Kill All." })
 
+-- Ghost Mode (version clasica: clone/seat, SIN vuelo)
+local function setGhostBubbleVisual(on)
+	pcall(function()
+		local ic = bubbleGhost and bubbleGhost:FindFirstChild("Icon")
+		local st = bubbleGhost and bubbleGhost:FindFirstChild("Stroke")
+		if on then
+			if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
+			if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
+		else
+			if ic then ic.ImageColor3 = FAB_GOLD end
+			if st then st.Color = FAB_GOLD; st.Transparency = 0.45 end
+		end
+	end)
+end
+
 local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
+	setGhostBubbleVisual(invisState.isInvisible)
 
     WindUI:Notify({
         Title = "Vortex X Sage",
@@ -1284,10 +1312,10 @@ local function executeGhostLogic()
 
     if invisState.isInvisible then
         local realChar = LocalPlayer.Character
-        if not realChar then invisState.isInvisible = false return end
+        if not realChar then invisState.isInvisible = false; setGhostBubbleVisual(false) return end
         local hrp = realChar:FindFirstChild("HumanoidRootPart")
         local realHumanoid = realChar:FindFirstChild("Humanoid")
-        if not hrp or not realHumanoid then invisState.isInvisible = false return end
+        if not hrp or not realHumanoid then invisState.isInvisible = false; setGhostBubbleVisual(false) return end
 
         invisState.realChar = realChar
         local savedCFrame = realChar:GetPivot()
@@ -1317,8 +1345,8 @@ local function executeGhostLogic()
         fakeChar.Name = _gameLikeName()
 
         for _, v in ipairs(fakeChar:GetDescendants()) do
-            if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then 
-                v:Destroy() 
+            if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then
+                v:Destroy()
             end
         end
         fakeChar.Parent = workspace
@@ -1350,7 +1378,7 @@ local function executeGhostLogic()
             if realHumanoid then
                 realHumanoid.Sit = false
             end
-            task.wait(0.05) 
+            task.wait(0.05)
 
             if hrp then
                 hrp.Anchored = true
@@ -1365,8 +1393,8 @@ local function executeGhostLogic()
             setCharacterTransparency(realChar, 0)
 
             LocalPlayer.Character = realChar
-            if realHumanoid then 
-                workspace.CurrentCamera.CameraSubject = realHumanoid 
+            if realHumanoid then
+                workspace.CurrentCamera.CameraSubject = realHumanoid
             end
 
             task.wait(0.05)
@@ -1378,9 +1406,9 @@ local function executeGhostLogic()
         if invisState.seat then invisState.seat:Destroy(); invisState.seat = nil end
         if invisState.platform then invisState.platform:Destroy(); invisState.platform = nil end
 
-        if fakeChar then 
-            fakeChar:Destroy() 
-            invisState.fakeChar = nil 
+        if fakeChar then
+            fakeChar:Destroy()
+            invisState.fakeChar = nil
         end
 
         invisState.realChar = nil
