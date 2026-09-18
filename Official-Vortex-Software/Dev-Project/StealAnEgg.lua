@@ -4299,68 +4299,68 @@ end
 local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
 
 pcall(function()
-	WindUI:AddTheme({
-		Name = "VortexGoldSolid",
-		Accent = Color3.fromRGB(255, 200, 50),
-		Outline = Color3.fromRGB(255, 180, 40),
-		Text = Color3.fromRGB(255, 255, 255),
-		Placeholder = Color3.fromRGB(180, 180, 190),
-		Background = Color3.fromRGB(18, 18, 22),
-		Button = Color3.fromRGB(35, 35, 42),
-		Icon = Color3.fromRGB(255, 205, 70),
-	})
-	WindUI:SetTheme("VortexGoldSolid")
+        WindUI:AddTheme({
+                Name = "VortexGoldSolid",
+                Accent = Color3.fromRGB(255, 200, 50),
+                Outline = Color3.fromRGB(255, 180, 40),
+                Text = Color3.fromRGB(255, 255, 255),
+                Placeholder = Color3.fromRGB(180, 180, 190),
+                Background = Color3.fromRGB(18, 18, 22),
+                Button = Color3.fromRGB(35, 35, 42),
+                Icon = Color3.fromRGB(255, 205, 70),
+        })
+        WindUI:SetTheme("VortexGoldSolid")
 end)
 
 local Window = WindUI:CreateWindow({
-	Title = "Vortex X Sage [Steal An Egg]",
-	Icon = "rbxassetid://118833096342184",
-	Author = "Israelcc",
-	Folder = "VortexXSage_StealAnEgg",
-	Background = "rbxassetid://133044138027516",
-	Size = UDim2.fromOffset(620, 480),
-	MinSize = Vector2.new(420, 320),
-	Resizable = true,
-	Transparent = false,
-	Theme = "VortexGoldSolid",
-	User = { Enabled = true, Anonymous = false },
-	OpenButton = {
-		Title = "VXS",
-		Icon = "",
-		CornerRadius = UDim.new(0, 16),
-		StrokeThickness = 2,
-		Color = ColorSequence.new(
-			Color3.fromRGB(255, 200, 50),
-			Color3.fromRGB(255, 160, 20)
-		),
-		OnlyMobile = false,
-		Enabled = true,
-		Draggable = true,
-	},
+        Title = "Vortex X Sage [Steal An Egg]",
+        Icon = "rbxassetid://118833096342184",
+        Author = "Israelcc",
+        Folder = "VortexXSage_StealAnEgg",
+        Background = "rbxassetid://133044138027516",
+        Size = UDim2.fromOffset(620, 480),
+        MinSize = Vector2.new(420, 320),
+        Resizable = true,
+        Transparent = false,
+        Theme = "VortexGoldSolid",
+        User = { Enabled = true, Anonymous = false },
+        OpenButton = {
+                Title = "VXS",
+                Icon = "rbxassetid://118833096342184",
+                CornerRadius = UDim.new(0, 16),
+                StrokeThickness = 2,
+                Color = ColorSequence.new(
+                        Color3.fromRGB(255, 200, 50),
+                        Color3.fromRGB(255, 160, 20)
+                ),
+                OnlyMobile = false,
+                Enabled = true,
+                Draggable = true,
+        },
 })
 
 pcall(function()
-	Window:Tag({ Title = "v1.0", Icon = "egg", Color = Color3.fromRGB(255, 200, 50) })
+        Window:Tag({ Title = "v1.0", Icon = "egg", Color = Color3.fromRGB(255, 200, 50) })
 end)
 
 pcall(function()
-	Window:EditOpenButton({
-		Title = "VXS",
-		Icon = "",
-		CornerRadius = UDim.new(0, 16),
-		StrokeThickness = 2,
-		Color = ColorSequence.new(
-			Color3.fromRGB(255, 200, 50),
-			Color3.fromRGB(255, 160, 20)
-		),
-		OnlyMobile = false,
-		Enabled = true,
-		Draggable = true,
-	})
+        Window:EditOpenButton({
+                Title = "VXS",
+                Icon = "rbxassetid://118833096342184",
+                CornerRadius = UDim.new(0, 16),
+                StrokeThickness = 2,
+                Color = ColorSequence.new(
+                        Color3.fromRGB(255, 200, 50),
+                        Color3.fromRGB(255, 160, 20)
+                ),
+                OnlyMobile = false,
+                Enabled = true,
+                Draggable = true,
+        })
 end)
 
 pcall(function()
-	WindUI:Notify({ Title = "Login VortexHub", Content = "Login VortexHub", Duration = 3, Icon = "check" })
+        WindUI:Notify({ Title = "Login VortexHub", Content = "Login VortexHub", Duration = 3, Icon = "check" })
 end)
 
 local mainSec = Window:Section({ Title = "Principal", Opened = true })
@@ -4370,32 +4370,32 @@ local InfoTab = mainSec:Tab({ Title = "Info", Icon = "info" })
 InfoTab:Select()
 InfoTab:Section({ Title = "Acerca del Script" })
 InfoTab:Paragraph({
-	Title = "Vortex X Sage [Steal An Egg]",
-	Desc = "Script multi-executor para Steal an Egg.\nIncluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.\nCompatible con PC y movil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersion: 1.0",
+        Title = "Vortex X Sage [Steal An Egg]",
+        Desc = "Script multi-executor para Steal an Egg.\nIncluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.\nCompatible con PC y movil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersion: 1.0",
 })
 InfoTab:Paragraph({
-	Title = "Desarrollador",
-	Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones.",
+        Title = "Desarrollador",
+        Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones.",
 })
 InfoTab:Divider()
 InfoTab:Paragraph({
-	Title = "Unete a nuestro Discord",
-	Desc = "Comunidad oficial para soporte y actualizaciones.\n\nhttps://discord.gg/Fn74MpzFUn",
+        Title = "Unete a nuestro Discord",
+        Desc = "Comunidad oficial para soporte y actualizaciones.\n\nhttps://discord.gg/Fn74MpzFUn",
 })
 InfoTab:Button({
-	Title = "Copiar enlace de Discord",
-	Desc = "Copia el invite de Discord de Vortex al portapapeles.",
-	Callback = function()
-		pcall(function()
-			if setclipboard then setclipboard("https://discord.gg/Fn74MpzFUn")
-			elseif setclip then setclip("https://discord.gg/Fn74MpzFUn")
-			elseif toclipboard then toclipboard("https://discord.gg/Fn74MpzFUn")
-			end
-		end)
-		pcall(function()
-			WindUI:Notify({ Title = "Vortex X Sage", Content = "Link de Discord copiado!", Duration = 2 })
-		end)
-	end
+        Title = "Copiar enlace de Discord",
+        Desc = "Copia el invite de Discord de Vortex al portapapeles.",
+        Callback = function()
+                pcall(function()
+                        if setclipboard then setclipboard("https://discord.gg/Fn74MpzFUn")
+                        elseif setclip then setclip("https://discord.gg/Fn74MpzFUn")
+                        elseif toclipboard then toclipboard("https://discord.gg/Fn74MpzFUn")
+                        end
+                end)
+                pcall(function()
+                        WindUI:Notify({ Title = "Vortex X Sage", Content = "Link de Discord copiado!", Duration = 2 })
+                end)
+        end
 })
 
 local StealTab = mainSec:Tab({ Title = "Auto Steal", Icon = "zap" })
@@ -4407,259 +4407,259 @@ local SettingsTab = toolsSec:Tab({ Title = "Settings", Icon = "settings" })
 -- AUTO STEAL (mismas funciones T4 / N4 / l4 / Q4)
 StealTab:Section({ Title = "Modes" })
 StealTab:Toggle({
-	Title = "Auto Steal (Tween)",
-	Desc = "Vuela a robar huevos y guarda en mochila.",
-	Value = false,
-	Callback = function(state)
-		if state then
-			T4("TWEEN")
-		else
-			if Y4 == "TWEEN" or h.pureTweenFarm then T4("NONE") end
-		end
-	end,
+        Title = "Auto Steal (Tween)",
+        Desc = "Vuela a robar huevos y guarda en mochila.",
+        Value = false,
+        Callback = function(state)
+                if state then
+                        T4("TWEEN")
+                else
+                        if Y4 == "TWEEN" or h.pureTweenFarm then T4("NONE") end
+                end
+        end,
 })
 StealTab:Toggle({
-	Title = "Auto Steal (Teleport)",
-	Desc = "Teletransporte continuo a robar huevos.",
-	Value = false,
-	Callback = function(state)
-		if state then
-			T4("WARP")
-		else
-			if Y4 == "WARP" or h.autoFarmLoop then T4("NONE") end
-		end
-	end,
+        Title = "Auto Steal (Teleport)",
+        Desc = "Teletransporte continuo a robar huevos.",
+        Value = false,
+        Callback = function(state)
+                if state then
+                        T4("WARP")
+                else
+                        if Y4 == "WARP" or h.autoFarmLoop then T4("NONE") end
+                end
+        end,
 })
 StealTab:Button({
-	Title = "Single Steal (Teleport)",
-	Desc = "Roba 1 huevo y regresa.",
-	Callback = function()
-		task.spawn(function()
-			if Y4 ~= "NONE" then T4("NONE") task.wait(0.2) end
-			local egg = N4()
-			if egg then
-				local ok = l4(egg, nil)
-				if ok then
-					pcall(u4)
-					if h.autoGlide then
-						Q4(h.glideSpeed)
-						u4()
-					end
-				end
-			end
-		end)
-	end,
+        Title = "Single Steal (Teleport)",
+        Desc = "Roba 1 huevo y regresa.",
+        Callback = function()
+                task.spawn(function()
+                        if Y4 ~= "NONE" then T4("NONE") task.wait(0.2) end
+                        local egg = N4()
+                        if egg then
+                                local ok = l4(egg, nil)
+                                if ok then
+                                        pcall(u4)
+                                        if h.autoGlide then
+                                                Q4(h.glideSpeed)
+                                                u4()
+                                        end
+                                end
+                        end
+                end)
+        end,
 })
 
 -- PLACE & HATCH
 PlaceTab:Section({ Title = "Place / Hatch" })
 PlaceTab:Button({
-	Title = "Place Egg",
-	Desc = "Tween a casa, coloca huevos y hatch.",
-	Callback = function()
-		task.spawn(function()
-			h.statusText = "[Manual] Depositing eggs..."
-			g4(h.glideSpeed)
-			v4()
-			u4()
-			h.isReturning = false
-			h.delivering = false
-		end)
-	end,
+        Title = "Place Egg",
+        Desc = "Tween a casa, coloca huevos y hatch.",
+        Callback = function()
+                task.spawn(function()
+                        h.statusText = "[Manual] Depositing eggs..."
+                        g4(h.glideSpeed)
+                        v4()
+                        u4()
+                        h.isReturning = false
+                        h.delivering = false
+                end)
+        end,
 })
 PlaceTab:Toggle({
-	Title = "Auto Place (Every 5)",
-	Desc = "Cada 5 robos vuelve, coloca y espera 5s.",
-	Value = h.autoPlaceEvery5 == true,
-	Callback = function(state)
-		h.autoPlaceEvery5 = state
-		if not state then h.batchStealCount = 0 end
-	end,
+        Title = "Auto Place (Every 5)",
+        Desc = "Cada 5 robos vuelve, coloca y espera 5s.",
+        Value = h.autoPlaceEvery5 == true,
+        Callback = function(state)
+                h.autoPlaceEvery5 = state
+                if not state then h.batchStealCount = 0 end
+        end,
 })
 PlaceTab:Toggle({
-	Title = "Auto Hatch",
-	Value = h.autoHatch ~= false,
-	Callback = function(state) h.autoHatch = state end,
+        Title = "Auto Hatch",
+        Value = h.autoHatch ~= false,
+        Callback = function(state) h.autoHatch = state end,
 })
 PlaceTab:Toggle({
-	Title = "Auto Return",
-	Desc = "Regresa a zona segura tras robar.",
-	Value = h.autoGlide ~= false,
-	Callback = function(state) h.autoGlide = state end,
+        Title = "Auto Return",
+        Desc = "Regresa a zona segura tras robar.",
+        Value = h.autoGlide ~= false,
+        Callback = function(state) h.autoGlide = state end,
 })
 PlaceTab:Toggle({
-	Title = "Auto Treadmill",
-	Desc = "Cinta cuando no hay huevos.",
-	Value = h.autoTreadmill ~= false,
-	Callback = function(state)
-		h.autoTreadmill = state
-		pcall(x)
-		pcall(n4)
-		if not state and (h.onTreadmill or (L4 and L4())) then
-			pcall(M4)
-		end
-	end,
+        Title = "Auto Treadmill",
+        Desc = "Cinta cuando no hay huevos.",
+        Value = h.autoTreadmill ~= false,
+        Callback = function(state)
+                h.autoTreadmill = state
+                pcall(x)
+                pcall(n4)
+                if not state and (h.onTreadmill or (L4 and L4())) then
+                        pcall(M4)
+                end
+        end,
 })
 
 -- EGG SELECT (Principal) — listas multi-select, no toggles
 SelectTab:Section({ Title = "Filtros de farm" })
 SelectTab:Paragraph({
-	Title = "Como usar",
-	Desc = "Elige zonas y rarezas en las listas. Secret+ puede saltarse el filtro de zona si alwaysCollectSecretPlus esta activo.",
+        Title = "Como usar",
+        Desc = "Elige zonas y rarezas en las listas. Secret+ puede saltarse el filtro de zona si alwaysCollectSecretPlus esta activo.",
 })
 
 local function buildSelectedList(map, order)
-	local out = {}
-	if type(map) ~= "table" then return out end
-	for _, name in ipairs(order) do
-		if map[name] == true then
-			out[#out + 1] = name
-		end
-	end
-	return out
+        local out = {}
+        if type(map) ~= "table" then return out end
+        for _, name in ipairs(order) do
+                if map[name] == true then
+                        out[#out + 1] = name
+                end
+        end
+        return out
 end
 
 local function applyMultiSelect(map, order, selected)
-	if type(map) ~= "table" then map = {} end
-	local set = {}
-	if type(selected) == "table" then
-		for _, v in pairs(selected) do
-			if type(v) == "string" then set[v] = true end
-			if type(v) == "table" and type(v.Title) == "string" then set[v.Title] = true end
-		end
-		-- WindUI a veces pasa array de strings
-		for i = 1, #selected do
-			local v = selected[i]
-			if type(v) == "string" then set[v] = true end
-		end
-	elseif type(selected) == "string" then
-		set[selected] = true
-	end
-	for _, name in ipairs(order) do
-		map[name] = set[name] == true
-	end
-	return map
+        if type(map) ~= "table" then map = {} end
+        local set = {}
+        if type(selected) == "table" then
+                for _, v in pairs(selected) do
+                        if type(v) == "string" then set[v] = true end
+                        if type(v) == "table" and type(v.Title) == "string" then set[v.Title] = true end
+                end
+                -- WindUI a veces pasa array de strings
+                for i = 1, #selected do
+                        local v = selected[i]
+                        if type(v) == "string" then set[v] = true end
+                end
+        elseif type(selected) == "string" then
+                set[selected] = true
+        end
+        for _, name in ipairs(order) do
+                map[name] = set[name] == true
+        end
+        return map
 end
 
 SelectTab:Dropdown({
-	Title = "Zonas objetivo",
-	Desc = "Lista multi-select de zonas a farmear.",
-	Values = M,
-	Value = buildSelectedList(h.selectedZones, M),
-	Multi = true,
-	AllowNone = true,
-	Callback = function(selected)
-		if not h.selectedZones then h.selectedZones = {} end
-		applyMultiSelect(h.selectedZones, M, selected)
-		pcall(x)
-	end,
+        Title = "Zonas objetivo",
+        Desc = "Lista multi-select de zonas a farmear.",
+        Values = M,
+        Value = buildSelectedList(h.selectedZones, M),
+        Multi = true,
+        AllowNone = true,
+        Callback = function(selected)
+                if not h.selectedZones then h.selectedZones = {} end
+                applyMultiSelect(h.selectedZones, M, selected)
+                pcall(x)
+        end,
 })
 
 SelectTab:Dropdown({
-	Title = "Rarezas objetivo",
-	Desc = "Lista multi-select de rarezas a recolectar.",
-	Values = X,
-	Value = buildSelectedList(h.selectedRarities, X),
-	Multi = true,
-	AllowNone = true,
-	Callback = function(selected)
-		if not h.selectedRarities then h.selectedRarities = {} end
-		applyMultiSelect(h.selectedRarities, X, selected)
-		pcall(x)
-	end,
+        Title = "Rarezas objetivo",
+        Desc = "Lista multi-select de rarezas a recolectar.",
+        Values = X,
+        Value = buildSelectedList(h.selectedRarities, X),
+        Multi = true,
+        AllowNone = true,
+        Callback = function(selected)
+                if not h.selectedRarities then h.selectedRarities = {} end
+                applyMultiSelect(h.selectedRarities, X, selected)
+                pcall(x)
+        end,
 })
 
 SelectTab:Toggle({
-	Title = "Always Steal Secret+",
-	Desc = "Siempre roba Secret/Eternal/Divine aunque la zona no este seleccionada.",
-	Value = h.alwaysCollectSecretPlus ~= false,
-	Callback = function(state)
-		h.alwaysCollectSecretPlus = state
-		pcall(x)
-	end,
+        Title = "Always Steal Secret+",
+        Desc = "Siempre roba Secret/Eternal/Divine aunque la zona no este seleccionada.",
+        Value = h.alwaysCollectSecretPlus ~= false,
+        Callback = function(state)
+                h.alwaysCollectSecretPlus = state
+                pcall(x)
+        end,
 })
 
 -- CHARACTER
 CharTab:Section({ Title = "Safety" })
 CharTab:Toggle({
-	Title = "Godmode",
-	Desc = "Invencible ante guards (desync).",
-	Value = false,
-	Callback = function(state)
-		if state then
-			pcall(enableDesyncGodmode)
-		else
-			pcall(disableDesyncGodmode)
-		end
-	end,
+        Title = "Godmode",
+        Desc = "Invencible ante guards (desync).",
+        Value = false,
+        Callback = function(state)
+                if state then
+                        pcall(enableDesyncGodmode)
+                else
+                        pcall(disableDesyncGodmode)
+                end
+        end,
 })
 CharTab:Button({
-	Title = "Get Out Treadmill",
-	Callback = function()
-		pcall(M4)
-		pcall(C4)
-		pcall(D4)
-	end,
+        Title = "Get Out Treadmill",
+        Callback = function()
+                pcall(M4)
+                pcall(C4)
+                pcall(D4)
+        end,
 })
 CharTab:Button({
-	Title = "Reset Character State",
-	Callback = function()
-		pcall(D4)
-		pcall(u4)
-	end,
+        Title = "Reset Character State",
+        Callback = function()
+                pcall(D4)
+                pcall(u4)
+        end,
 })
 CharTab:Slider({
-	Title = "Flight Speed",
-	Step = 25,
-	Value = { Min = 100, Max = 1000, Default = h.glideSpeed or 600 },
-	Callback = function(v)
-		h.glideSpeed = math.clamp(math.floor(v), 100, 1000)
-		pcall(Y, h.glideSpeed)
-	end,
+        Title = "Flight Speed",
+        Step = 25,
+        Value = { Min = 100, Max = 1000, Default = h.glideSpeed or 600 },
+        Callback = function(v)
+                h.glideSpeed = math.clamp(math.floor(v), 100, 1000)
+                pcall(Y, h.glideSpeed)
+        end,
 })
 
 -- SETTINGS
 SettingsTab:Toggle({
-	Title = "Anti AFK",
-	Value = h.antiAFK ~= false,
-	Callback = function(state)
-		h.antiAFK = state
-		pcall(x)
-	end,
+        Title = "Anti AFK",
+        Value = h.antiAFK ~= false,
+        Callback = function(state)
+                h.antiAFK = state
+                pcall(x)
+        end,
 })
 SettingsTab:Toggle({
-	Title = "Performance Mode",
-	Value = h.performanceMode == true,
-	Callback = function(state)
-		h.performanceMode = state
-		pcall(x)
-		if state and Mk then task.spawn(Mk) end
-	end,
+        Title = "Performance Mode",
+        Value = h.performanceMode == true,
+        Callback = function(state)
+                h.performanceMode = state
+                pcall(x)
+                if state and Mk then task.spawn(Mk) end
+        end,
 })
 SettingsTab:Toggle({
-	Title = "Disable 3D Rendering",
-	Value = h.disable3D == true,
-	Callback = function(state)
-		h.disable3D = state
-		pcall(x)
-		pcall(function()
-			y:Set3dRenderingEnabled(not state)
-		end)
-	end,
+        Title = "Disable 3D Rendering",
+        Value = h.disable3D == true,
+        Callback = function(state)
+                h.disable3D = state
+                pcall(x)
+                pcall(function()
+                        y:Set3dRenderingEnabled(not state)
+                end)
+        end,
 })
 SettingsTab:Button({
-	Title = "Unload Script",
-	Callback = function()
-		pcall(aM)
-		pcall(function() Window:Destroy() end)
-	end,
+        Title = "Unload Script",
+        Callback = function()
+                pcall(aM)
+                pcall(function() Window:Destroy() end)
+        end,
 })
 
 
 local function showBottomMessage(msg)
-	pcall(function()
-		WindUI:Notify({ Title = "Vortex X Sage", Content = tostring(msg), Duration = 2 })
-	end)
+        pcall(function()
+                WindUI:Notify({ Title = "Vortex X Sage", Content = tostring(msg), Duration = 2 })
+        end)
 end
 
 -- =====================================
@@ -4922,33 +4922,33 @@ print("[Vortex X Sage] Steal An Egg WindUI loaded")
 
 
 task.spawn(function()
-	task.wait(0.5)
-	pcall(A4)
-	pcall(function() b4(true) end)
-	pcall(C4)
-	if o.Character then
-		pcall(z4, o.Character)
-	end
-	pcall(u4)
+        task.wait(0.5)
+        pcall(A4)
+        pcall(function() b4(true) end)
+        pcall(C4)
+        if o.Character then
+                pcall(z4, o.Character)
+        end
+        pcall(u4)
 end)
 o.CharacterAdded:Connect(function(char)
-	task.wait(0.6)
-	if h.alive then
-		pcall(D4)
-		pcall(n4)
-		pcall(C4)
-		pcall(A4)
-		pcall(function() b4(true) end)
-		pcall(z4, char)
-		pcall(u4)
-	end
+        task.wait(0.6)
+        if h.alive then
+                pcall(D4)
+                pcall(n4)
+                pcall(C4)
+                pcall(A4)
+                pcall(function() b4(true) end)
+                pcall(z4, char)
+                pcall(u4)
+        end
 end)
 if h.performanceMode then
-	pcall(function() if Mk then task.spawn(Mk) end end)
+        pcall(function() if Mk then task.spawn(Mk) end end)
 end
 if h.disable3D then
-	pcall(function() y:Set3dRenderingEnabled(false) end)
+        pcall(function() y:Set3dRenderingEnabled(false) end)
 end
 if h.antiAFK then
-	pcall(function() if bk then task.spawn(bk) end end)
+        pcall(function() if bk then task.spawn(bk) end end)
 end
