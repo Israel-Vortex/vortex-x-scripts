@@ -1045,6 +1045,116 @@ RunService.RenderStepped:Connect(function()
 end)
 
 -- Bubbles independientes (cada una se mueve sola, solo con Edit Bubble)
+
+-- ========== Lucide icons (Rayfield atlas, same as Vapor) + FAB dorado ==========
+local _VortexIcons, _VortexIconReady = nil, false
+local _VortexIconQueue = {}
+task.spawn(function()
+	local ok, res = pcall(function()
+		return loadstring(game:HttpGet("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"))()
+	end)
+	if ok and type(res) == "table" then
+		_VortexIcons = res
+		_VortexIconReady = true
+		for _, q in ipairs(_VortexIconQueue) do
+			pcall(function()
+				local entry = _VortexIcons["48px"] and _VortexIcons["48px"][q.name]
+				if entry and q.img and q.img.Parent then
+					q.img.Image = "rbxassetid://" .. tostring(entry[1])
+					q.img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+					q.img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+				end
+			end)
+		end
+		table.clear(_VortexIconQueue)
+	end
+end)
+
+local function applyLucideIcon(img, iconName)
+	if not img then return end
+	iconName = tostring(iconName or "zap")
+	local atlas = _VortexIcons and _VortexIcons["48px"]
+	if _VortexIconReady and atlas and atlas[iconName] then
+		local entry = atlas[iconName]
+		img.Image = "rbxassetid://" .. tostring(entry[1])
+		img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+		img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+	else
+		table.insert(_VortexIconQueue, { img = img, name = iconName })
+	end
+end
+
+local FAB_GOLD = Color3.fromRGB(255, 200, 55)
+local FAB_GLASS = Color3.fromRGB(8, 12, 20)
+local FAB_GLASS_T = 0.35
+
+local function createVaporStyleFab(parent, cfg)
+	cfg = cfg or {}
+	local BTN_SZ = math.floor(tonumber(cfg.Size) or 48)
+	local ICO_SZ = math.floor(BTN_SZ * 0.42)
+	local Fab = Instance.new("Frame")
+	Fab.Name = cfg.Name or "VortexFab"
+	Fab.Size = UDim2.fromOffset(BTN_SZ, BTN_SZ)
+	Fab.Position = cfg.Position or UDim2.new(1, -70, 0, 40)
+	Fab.AnchorPoint = cfg.AnchorPoint or Vector2.new(1, 0)
+	Fab.BackgroundColor3 = FAB_GLASS
+	Fab.BackgroundTransparency = FAB_GLASS_T
+	Fab.BorderSizePixel = 0
+	Fab.Visible = cfg.Visible == true
+	Fab.ZIndex = cfg.ZIndex or 100
+	Fab.Parent = parent
+	Instance.new("UICorner", Fab).CornerRadius = UDim.new(0, 10)
+
+	local fabStroke = Instance.new("UIStroke")
+	fabStroke.Name = "Stroke"
+	fabStroke.Color = FAB_GOLD
+	fabStroke.Thickness = 1.5
+	fabStroke.Transparency = 0.45
+	fabStroke.Parent = Fab
+
+	local FabGlow = Instance.new("Frame")
+	FabGlow.Name = "Glow"
+	FabGlow.Size = UDim2.fromScale(1, 1)
+	FabGlow.BackgroundColor3 = FAB_GOLD
+	FabGlow.BackgroundTransparency = 0.92
+	FabGlow.BorderSizePixel = 0
+	FabGlow.ZIndex = Fab.ZIndex
+	FabGlow.Parent = Fab
+	Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(1, 0)
+
+	local fabIco = Instance.new("ImageLabel")
+	fabIco.Name = "Icon"
+	fabIco.BackgroundTransparency = 1
+	fabIco.AnchorPoint = Vector2.new(0.5, 0.5)
+	fabIco.Position = UDim2.fromScale(0.5, 0.5)
+	fabIco.Size = UDim2.fromOffset(ICO_SZ, ICO_SZ)
+	fabIco.ImageColor3 = FAB_GOLD
+	fabIco.ZIndex = Fab.ZIndex + 2
+	fabIco.Parent = Fab
+	applyLucideIcon(fabIco, cfg.Icon or "zap")
+
+	local FabBtn = Instance.new("TextButton")
+	FabBtn.Name = "Hit"
+	FabBtn.Size = UDim2.fromScale(1, 1)
+	FabBtn.BackgroundTransparency = 1
+	FabBtn.Text = ""
+	FabBtn.ZIndex = Fab.ZIndex + 3
+	FabBtn.Parent = Fab
+
+	FabBtn.MouseEnter:Connect(function()
+		TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = 0.18 }):Play()
+		TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.2 }):Play()
+		TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.85 }):Play()
+	end)
+	FabBtn.MouseLeave:Connect(function()
+		TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = FAB_GLASS_T }):Play()
+		TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.45 }):Play()
+		TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.92 }):Play()
+	end)
+
+	return Fab, FabBtn, fabIco, fabStroke
+end
+
 local bubblesContainer = Instance.new("Frame")
 bubblesContainer.Name = "BubblesContainer"
 bubblesContainer.Size = UDim2.new(1, 0, 1, 0)
@@ -1053,42 +1163,55 @@ bubblesContainer.BackgroundTransparency = 1
 bubblesContainer.Active = false
 bubblesContainer.Parent = bubblesScreenGui
 
-local function createBubbleButton(name, text, posY)
-    local btn = Instance.new("TextButton")
-    btn.Name = name
-    btn.Size = UDim2.new(0, 45, 0, 45)
-    -- posición absoluta en pantalla (derecha), independiente
-    btn.AnchorPoint = Vector2.new(1, 0)
-    btn.Position = UDim2.new(0.98, 0, 0, posY)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 13
-    btn.Visible = false
-    btn.AutoButtonColor = true
-    btn.Parent = bubblesContainer
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(1, 0)
+local bubbleSize = 42
+local allBubbleFabs = {}
 
-    local bg = Instance.new("UIGradient")
-    bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
-    })
-    bg.Rotation = 45
-    bg.Parent = btn
-
-    -- Solo se mueve ESTA bubble, y solo si Edit Bubble está activo
-    makeDraggable(btn, btn, function()
-        return editBubblesState == true
-    end)
-    return btn
+local function applyBubbleSize(sz)
+	bubbleSize = math.clamp(math.floor(sz), 28, 64)
+	for _, fab in ipairs(allBubbleFabs) do
+		if fab and fab.Parent then
+			fab.Size = UDim2.fromOffset(bubbleSize, bubbleSize)
+			local ic = fab:FindFirstChild("Icon")
+			if ic then
+				local ico = math.floor(bubbleSize * 0.42)
+				ic.Size = UDim2.fromOffset(ico, ico)
+			end
+		end
+	end
 end
 
-local bubbleDesync = createBubbleButton("BubbleDesync", "DSY", 40)
-local bubbleGhost = createBubbleButton("BubbleGhost", "GST", 95)
-local bubbleKillAll = createBubbleButton("BubbleKillAll", "KAL", 150)
-local bubbleSilentAim = createBubbleButton("BubbleSilentAim", "SA", 205)
-local bubbleAutoShoot = createBubbleButton("BubbleAutoShoot", "ATS", 260)
+local function createBubbleButton(name, iconName, rowY, posXOffset)
+	posXOffset = posXOffset or -10
+	-- rowY = offset desde el centro vertical del borde derecho
+	local Fab, FabBtn = createVaporStyleFab(bubblesContainer, {
+		Name = name,
+		Icon = iconName,
+		Size = bubbleSize,
+		Position = UDim2.new(1, posXOffset, 0.5, rowY),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Visible = false,
+		ZIndex = 100,
+	})
+	-- drag on whole fab when edit mode
+	makeDraggable(FabBtn, Fab, function()
+		return editBubblesState == true
+	end)
+	-- expose Visible/Mouse like old TextButton
+	local proxy = Fab
+	-- wire click via FabBtn - store for external connections that use .MouseButton1Click on bubble*
+	proxy.MouseButton1Click = FabBtn.MouseButton1Click
+	-- compatibility: some code uses bubble.Visible
+	return Fab, FabBtn
+end
+
+-- 2 columnas al medio del borde derecho
+local BX_OUT, BX_IN = -10, -58
+local BGAP = 46
+local bubbleDesync, bubbleDesyncHit = createBubbleButton("BubbleDesync", "refresh-cw", -BGAP, BX_OUT)
+local bubbleGhost, bubbleGhostHit = createBubbleButton("BubbleGhost", "ghost", 0, BX_OUT)
+local bubbleKillAll, bubbleKillAllHit = createBubbleButton("BubbleKillAll", "swords", BGAP, BX_OUT)
+local bubbleSilentAim, bubbleSilentAimHit = createBubbleButton("BubbleSilentAim", "crosshair", -BGAP / 2, BX_IN)
+local bubbleAutoShoot, bubbleAutoShootHit = createBubbleButton("BubbleAutoShoot", "target", BGAP / 2, BX_IN)
 
 bannableTab:Toggle({
     Title = "Edit Bubble Positions",
@@ -1096,6 +1219,16 @@ bannableTab:Toggle({
     Default = false,
     Callback = function(state)
         editBubblesState = state
+    end
+})
+
+bannableTab:Slider({
+    Title = "Tamano de Bubbles",
+    Desc = "Agrandar o hacer mas pequenas las bubbles (cuadradas).",
+    Step = 1,
+    Value = { Min = 28, Max = 64, Default = 42 },
+    Callback = function(v)
+        applyBubbleSize(v)
     end
 })
 
@@ -1387,12 +1520,12 @@ bannableTab:Keybind({
     Callback = function() executeDesyncLogic() end
 })
 
-bubbleGhost.MouseButton1Click:Connect(function()
+bubbleGhostHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     executeGhostLogic()
 end)
 
-bubbleDesync.MouseButton1Click:Connect(function()
+bubbleDesyncHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     executeDesyncLogic()
 end)
@@ -1942,12 +2075,12 @@ local function toggleAutoShootGlobal()
     end
 end
 
-bubbleSilentAim.MouseButton1Click:Connect(function()
+bubbleSilentAimHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     toggleSilentAimGlobal()
 end)
 
-bubbleAutoShoot.MouseButton1Click:Connect(function()
+bubbleAutoShootHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     toggleAutoShootGlobal()
 end)
@@ -2253,7 +2386,7 @@ bannableTab:Keybind({
     Callback = function() setKillAllState(not killAllEnabled) end
 })
 
-bubbleKillAll.MouseButton1Click:Connect(function()
+bubbleKillAllHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     setKillAllState(not killAllEnabled)
 end)
