@@ -268,10 +268,8 @@ espFolder.Parent = screenGui
 
 -- 🔥 VARIABLES GLOBALES PARA EDICIÓN DE BOTONES
 _G.EditFloatingButtons = false
-_G.FloatingButtonsShape = "Rectangle"
-_G.FloatingBtnWidth = 110
-_G.FloatingBtnHeight = 42
-_G.FloatingBtnTransparency = 0 -- estilo Fling Murder sólido
+_G.FloatingButtonsShape = "Square"
+_G.FloatingBtnSize = 42
 local floatingButtonsList = {}
 local flingMurderFloatingBtn, getFlingMurderClick
 local flingSheriffFloatingBtn, getFlingSheriffClick
@@ -299,99 +297,183 @@ local function makeDraggable(guiObject, objectToMove)
 end
 
 
+
+
+-- FAB Vapor-style (dorado) + Lucide via getgenv (ahorra registers)
+do
+	local g = (getgenv and getgenv()) or _G
+	g.__VXFab = g.__VXFab or {}
+	local F = g.__VXFab
+	F.GOLD = Color3.fromRGB(255, 200, 55)
+	F.GLASS = Color3.fromRGB(8, 12, 20)
+	F.GLASS_T = 0.35
+	F.Icons = nil
+	F.IconReady = false
+	F.Queue = F.Queue or {}
+	task.spawn(function()
+		local ok, res = pcall(function()
+			return loadstring(game:HttpGet("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"))()
+		end)
+		if ok and type(res) == "table" then
+			F.Icons = res
+			F.IconReady = true
+			for _, q in ipairs(F.Queue) do
+				pcall(function()
+					local entry = F.Icons["48px"] and F.Icons["48px"][q.name]
+					if entry and q.img and q.img.Parent then
+						q.img.Image = "rbxassetid://" .. tostring(entry[1])
+						q.img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+						q.img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+					end
+				end)
+			end
+			table.clear(F.Queue)
+		end
+	end)
+	F.applyIcon = function(img, iconName)
+		if not img then return end
+		iconName = tostring(iconName or "zap")
+		local atlas = F.Icons and F.Icons["48px"]
+		if F.IconReady and atlas and atlas[iconName] then
+			local entry = atlas[iconName]
+			img.Image = "rbxassetid://" .. tostring(entry[1])
+			img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+			img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+		else
+			table.insert(F.Queue, { img = img, name = iconName })
+		end
+	end
+	F.create = function(parent, cfg)
+		cfg = cfg or {}
+		local BTN_SZ = math.floor(tonumber(cfg.Size) or 48)
+		local ICO_SZ = math.floor(BTN_SZ * 0.42)
+		local Fab = Instance.new("Frame")
+		Fab.Name = cfg.Name or "VortexFab"
+		Fab.Size = UDim2.fromOffset(BTN_SZ, BTN_SZ)
+		Fab.Position = cfg.Position or UDim2.new(1, -70, 0, 40)
+		Fab.AnchorPoint = cfg.AnchorPoint or Vector2.new(0.5, 0.5)
+		Fab.BackgroundColor3 = F.GLASS
+		Fab.BackgroundTransparency = F.GLASS_T
+		Fab.BorderSizePixel = 0
+		Fab.Visible = cfg.Visible == true
+		Fab.ZIndex = cfg.ZIndex or 100
+		Fab.Parent = parent
+		Instance.new("UICorner", Fab).CornerRadius = UDim.new(0, 10)
+		local fabStroke = Instance.new("UIStroke")
+		fabStroke.Name = "Stroke"
+		fabStroke.Color = F.GOLD
+		fabStroke.Thickness = 1.5
+		fabStroke.Transparency = 0.45
+		fabStroke.Parent = Fab
+		local FabGlow = Instance.new("Frame")
+		FabGlow.Name = "Glow"
+		FabGlow.Size = UDim2.fromScale(1, 1)
+		FabGlow.BackgroundColor3 = F.GOLD
+		FabGlow.BackgroundTransparency = 0.92
+		FabGlow.BorderSizePixel = 0
+		FabGlow.ZIndex = Fab.ZIndex
+		FabGlow.Parent = Fab
+		Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(0, 10)
+		local fabIco = Instance.new("ImageLabel")
+		fabIco.Name = "Icon"
+		fabIco.BackgroundTransparency = 1
+		fabIco.AnchorPoint = Vector2.new(0.5, 0.5)
+		fabIco.Position = UDim2.fromScale(0.5, 0.5)
+		fabIco.Size = UDim2.fromOffset(ICO_SZ, ICO_SZ)
+		fabIco.ImageColor3 = F.GOLD
+		fabIco.ZIndex = Fab.ZIndex + 2
+		fabIco.Parent = Fab
+		F.applyIcon(fabIco, cfg.Icon or "zap")
+		local FabBtn = Instance.new("TextButton")
+		FabBtn.Name = "Hit"
+		FabBtn.Size = UDim2.fromScale(1, 1)
+		FabBtn.BackgroundTransparency = 1
+		FabBtn.Text = ""
+		FabBtn.ZIndex = Fab.ZIndex + 3
+		FabBtn.Parent = Fab
+		FabBtn.MouseEnter:Connect(function()
+			TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = 0.18 }):Play()
+			TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.2 }):Play()
+			TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.85 }):Play()
+		end)
+		FabBtn.MouseLeave:Connect(function()
+			TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = F.GLASS_T }):Play()
+			TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.45 }):Play()
+			TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.92 }):Play()
+		end)
+		return Fab, FabBtn, fabIco, fabStroke
+	end
+end
+
 local function createFloatingBtn(name, startPos, internalId)
-    local btn = Instance.new("TextButton")
-    btn.Name = internalId or name
-    -- Estilo unificado = dorado / oro
-    local w = _G.FloatingBtnWidth or 110
-    local h = _G.FloatingBtnHeight or 42
-    if _G.FloatingButtonsShape == "Square" then
-        w, h = 60, 60
-    end
-    btn.Size = UDim2.new(0, w, 0, h)
-    btn.Position = startPos
-    btn.BackgroundColor3 = Color3.fromRGB(200, 150, 30)
-    btn.BackgroundTransparency = math.clamp(_G.FloatingBtnTransparency or 0, 0, 0.5)
-    btn.Text = name
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = (_G.FloatingButtonsShape == "Square") and 10 or 13
-    btn.AutoButtonColor = true
-    btn.Visible = false
-    btn.ZIndex = 50
-    btn.BorderSizePixel = 0
-    btn.Parent = screenGui
-
-    local corner = Instance.new("UICorner", btn)
-    corner.CornerRadius = (_G.FloatingButtonsShape == "Square") and UDim.new(0.2, 0) or UDim.new(0, 10)
-
-    local stroke = Instance.new("UIStroke")
-    stroke.Thickness = 0
-    stroke.Color = Color3.fromRGB(255, 190, 40)
-    stroke.Transparency = 1
-    stroke.Parent = btn
-
-    local bg = Instance.new("UIGradient")
-    bg.Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
-    })
-    bg.Rotation = 45
-    bg.Parent = btn
-
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = 0}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {BackgroundTransparency = math.clamp(_G.FloatingBtnTransparency or 0, 0, 0.5)}):Play()
-    end)
-
-    makeDraggable(btn, btn)
-    
-    local dragStartPos = nil; local validClick = false
-    btn.InputBegan:Connect(function(input) 
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-            dragStartPos = input.Position; validClick = true 
-        end 
-    end)
-    btn.InputChanged:Connect(function(input) 
-        if dragStartPos and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then 
-            if (input.Position - dragStartPos).Magnitude > 5 then validClick = false end 
-        end 
-    end)
-
-    btn.ClipsDescendants = true
-    table.insert(floatingButtonsList, btn) 
-    return btn, function() return validClick end, stroke
+	local F = ((getgenv and getgenv()) or _G).__VXFab
+	local iconMap = {
+		BtnShootIA = "crosshair",
+		BtnToggleIA = "zap",
+		BtnKillAll = "swords",
+		BtnGetGun = "target",
+		BtnFantasma = "ghost",
+		BtnBombJump = "rocket",
+		BtnFlingMurder = "flame",
+		BtnFlingSheriff = "shield",
+	}
+	local sz = math.clamp(tonumber(_G.FloatingBtnSize) or 42, 28, 64)
+	local Fab, FabBtn, fabIco, fabStroke = F.create(screenGui, {
+		Name = internalId or name or "FloatBtn",
+		Icon = iconMap[internalId] or "zap",
+		Size = sz,
+		Position = startPos or UDim2.new(1, -10, 0.5, 0),
+		AnchorPoint = Vector2.new(1, 0.5),
+		Visible = false,
+		ZIndex = 100,
+	})
+	makeDraggable(FabBtn, Fab)
+	local dragStartPos, validClick = nil, false
+	FabBtn.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragStartPos = input.Position
+			validClick = true
+		end
+	end)
+	FabBtn.InputChanged:Connect(function(input)
+		if dragStartPos and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+			if (input.Position - dragStartPos).Magnitude > 5 then validClick = false end
+		end
+	end)
+	table.insert(floatingButtonsList, Fab)
+	return Fab, function()
+		if _G.EditFloatingButtons then return false end
+		return validClick
+	end, fabStroke
 end
 
-local function UpdateFloatingButtonsShape(shape)
-    for _, btn in ipairs(floatingButtonsList) do
-        local isSquare = (shape == "Square")
-        local newSize = isSquare and UDim2.new(0, 60, 0, 60) or UDim2.new(0, _G.FloatingBtnWidth or 110, 0, _G.FloatingBtnHeight or 42)
-        TweenService:Create(btn, TweenInfo.new(0.2), { Size = newSize }):Play()
-        local corner = btn:FindFirstChildOfClass("UICorner")
-        if corner then
-            corner.CornerRadius = isSquare and UDim.new(0.2, 0) or UDim.new(0, 10)
-        end
-        btn.TextSize = isSquare and 10 or 13
-        -- Mantener apariencia Fling Murder
-        btn.BackgroundColor3 = Color3.fromRGB(200, 150, 30)
-        local grad = btn:FindFirstChildOfClass("UIGradient")
-        if grad then
-            grad.Color = ColorSequence.new({
-                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 220, 80)),
-                ColorSequenceKeypoint.new(1, Color3.fromRGB(160, 110, 20))
-            })
-            grad.Rotation = 45
-        end
-    end
+local function UpdateFloatingButtonsSize(sz)
+	sz = math.clamp(math.floor(tonumber(sz) or 42), 28, 64)
+	_G.FloatingBtnSize = sz
+	local F = ((getgenv and getgenv()) or _G).__VXFab
+	for _, fab in ipairs(floatingButtonsList) do
+		if not fab or not fab.Parent then continue end
+		TweenService:Create(fab, TweenInfo.new(0.2), { Size = UDim2.fromOffset(sz, sz) }):Play()
+		local corner = fab:FindFirstChildOfClass("UICorner")
+		if corner then corner.CornerRadius = UDim.new(0, 10) end
+		local glow = fab:FindFirstChild("Glow")
+		if glow then
+			local gc = glow:FindFirstChildOfClass("UICorner")
+			if gc then gc.CornerRadius = UDim.new(0, 10) end
+		end
+		if F then
+			fab.BackgroundColor3 = F.GLASS
+			fab.BackgroundTransparency = F.GLASS_T
+			local stroke = fab:FindFirstChild("Stroke")
+			if stroke then stroke.Color = F.GOLD; stroke.Transparency = 0.45 end
+			local ic = fab:FindFirstChild("Icon")
+			if ic then
+				ic.ImageColor3 = F.GOLD
+				ic.Size = UDim2.fromOffset(math.floor(sz * 0.42), math.floor(sz * 0.42))
+			end
+		end
+	end
 end
-
-
-
-
-
 
 local WindUI
 do
@@ -906,6 +988,8 @@ end
 task.wait() -- 🔥 AÑADE ESTO
 
 -- ==========================================
+
+do -- Graphics scope
 -- PESTAÑA GRÁFICOS (SHADERS Y OPTIMIZACIÓN)
 -- ==========================================
 Tabs.Graficos:Section({Title = "Modos Visuales (Elige solo uno)"})
@@ -1828,7 +1912,7 @@ UIElements.ToggleAutoShoot = Tabs.Sheriff:Toggle({
 -- 🎯 BOTONES FLOTANTES DE DISPARO (IA)
 -- ==========================================
 -- Creamos el botón (SIN TEXTO VISIBLE)
-local aiFloatingShoot, getShootClick, shootStroke = createFloatingBtn("", UDim2.new(0.8, -150, 0.4, 0), "BtnShootIA")
+local aiFloatingShoot, getShootClick, shootStroke = createFloatingBtn("", UDim2.new(1, -10, 0.5, -115), "BtnShootIA")
 
 -- ✨ ICONO GIRATORIO INTELIGENTE (GRANDE Y EN MEDIO) ✨
 local shootIcon = Instance.new("ImageLabel")
@@ -1846,19 +1930,21 @@ local spinInfo = TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirectio
 game:GetService("TweenService"):Create(shootIcon, spinInfo, {Rotation = 360}):Play()
 
 -- Lógica del disparo
-aiFloatingShoot.MouseButton1Click:Connect(function()
+aiFloatingShoot:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getShootClick() then return end
     if getgenv().DispararEventoDirecto then getgenv().DispararEventoDirecto(true) end
 end)
 
-local aiFloatingToggle, getTogClick, togStroke = createFloatingBtn("AutoShoot: OFF", UDim2.new(0.8, -150, 0.5, 0), "BtnToggleIA")
-aiFloatingToggle.MouseButton1Click:Connect(function()
+local aiFloatingToggle, getTogClick, togStroke = createFloatingBtn("AutoShoot: OFF", UDim2.new(1, -10, 0.5, -69), "BtnToggleIA")
+aiFloatingToggle:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getTogClick() then return end
     if getgenv().NathConfig then
         local newState = not getgenv().NathConfig.AutoShoot
         getgenv().NathConfig.AutoShoot = newState
-        aiFloatingToggle.Text = newState and "AutoShoot: ON" or "AutoShoot: OFF"
-        aiFloatingToggle.TextColor3 = newState and Color3.fromRGB(0, 255, 100) or Color3.fromRGB(255, 255, 255)
+        local ic = aiFloatingToggle:FindFirstChild("Icon")
+        local st = aiFloatingToggle:FindFirstChild("Stroke")
+        if ic then ic.ImageColor3 = newState and Color3.fromRGB(80, 255, 120) or (((getgenv and getgenv()) or _G).__VXFab and ((getgenv and getgenv()) or _G).__VXFab.GOLD) or Color3.fromRGB(255,200,55) end
+        if st then st.Color = newState and Color3.fromRGB(80, 255, 120) or (((getgenv and getgenv()) or _G).__VXFab and ((getgenv and getgenv()) or _G).__VXFab.GOLD) or Color3.fromRGB(255,200,55) end
     end
 end)
 
@@ -2129,14 +2215,14 @@ Tabs.Murderer:Button({
 })
 
 -- Floating Kill All bubble
-killAllFloatingBtn, getKillAllClick = createFloatingBtn("Kill All", UDim2.new(0.82, -150, 0.58, 0), "BtnKillAll")
-killAllFloatingBtn.MouseButton1Click:Connect(function()
+killAllFloatingBtn, getKillAllClick = createFloatingBtn("Kill All", UDim2.new(1, -10, 0.5, -23), "BtnKillAll")
+killAllFloatingBtn:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getKillAllClick() then return end
     task.spawn(executeKillAllOnce)
 end)
 
 -- Bubble manual Get Gun
-getGunFloatingBtn, getGetGunClick = createFloatingBtn("Get Gun", UDim2.new(0.82, -150, 0.68, 0), "BtnGetGun")
+getGunFloatingBtn, getGetGunClick = createFloatingBtn("Get Gun", UDim2.new(1, -10, 0.5, 23), "BtnGetGun")
 getGunFloatingBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
 do
     local g = getGunFloatingBtn:FindFirstChildOfClass("UIGradient")
@@ -2147,7 +2233,7 @@ do
         })
     end
 end
-getGunFloatingBtn.MouseButton1Click:Connect(function()
+getGunFloatingBtn:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getGetGunClick() then return end
     if playerHasGun() then
         sendNotification("Ya tienes el arma.")
@@ -2798,12 +2884,12 @@ UIElements.ToggleInfJump = Tabs.Movimiento:Toggle({ Title = "Salto Infinito", Va
 Tabs.Movimiento:Section({ Title = "Modo Fantasma" })
 
 local invisHumanoid = nil; local invisHumanoidRootPart = nil; local isInvisible = false; local invisCharacterParts = {}; local invisHeartbeatConnection = nil; local invisBg = nil; local invisBv = nil; local invisFlySpeed = 40 
-local ghostBtn, getGhostClick, ghostStroke = createFloatingBtn("Ghost", UDim2.new(0.8, -150, 0.5, 0), "BtnFantasma")
+local ghostBtn, getGhostClick, ghostStroke = createFloatingBtn("Ghost", UDim2.new(1, -10, 0.5, 69), "BtnFantasma")
 
 -- ==========================================
 -- BOTÓN FLOTANTE: BOMB JUMP (COOLDOWN DINÁMICO, ANTI-BUG Y DETECCIÓN MANUAL)
 -- ==========================================
-local bombBtn, getBombClick, bombStroke = createFloatingBtn("Bomb Jump", UDim2.new(0.8, -150, 0.65, 0), "BtnBombJump")
+local bombBtn, getBombClick, bombStroke = createFloatingBtn("Bomb Jump", UDim2.new(1, -10, 0.5, 115), "BtnBombJump")
 
 local bombCooldownEnd = 0
 local bombOnCooldown = false
@@ -2864,7 +2950,7 @@ task.spawn(function()
 end)
 
 -- 🎯 Lógica cuando presionas el botón flotante del Hub
-bombBtn.MouseButton1Click:Connect(function()
+bombBtn:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getBombClick() then return end
     
     if tick() < bombCooldownEnd then return end -- Si sigue en cooldown, ignora el clic
@@ -2913,71 +2999,191 @@ bombBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+local function setGhostBubbleVisual(on)
+	pcall(function()
+		local ic = ghostBtn and ghostBtn:FindFirstChild("Icon")
+		local st = ghostBtn and ghostBtn:FindFirstChild("Stroke")
+		if on then
+			if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
+			if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
+		else
+			local gold = (((getgenv and getgenv()) or _G).__VXFab and ((getgenv and getgenv()) or _G).__VXFab.GOLD) or Color3.fromRGB(255, 200, 55)
+			if ic then ic.ImageColor3 = gold end
+			if st then st.Color = gold; st.Transparency = 0.45 end
+		end
+	end)
+end
+
+local function clearGhostMovers()
+	pcall(function()
+		if invisBg then invisBg:Destroy() end
+		if invisBv then invisBv:Destroy() end
+	end)
+	invisBg, invisBv = nil, nil
+	pcall(function()
+		local char = player.Character
+		local hum = char and char:FindFirstChildOfClass("Humanoid")
+		if hum then
+			hum.PlatformStand = false
+		end
+	end)
+end
+
+local function setupGhostMovers()
+	clearGhostMovers()
+	local char = player.Character
+	if not char then return false end
+	local hrp = char:FindFirstChild("HumanoidRootPart")
+	local hum = char:FindFirstChildOfClass("Humanoid")
+	if not hrp or not hum then return false end
+
+	invisBg = Instance.new("BodyGyro")
+	invisBg.Name = "VXGhostGyro"
+	invisBg.P = 9e4
+	invisBg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+	invisBg.CFrame = hrp.CFrame
+	invisBg.Parent = hrp
+
+	invisBv = Instance.new("BodyVelocity")
+	invisBv.Name = "VXGhostVel"
+	invisBv.Velocity = Vector3.zero
+	invisBv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+	invisBv.Parent = hrp
+
+	hum.PlatformStand = true
+	return true
+end
+
 local function SetupInvisCharacter()
-    local char = player.Character 
-    if char then 
-        invisHumanoid = char:FindFirstChild("Humanoid") 
-        invisHumanoidRootPart = char:FindFirstChild("HumanoidRootPart") 
-        invisCharacterParts = {} 
-        for _, part in pairs(char:GetDescendants()) do 
-            if part:IsA("BasePart") then table.insert(invisCharacterParts, part) end 
-        end 
-    end
+	local char = player.Character
+	if not char then return end
+	invisHumanoid = char:FindFirstChildOfClass("Humanoid")
+	invisHumanoidRootPart = char:FindFirstChild("HumanoidRootPart")
+	invisCharacterParts = {}
+	for _, part in ipairs(char:GetDescendants()) do
+		if part:IsA("BasePart") then
+			table.insert(invisCharacterParts, part)
+		end
+	end
 end
 
 local function ToggleInvisibilityState()
-    isInvisible = not isInvisible; local char = player.Character
-    for _, part in pairs(invisCharacterParts) do
-        if part and part.Parent then
-            if isInvisible then 
-                if not part:FindFirstChild("OrigTrans") then 
-                    local val = Instance.new("NumberValue"); val.Name = "OrigTrans"; val.Value = part.Transparency; val.Parent = part 
-                end 
-                part.Transparency = 0.5
-            else 
-                if part:FindFirstChild("OrigTrans") then part.Transparency = part.OrigTrans.Value end 
-            end
-        end
-    end
-    if isInvisible then
-        ghostBtn.TextColor3 = Color3.fromRGB(168, 199, 250); ghostStroke.Color = Color3.fromRGB(255, 255, 255)
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            local hrp = char.HumanoidRootPart 
-            invisBg = Instance.new("BodyGyro"); invisBg.P = 9e4; invisBg.maxTorque = Vector3.new(9e9, 9e9, 9e9); invisBg.cframe = hrp.CFrame; invisBg.Parent = hrp 
-            invisBv = Instance.new("BodyVelocity"); invisBv.velocity = Vector3.new(0, 0, 0); invisBv.maxForce = Vector3.new(9e9, 9e9, 9e9); invisBv.Parent = hrp 
-            if char:FindFirstChild("Humanoid") then char.Humanoid.PlatformStand = true end
-        end
-    else
-        ghostBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ghostStroke.Color = Color3.fromRGB(168, 199, 250) 
-        if invisBg then invisBg:Destroy(); invisBg = nil end 
-        if invisBv then invisBv:Destroy(); invisBv = nil end 
-        if char and char:FindFirstChild("Humanoid") then char.Humanoid.PlatformStand = false end
-    end
+	local char = player.Character
+	if not char then
+		sendNotification("Ghost: sin personaje")
+		return
+	end
+
+	SetupInvisCharacter()
+	isInvisible = not isInvisible
+
+	if isInvisible then
+		-- Transparencia local de partes
+		for _, part in ipairs(invisCharacterParts) do
+			pcall(function()
+				if not part:FindFirstChild("OrigTrans") then
+					local val = Instance.new("NumberValue")
+					val.Name = "OrigTrans"
+					val.Value = part.Transparency
+					val.Parent = part
+				end
+				part.Transparency = 0.5
+			end)
+		end
+		if not setupGhostMovers() then
+			isInvisible = false
+			sendNotification("Ghost: no se pudo activar")
+			setGhostBubbleVisual(false)
+			return
+		end
+		setGhostBubbleVisual(true)
+		sendNotification("Ghost ON (vuelo)")
+	else
+		for _, part in ipairs(invisCharacterParts) do
+			pcall(function()
+				local ot = part:FindFirstChild("OrigTrans")
+				if ot then
+					part.Transparency = ot.Value
+				end
+			end)
+		end
+		clearGhostMovers()
+		setGhostBubbleVisual(false)
+		sendNotification("Ghost OFF")
+	end
 end
 
-ghostBtn.MouseButton1Click:Connect(function() if not getGhostClick() then return end ToggleInvisibilityState() end)
+-- Click bubble: no depender de validClick flaky (solo bloquea en modo editar)
+local _ghostHit = ghostBtn and ghostBtn:FindFirstChild("Hit")
+if _ghostHit then
+	_ghostHit.MouseButton1Click:Connect(function()
+		if _G.EditFloatingButtons then return end
+		ToggleInvisibilityState()
+	end)
+end
 
 local cachedGhostControls = nil
+if not invisHeartbeatConnection then
+	-- noop placeholder; real heartbeat starts when bubble shown
+end
+
 RunService.RenderStepped:Connect(function()
-    if isInvisible and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        if not cachedGhostControls then
-            local pScripts = player:FindFirstChild("PlayerScripts")
-            if pScripts then 
-                local pModule = pScripts:FindFirstChild("PlayerModule") 
-                if pModule then 
-                    local PlayerModule = require(pModule)
-                    cachedGhostControls = PlayerModule:GetControls()
-                end
-            end
-        end
-        
-        if cachedGhostControls and invisBv and invisBg then 
-            local moveVector = cachedGhostControls:GetMoveVector()
-            local moveDir = camera.CFrame:VectorToWorldSpace(moveVector)
-            invisBv.Velocity = moveDir * invisFlySpeed
-            invisBg.CFrame = camera.CFrame 
-        end
-    end
+	if not isInvisible then return end
+	local char = player.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	if not hrp then return end
+
+	-- Re-crear movers si el juego los borro
+	if not (invisBv and invisBv.Parent) or not (invisBg and invisBg.Parent) then
+		setupGhostMovers()
+	end
+	if not (invisBv and invisBg) then return end
+
+	if not cachedGhostControls then
+		pcall(function()
+			local pScripts = player:FindFirstChild("PlayerScripts")
+			local pModule = pScripts and pScripts:FindFirstChild("PlayerModule")
+			if pModule then
+				cachedGhostControls = require(pModule):GetControls()
+			end
+		end)
+	end
+
+	local moveVector = Vector3.zero
+	if cachedGhostControls then
+		pcall(function()
+			moveVector = cachedGhostControls:GetMoveVector()
+		end)
+	end
+	-- Fallback WASD/stick via Humanoid MoveDirection
+	if moveVector.Magnitude < 0.05 then
+		local hum = char:FindFirstChildOfClass("Humanoid")
+		if hum and hum.MoveDirection.Magnitude > 0.05 then
+			moveVector = hum.MoveDirection
+		end
+	end
+
+	local cam = workspace.CurrentCamera
+	local moveDir
+	if moveVector.Magnitude > 0.05 then
+		if moveVector == (char:FindFirstChildOfClass("Humanoid") and char.Humanoid.MoveDirection or Vector3.zero) then
+			moveDir = moveVector
+		else
+			moveDir = cam.CFrame:VectorToWorldSpace(moveVector)
+		end
+	else
+		moveDir = Vector3.zero
+	end
+
+	-- Vuelo: mover + un poco de hold altitude
+	local vel = moveDir * invisFlySpeed
+	if vel.Magnitude < 0.1 then
+		vel = Vector3.new(0, 0.15, 0) -- flotar leve
+	end
+	pcall(function()
+		invisBv.Velocity = vel
+		invisBg.CFrame = CFrame.new(hrp.Position, hrp.Position + cam.CFrame.LookVector)
+	end)
 end)
 
 UIElements.ToggleGhost = Tabs.Bubbles:Toggle({
@@ -3009,8 +3215,13 @@ UIElements.ToggleBombBtn = Tabs.Bubbles:Toggle({
 })
 
 player.CharacterAdded:Connect(function()
-    isInvisible = false; ghostBtn.TextColor3 = Color3.fromRGB(255, 255, 255); ghostStroke.Color = Color3.fromRGB(168, 199, 250); if invisBg then invisBg:Destroy(); invisBg = nil end; if invisBv then invisBv:Destroy(); invisBv = nil end
-    if ghostBtn.Visible then task.wait(1) SetupInvisCharacter() end
+    isInvisible = false
+    clearGhostMovers()
+    setGhostBubbleVisual(false)
+    if ghostBtn and ghostBtn.Visible then
+        task.wait(1)
+        SetupInvisCharacter()
+    end
 end)
 
 
@@ -3378,8 +3589,8 @@ local function flingTarget(TargetPlayer)
 end
 
 -- Floating Fling bubbles (mismo estilo que el resto, vía createFloatingBtn)
-flingMurderFloatingBtn, getFlingMurderClick = createFloatingBtn("Fling Murder", UDim2.new(0.82, 0, 0.36, 0), "BtnFlingMurder")
-flingMurderFloatingBtn.MouseButton1Click:Connect(function()
+flingMurderFloatingBtn, getFlingMurderClick = createFloatingBtn("Fling Murder", UDim2.new(1, -58, 0.5, -23), "BtnFlingMurder")
+flingMurderFloatingBtn:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getFlingMurderClick() then return end
     local target = findMurderer()
     if target then
@@ -3390,7 +3601,7 @@ flingMurderFloatingBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-flingSheriffFloatingBtn, getFlingSheriffClick = createFloatingBtn("Fling Sheriff", UDim2.new(0.82, 0, 0.24, 0), "BtnFlingSheriff")
+flingSheriffFloatingBtn, getFlingSheriffClick = createFloatingBtn("Fling Sheriff", UDim2.new(1, -58, 0.5, 23), "BtnFlingSheriff")
 -- Sheriff bubble: azul como antes
 flingSheriffFloatingBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 215)
 do
@@ -3402,7 +3613,7 @@ do
         })
     end
 end
-flingSheriffFloatingBtn.MouseButton1Click:Connect(function()
+flingSheriffFloatingBtn:FindFirstChild("Hit").MouseButton1Click:Connect(function()
     if not getFlingSheriffClick() then return end
     local target = findSheriff()
     if target then
@@ -3439,6 +3650,9 @@ Tabs.Troll:Button({
     end
 })
 
+end -- Graphics scope
+
+do -- TrollExtra scope
 local selectedFlingPlayer = ""
 local function getFlingPlayerNames()
     local names = {}
@@ -3609,49 +3823,15 @@ Tabs.Bubbles:Toggle({
     end
 })
 
-Tabs.Bubbles:Section({ Title = "Estilo" })
-
-
-local btnShapeDrop = Tabs.Bubbles:Dropdown({
-    Title = "Forma del Bubble",
-    Values = {"Rectangle", "Square"},
-    Value = "Rectangle",
-    Callback = function(Value)
-        _G.FloatingButtonsShape = Value
-        UpdateFloatingButtonsShape(Value)
-    end
-})
+Tabs.Bubbles:Section({ Title = "Tamano" })
 
 Tabs.Bubbles:Slider({
-    Title = "Ancho del Bubble",
+    Title = "Tamano de Bubbles",
+    Desc = "Agrandar o hacer mas pequenas (siempre cuadradas).",
     Step = 1,
-    Value = {Min = 50, Max = 300, Default = 110},
+    Value = { Min = 28, Max = 64, Default = 42 },
     Callback = function(v)
-        _G.FloatingBtnWidth = v
-        if _G.FloatingButtonsShape == "Rectangle" then UpdateFloatingButtonsShape("Rectangle") end
-    end
-})
-
-Tabs.Bubbles:Slider({
-    Title = "Alto del Bubble",
-    Step = 1,
-    Value = {Min = 30, Max = 100, Default = 42},
-    Callback = function(v)
-        _G.FloatingBtnHeight = v
-        if _G.FloatingButtonsShape == "Rectangle" then UpdateFloatingButtonsShape("Rectangle") end
-    end
-})
-
-
-UIElements.SliderBtnTrans = Tabs.Bubbles:Slider({
-    Title = "Transparencia del Bubble",
-    Step = 0.05,
-    Value = {Min = 0.0, Max = 1.0, Default = 0},
-    Callback = function(v)
-        _G.FloatingBtnTransparency = v
-        for _, btn in ipairs(floatingButtonsList) do
-            TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundTransparency = v}):Play()
-        end
+        UpdateFloatingButtonsSize(v)
     end
 })
 
@@ -3731,6 +3911,9 @@ Tabs.Config:Input({
 Tabs.Config:Divider()
 Tabs.Config:Section({ Title = "Guardar / Cargar" })
 
+
+
+end -- TrollExtra scope
 local ConfigManager = Window.ConfigManager
 local ConfigName = "default"
 
