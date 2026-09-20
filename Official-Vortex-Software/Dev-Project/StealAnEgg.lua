@@ -1,55 +1,134 @@
-local e=game:GetService( "Players" )
-local r=game:GetService( "Workspace" )
-local y=game:GetService( "RunService" )
-local u=game:GetService( "TweenService" )
-local w=game:GetService( "UserInputService" )
-local j=game:GetService( "ReplicatedStorage" )
-local k=game:GetService( "ProximityPromptService" )
-local a=game:GetService( "HttpService" )
-local TeleportService=game:GetService( "TeleportService" )
-local o=e.LocalPlayer
-local Window=nil
-local currentLang="EN"
-local executorCheckCaller=typeof(checkcaller)=="function" and checkcaller or function() return false end
-local safeNewCClosure=typeof(newcclosure)=="function" and newcclosure or function(fn) return fn end
-local V=game:GetService( "ProximityPromptService" )pcall(function(...) V.PromptButtonHoldBegan :Connect(function(e,...) pcall(function(...)
-            if typeof(fireproximityprompt)== "function" then
-                fireproximityprompt(e)
+-- ==========================================
+-- VORTEX X SAGE · Steal an Egg [WindUI]
+-- ==========================================
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ProximityPromptService = game:GetService("ProximityPromptService")
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+
+-- Anti-kick / Anti-AFK (runs immediately on load)
+pcall(function()
+    local VirtualUser = game:GetService("VirtualUser")
+    LocalPlayer.Idled:Connect(function()
+        pcall(function()
+            VirtualUser:CaptureController()
+            VirtualUser:ClickButton2(Vector2.new())
+        end)
+    end)
+end)
+pcall(function()
+    local getCons = getconnections or get_signal_cons
+    if typeof(getCons) == "function" then
+        for _, conn in ipairs(getCons(LocalPlayer.Idled)) do
+            pcall(function()
+                if conn.Disable then
+                    conn:Disable()
+                elseif conn.Disconnect then
+                    conn:Disconnect()
+                end
+            end)
+        end
+    end
+end)
+
+for _, Table in getgc(true) do
+    if typeof(Table) ~= "table" then continue end
+    if getrawmetatable(Table) then continue end
+
+    local HasRecursiveTable = false
+
+    for _, Value in Table do
+        if typeof(Value) ~= "table" then continue end
+
+        if Table == Value then
+            HasRecursiveTable = true
+            break
+        end
+    end
+
+    if not HasRecursiveTable then
+        continue
+    end
+
+    local BanIndex: number
+    for _, Value in Table do
+        if typeof(Value) ~= "number" then continue end
+
+        for Index = 1, 3  do
+            if Value == Index then
+                BanIndex = Index
+                break
             end
         end
-        )
+
+        if BanIndex then
+            break
+        end
     end
-    )
-end
-)
-local H=function(...)
-end
-local t=function(...)
-end
-local s=nil pcall(function(...) s=require((j:WaitForChild( "Client" , 5 )):WaitForChild( "EggState" , 5 ))
-end
-)
-if not s then
-    pcall(function(...) s=require(j.Client.EggState )
+
+    if BanIndex and Table[BanIndex] == nil then
+        setmetatable(Table, {
+            __newindex = function(self, Key, Value)
+                rconsolewarn(`Blocked {Key} {Value}`)
+            end
+        })
     end
-    )
 end
-local p=nil pcall(function(...) p=require(((j:WaitForChild( "Shared" , 5 )):WaitForChild( "Util" , 5 )):WaitForChild( "AssetItems" , 5 ))
+
+-- Internal aliases (used by compact logic below)
+local e, r, y, u, w, j, k, a, o = Players, Workspace, RunService, TweenService, UserInputService, ReplicatedStorage, ProximityPromptService, HttpService, LocalPlayer
+
+local Window = nil
+local currentLang = "EN"
+local executorCheckCaller = typeof(checkcaller) == "function" and checkcaller or function() return false end
+local safeNewCClosure = typeof(newcclosure) == "function" and newcclosure or function(fn) return fn end
+
+pcall(function()
+    ProximityPromptService.PromptButtonHoldBegan:Connect(function(prompt)
+        pcall(function()
+            if typeof(fireproximityprompt) == "function" then
+                fireproximityprompt(prompt)
+            end
+        end)
+    end)
+end)
+
+local H = function(...) end
+local t = function(...) end
+
+local EggState = nil
+pcall(function()
+    EggState = require((ReplicatedStorage:WaitForChild("Client", 5)):WaitForChild("EggState", 5))
+end)
+if not EggState then
+    pcall(function() EggState = require(ReplicatedStorage.Client.EggState) end)
 end
-)
-if not p then
-    pcall(function(...) p=require(j.Shared.Util .AssetItems )
-    end
-    )
+local s = EggState
+
+local AssetItems = nil
+pcall(function()
+    AssetItems = require(((ReplicatedStorage:WaitForChild("Shared", 5)):WaitForChild("Util", 5)):WaitForChild("AssetItems", 5))
+end)
+if not AssetItems then
+    pcall(function() AssetItems = require(ReplicatedStorage.Shared.Util.AssetItems) end)
 end
-local B=nil pcall(function(...) B=require((j:WaitForChild( "Shared" , 5 )):WaitForChild( "Remotes" , 5 ))
+local p = AssetItems
+
+local SharedRemotes = nil
+pcall(function()
+    SharedRemotes = require((ReplicatedStorage:WaitForChild("Shared", 5)):WaitForChild("Remotes", 5))
+end)
+if not SharedRemotes then
+    pcall(function() SharedRemotes = require(ReplicatedStorage.Shared.Remotes) end)
 end
-)
-if not B then
-    pcall(function(...) B=require(j.Shared.Remotes )
-    end
-    )
-end
+local B = SharedRemotes
 local function J(e,r,...)
     local y=(j:FindFirstChild( "Packages" )and j.Packages :FindFirstChild( "Networking" ))or j:FindFirstChild( "Network" )or j
     local u=y:FindFirstChild(e)or j:FindFirstChild(e)
@@ -122,12 +201,12 @@ local b= 620
 local A= 130
 local S=CFrame.new ( 4773.7587890625 , 70.392112731934 , -315.73501586914 )
 
-local Z= "DiceHub_FlightSpeed.txt"
-local z= "DiceHub_EggSelectConfig.json"
-local d={[ "Light Dark" ]=Color3.fromRGB ( 168 , 85 , 247 ),[ "Titan Temple" ]=Color3.fromRGB ( 245 , 158 , 11 );
-[ "Cherry Blossom" ]=Color3.fromRGB ( 236 , 72 , 153 );
-[ "Cosmic" ]=Color3.fromRGB ( 6 , 182 , 212 ),[ "Prehistoric" ]=Color3.fromRGB ( 16 , 185 , 129 ),[ "Abyss Ocean" ]=Color3.fromRGB ( 59 , 130 , 246 );
-[ "Volcano" ]=Color3.fromRGB ( 239 , 68 , 68 ),[ "Snow" ]=Color3.fromRGB ( 147 , 197 , 253 ),[ "Jungle" ]=Color3.fromRGB ( 34 , 197 , 94 ),[ "Desert" ]=Color3.fromRGB ( 234 , 179 , 8 ),[ "Lake" ]=Color3.fromRGB ( 20 , 184 , 166 ),[ "Forest" ]=Color3.fromRGB ( 22 , 163 , 74 )}
+local Z= "VortexXSage_FlightSpeed.txt"
+local z= "VortexXSage_EggSelectConfig.json"
+local d={[ "Light Dark" ]=Color3.fromRGB ( 180 , 180 , 180 ),[ "Titan Temple" ]=Color3.fromRGB ( 190 , 190 , 190 );
+[ "Cherry Blossom" ]=Color3.fromRGB ( 190 , 190 , 190 );
+[ "Cosmic" ]=Color3.fromRGB ( 170 , 170 , 170 ),[ "Prehistoric" ]=Color3.fromRGB ( 155 , 155 , 155 ),[ "Abyss Ocean" ]=Color3.fromRGB ( 170 , 170 , 170 );
+[ "Volcano" ]=Color3.fromRGB ( 180 , 180 , 180 ),[ "Snow" ]=Color3.fromRGB ( 155 , 155 , 155 ),[ "Jungle" ]=Color3.fromRGB ( 180 , 180 , 180 ),[ "Desert" ]=Color3.fromRGB ( 180 , 180 , 180 ),[ "Lake" ]=Color3.fromRGB ( 160 , 160 , 160 ),[ "Forest" ]=Color3.fromRGB ( 160 , 160 , 160 )}
 
 local X={ "Divine" , "Eternal" , "Secret" ;
 "Cosmic" , "Mythic" , "Legendary" ;
@@ -135,11 +214,11 @@ local X={ "Divine" , "Eternal" , "Secret" ;
 "Rare" ;
 "Uncommon" ;
 "Common" }
-local G={[ "Divine" ]=Color3.fromRGB ( 244 , 63 , 94 );
-[ "Eternal" ]=Color3.fromRGB ( 217 , 70 , 239 ),[ "Secret" ]=Color3.fromRGB ( 249 , 115 , 22 ),[ "Cosmic" ]=Color3.fromRGB ( 6 , 182 , 212 ),[ "Mythic" ]=Color3.fromRGB ( 139 , 92 , 246 ),[ "Legendary" ]=Color3.fromRGB ( 251 , 191 , 36 );
-[ "Epic" ]=Color3.fromRGB ( 168 , 85 , 247 );
-[ "Rare" ]=Color3.fromRGB ( 59 , 130 , 246 );
-[ "Uncommon" ]=Color3.fromRGB ( 34 , 197 , 94 ),[ "Common" ]=Color3.fromRGB ( 148 , 163 , 184 )}
+local G={[ "Divine" ]=Color3.fromRGB ( 160 , 160 , 160 );
+[ "Eternal" ]=Color3.fromRGB ( 190 , 190 , 190 ),[ "Secret" ]=Color3.fromRGB ( 155 , 155 , 155 ),[ "Cosmic" ]=Color3.fromRGB ( 170 , 170 , 170 ),[ "Mythic" ]=Color3.fromRGB ( 170 , 170 , 170 ),[ "Legendary" ]=Color3.fromRGB ( 155 , 155 , 155 );
+[ "Epic" ]=Color3.fromRGB ( 180 , 180 , 180 );
+[ "Rare" ]=Color3.fromRGB ( 170 , 170 , 170 );
+[ "Uncommon" ]=Color3.fromRGB ( 180 , 180 , 180 ),[ "Common" ]=Color3.fromRGB ( 160 , 160 , 160 )}
 local F={[ "Divine" ]= 6 ;
 [ "Eternal" ]= 5 ;
 [ "Secret" ]= 4 ,[ "Cosmic" ]= 3 ;
@@ -205,8 +284,8 @@ local function T(...)
     if type(e)~= "table" then
         e={[ "selectedZones" ]=r;
         [ "selectedRarities" ]=y,[ "alwaysCollectSecretPlus" ]= true ,[ "minRarityTier" ]= 2 ;
-        [ "autoTreadmill" ]= true ;
-        [ "autoUpgradeTreadmill" ]= true ,[ "autoBuyTrails" ]= true ;
+        [ "autoTreadmill" ]= false ;
+        [ "autoUpgradeTreadmill" ]= false ,[ "autoBuyTrails" ]= true ;
         [ "hideNotEnoughMoney" ]= true ;
         [ "performanceMode" ]= false ,[ "disable3D" ]= false ,[ "antiAFK" ]= true ,[ "language" ]= "EN" }
     else
@@ -229,10 +308,10 @@ local function T(...)
             e.minRarityTier = 2
         end
         if e.autoTreadmill ==nil then
-            e.autoTreadmill = true
+            e.autoTreadmill = false
         end
         if e.autoUpgradeTreadmill ==nil then
-            e.autoUpgradeTreadmill = true
+            e.autoUpgradeTreadmill = false
         end
         if e.autoBuyTrails ==nil then
             e.autoBuyTrails = true
@@ -271,7 +350,7 @@ local function x(...) pcall(function(...)
     end
     )
 end
-local W=T()h={[ "godmode" ]= true ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true ;
+local W=T()h={[ "godmode" ]= false ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true ;
 [ "autoPlaceEvery5" ]= false ;
 [ "batchStealCount" ]= 0 ,[ "isBatchPlacing" ]= false ,[ "isHatching" ]= false ;
 [ "autoFarmLoop" ]= false ,[ "pureTweenFarm" ]= false ;
@@ -279,8 +358,8 @@ local W=T()h={[ "godmode" ]= true ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true 
 [ "securingEgg" ]= false ,[ "glideSpeed" ]=O();
 [ "selectedZones" ]=W.selectedZones ;
 [ "selectedRarities" ]=W.selectedRarities ;
-[ "alwaysCollectSecretPlus" ]=W.alwaysCollectSecretPlus ,[ "minRarityTier" ]=W.minRarityTier ,[ "autoTreadmill" ]=(W.autoTreadmill ~= false );
-[ "autoUpgradeTreadmill" ]=(W.autoUpgradeTreadmill ~= false ),[ "autoBuyTrails" ]=(W.autoBuyTrails ~= false ),[ "hideNotEnoughMoney" ]= true ;
+[ "alwaysCollectSecretPlus" ]=W.alwaysCollectSecretPlus ,[ "minRarityTier" ]=W.minRarityTier ,[ "autoTreadmill" ]=(W.autoTreadmill == true );
+[ "autoUpgradeTreadmill" ]=(W.autoUpgradeTreadmill == true ),[ "autoBuyTrails" ]=(W.autoBuyTrails ~= false ),[ "hideNotEnoughMoney" ]= true ;
 [ "performanceMode" ]=(W.performanceMode == true ),[ "disable3D" ]=(W.disable3D == true ),[ "antiAFK" ]=(W.antiAFK ~= false ),[ "onTreadmill" ]= false ,[ "lastTreadmillMount" ]= 0 ,[ "laneZ" ]= -360 ,[ "swapped" ]= false ;
 [ "teleporting" ]= false ,[ "isReturning" ]= false ;
 [ "delivering" ]= false ,[ "holdingEggForGuard" ]= false ,[ "currentTargetModel" ]=nil,[ "targetPosition" ]=nil;
@@ -288,7 +367,20 @@ local W=T()h={[ "godmode" ]= true ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true 
 [ "gui" ]=nil;
 [ "alive" ]= true ,[ "plot" ]=nil;
 [ "pen" ]=nil,[ "origin" ]=nil;
-[ "tread" ]=nil}
+[ "tread" ]=nil;
+-- added features (do not replace existing)
+[ "eggESP" ]= false ;
+[ "antiTrap" ]= true ;
+[ "autoIndex" ]= false ;
+[ "autoHop" ]= false ;
+[ "maxHops" ]= 15 ;
+[ "hopDelay" ]= 20 ;
+[ "hopCount" ]= 0 ;
+[ "webhookEnabled" ]= false ;
+[ "webhookUrl" ]= "" ;
+[ "webhookOnSteal" ]= true ;
+[ "webhookOnHop" ]= true ;
+}
 local m
 local e4
 local r4
@@ -754,8 +846,8 @@ H4=function(e,...)
         )
     end
 end
-if typeof(hookmetamethod)== "function" and not _G._DesyncAntiRagdollHooked then
-    _G._DesyncAntiRagdollHooked = true
+if typeof(hookmetamethod)== "function" and not _G._NyxAntiRagdollHooked then
+    _G._NyxAntiRagdollHooked = true
     local e e=hookmetamethod(game, "__newindex" ,safeNewCClosure(function(r,y,u,...)
         if not executorCheckCaller()and typeof(r)== "Instance" then
             if r:IsA( "Motor6D" )and(y== "Enabled" and u== false )then
@@ -789,15 +881,13 @@ S4=function(e,...) e=e or o.Character
             end
             )
         end
+        if r:IsA( "WeldConstraint" )and string.find(tostring(r.Name), "RigidJointWeld") then
+            pcall(function(...) r:Destroy() end)
+        end
     end
     for e,r in ipairs(e:GetDescendants())do
         if r:IsA( "Motor6D" )and(r.Part0 and r.Part1 )then
             r.Enabled = true
-            local e= "RigidJointWeld_" ..r.Name
-            local y=r.Part1 :FindFirstChild(e)
-            if not y then
-                local y=Instance.new ( "WeldConstraint" )y.Name =e y.Part0 =r.Part0 y.Part1 =r.Part1 y.Parent =r.Part1
-            end
         end
     end
 end
@@ -812,12 +902,20 @@ Z4=function(e,...)
     local r=e:FindFirstChildOfClass( "Humanoid" )
     if r then
         r:SetStateEnabled(Enum.HumanoidStateType.Ragdoll , false )r:SetStateEnabled(Enum.HumanoidStateType.FallingDown , false )r:SetStateEnabled(Enum.HumanoidStateType.Physics , false )r:SetStateEnabled(Enum.HumanoidStateType.PlatformStanding , false )r:SetStateEnabled(Enum.HumanoidStateType.Seated , false )
+        r:SetStateEnabled(Enum.HumanoidStateType.Jumping , true )
+        r:SetStateEnabled(Enum.HumanoidStateType.Freefall , true )
+        r:SetStateEnabled(Enum.HumanoidStateType.Running , true )
         if r.PlatformStand then
             r.PlatformStand = false
         end
         if r.Sit then
             r.Sit = false
         end
+        pcall(function()
+            if r.UseJumpPower ~= nil then r.UseJumpPower = true end
+            if (r.JumpPower or 0) < 50 then r.JumpPower = 50 end
+            if (r.JumpHeight or 0) < 7.2 then r.JumpHeight = 7.2 end
+        end)
     end
     for e,r in ipairs(e:GetDescendants())do
         if r:IsA( "LocalScript" )and((string.find (string.lower (r.Name ), "ragdoll" )or string.find (string.lower (r.Name ), "fall" )))then
@@ -1184,10 +1282,10 @@ b4=function(e,...) h.godmode =e
     end
     Z4(r)
 end
-local function enableDesyncGodmode()
+local function enableNyxGodmode()
     b4(true)
 end
-local function disableDesyncGodmode()
+local function disableNyxGodmode()
     b4(false)
 end
 
@@ -1632,7 +1730,7 @@ g4=function(e,r,u,...)
         local Q=e.Z +g
         local P=i4()
         local N= false
-        if e.X >E then
+        if e.X >E and h.antiTrap ~= false then
             for e,r in ipairs(P)do
                 local y=r.Position
                 local u=((Vector3.new (K,i,Q)-y)).Magnitude
@@ -1683,7 +1781,7 @@ v4=function(e,r,y,...)
     h.statusText = "[Place] Hatching ready eggs..." J4( true )u4()h.isReturning = false h.delivering = false h.currentTargetModel =nil h.targetPosition =nil
     local H=y4()h.statusText =string.format ( "Placed & Hatched (Left: %d)! Hands Free." ,H)
 end
-local uk= 5 K4=function(e,...)
+local uk= 1 K4=function(e,...)
     if h.isBatchPlacing then
         return
     end
@@ -1803,7 +1901,7 @@ local function wk(e,r,u,w,...)
         local U=math.sign (N)*math.min (math.abs (N),r*B)
         local l=e.Z +U
         local D= false
-        if o> 25 then
+        if o > 25 and h.antiTrap ~= false then
             local e=i4()
             for e,y in ipairs(e)do
                 local u=y.Position
@@ -1920,18 +2018,20 @@ Q4=function(e,r,...)
         local Q=e.Z +g
         local P=i4()
         local N= false
-        for e,r in ipairs(P)do
-            local y=r.Position
-            local u=((Vector3.new (K,i,Q)-y)).Magnitude
-            local w=math.abs (K-y.X )
-            local j=math.abs (Q-y.Z )
-            if u< 22 or(w< 18 and j< 14 )then
-                N= true
-                local e=y.Y + 16
-                if i<e then
-                    i=math.min (i+((s*V)* 1.5 ),e)
+        if h.antiTrap ~= false then
+            for e,r in ipairs(P)do
+                local y=r.Position
+                local u=((Vector3.new (K,i,Q)-y)).Magnitude
+                local w=math.abs (K-y.X )
+                local j=math.abs (Q-y.Z )
+                if u< 22 or(w< 18 and j< 14 )then
+                    N= true
+                    local e=y.Y + 16
+                    if i<e then
+                        i=math.min (i+((s*V)* 1.5 ),e)
+                    end
+                    break
                 end
-                break
             end
         end
         local U=Vector3.new (K,i,Q)
@@ -3134,7 +3234,7 @@ N4=function(...)
             local r=u[e]table.insert (V,string.format ( "#%d %s[%s|%s] Score:%d $%s/s (%.1fx) dist=%dm" ,e,tostring(r.Category ),tostring(r.Rarity ),tostring(r.Area ),a(r),j(r.RealIncome ),tonumber(r.Scale )or 1 ,math.floor (tonumber(r.Distance )or 0 )))
         end
         if#V> 0 then
-            H( "[AutoSteal v42.44] " ..table.concat (V, " | " ))
+            H( "[AutoSteal v1.0] " ..table.concat (V, " | " ))
         end
         return o
     end
@@ -3313,7 +3413,7 @@ l4=function(e,u,...)
     if k then
         k:UnequipTools()
     end
-    h.statusText = "[1/7] Pre-Flight Desync..."
+    h.statusText = "[1/7] Pre-Flight Setup..."
     if not h.swapped then
         A4()
     end
@@ -3768,72 +3868,113 @@ local function fk(e,...) pcall(function(...)
     end
     )
 end
-local function Mk(...) h.performanceMode = true pcall(function(...)
-        local e=r:FindFirstChild( "DiceHub_EggESP" )
-        if e then
-            e:Destroy()
-        end
-        local y=game:GetService( "Lighting" )y.GlobalShadows = false y.FogEnd = 9000000000 y.Brightness = 1 y.ClockTime = 14 y.OutdoorAmbient =Color3.fromRGB ( 128 , 128 , 128 )
-        for e,r in ipairs(y:GetChildren())do
-            if r:IsA( "PostEffect" )or r:IsA( "BloomEffect" )or r:IsA( "BlurEffect" )or r:IsA( "ColorCorrectionEffect" )or r:IsA( "SunRaysEffect" )or r:IsA( "DepthOfFieldEffect" )or r:IsA( "Atmosphere" )then
-                pcall(function(...) r.Enabled = false
-                end
-                )
-            elseif r:IsA( "Sky" )then
-                pcall(function(...) r.Parent =nil
-                end
-                )
-            end
-        end
-        local u=workspace:FindFirstChildOfClass( "Terrain" )
-        if u then
-            pcall(function(...) u.Decoration = false u.WaterWaveSize = 0 u.WaterWaveSpeed = 0 u.WaterReflectance = 0 u.WaterTransparency = 0
-            end
-            )
-        end
-        for e,r in ipairs(workspace:GetDescendants())do
-            fk(r)
-        end
-        if not nk then
-            nk=workspace.DescendantAdded :Connect(function(e,...)
-                if h.performanceMode then
-                    fk(e)
-                end
-            end
-            )
-        end
-        pcall(function(...)
-            if settings and(settings()).Rendering then
-                (settings()).Rendering.QualityLevel = 1
-            end
-        end
-        )
-    end
-    )
-end
-local function Ik(...) h.performanceMode = false
+local _nyxFpsSnap = nil
+local function Mk(...)
+    -- stop any previous strip loop first
+    h.performanceMode = false
     if nk then
-        pcall(function(...) nk:Disconnect()
-        end
-        )nk=nil
+        pcall(function() nk:Disconnect() end)
+        nk = nil
     end
-    pcall(function(...)
-        local e=game:GetService( "Lighting" )e.GlobalShadows = true
-        for e,r in ipairs(e:GetChildren())do
-            if r:IsA( "PostEffect" )or r:IsA( "BloomEffect" )or r:IsA( "BlurEffect" )or r:IsA( "ColorCorrectionEffect" )or r:IsA( "SunRaysEffect" )or r:IsA( "DepthOfFieldEffect" )or r:IsA( "Atmosphere" )then
-                pcall(function(...) r.Enabled = true
+    h.performanceMode = true
+    pcall(function()
+        local lighting = game:GetService("Lighting")
+        if not _nyxFpsSnap then
+            _nyxFpsSnap = {
+                GlobalShadows = lighting.GlobalShadows,
+                FogEnd = lighting.FogEnd,
+                Brightness = lighting.Brightness,
+                ClockTime = lighting.ClockTime,
+                OutdoorAmbient = lighting.OutdoorAmbient,
+                Quality = nil}
+            pcall(function()
+                if settings and settings().Rendering then
+                    _nyxFpsSnap.Quality = settings().Rendering.QualityLevel
                 end
-                )
+            end)
+        end
+        lighting.GlobalShadows = false
+        lighting.FogEnd = 9e9
+        lighting.Brightness = 1
+        lighting.ClockTime = 14
+        lighting.OutdoorAmbient = Color3.fromRGB(128, 128, 128)
+        for _, fx in ipairs(lighting:GetChildren()) do
+            if fx:IsA("PostEffect") or fx:IsA("BloomEffect") or fx:IsA("BlurEffect")
+                or fx:IsA("ColorCorrectionEffect") or fx:IsA("SunRaysEffect")
+                or fx:IsA("DepthOfFieldEffect") or fx:IsA("Atmosphere") then
+                pcall(function() fx.Enabled = false end)
             end
         end
-        local r=workspace:FindFirstChildOfClass( "Terrain" )
-        if r then
-            pcall(function(...) r.Decoration = true
-            end
-            )
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            pcall(function()
+                terrain.Decoration = false
+                terrain.WaterWaveSize = 0
+                terrain.WaterWaveSpeed = 0
+                terrain.WaterReflectance = 0
+                terrain.WaterTransparency = 0
+            end)
         end
+        -- only strip NEW descendants while enabled (do not permanently wipe whole world once)
+        if not nk then
+            nk = workspace.DescendantAdded:Connect(function(inst)
+                if h and h.performanceMode then
+                    fk(inst)
+                end
+            end)
+        end
+        pcall(function()
+            if settings and settings().Rendering then
+                settings().Rendering.QualityLevel = 1
+            end
+        end)
+        -- one-time soft pass on existing (limited batch to avoid freeze)
+        task.spawn(function()
+            local n = 0
+            for _, inst in ipairs(workspace:GetDescendants()) do
+                if not h.performanceMode then break end
+                fk(inst)
+                n = n + 1
+                if n % 200 == 0 then task.wait() end
+            end
+        end)
+    end)
+end
+local function Ik(...)
+    -- MUST clear flag first so DescendantAdded callback no-ops
+    h.performanceMode = false
+    if nk then
+        pcall(function() nk:Disconnect() end)
+        nk = nil
     end
-    )
+    pcall(function()
+        local lighting = game:GetService("Lighting")
+        if _nyxFpsSnap then
+            lighting.GlobalShadows = _nyxFpsSnap.GlobalShadows
+            lighting.FogEnd = _nyxFpsSnap.FogEnd
+            lighting.Brightness = _nyxFpsSnap.Brightness
+            lighting.ClockTime = _nyxFpsSnap.ClockTime
+            lighting.OutdoorAmbient = _nyxFpsSnap.OutdoorAmbient
+            pcall(function()
+                if settings and settings().Rendering and _nyxFpsSnap.Quality ~= nil then
+                    settings().Rendering.QualityLevel = _nyxFpsSnap.Quality
+                end
+            end)
+        else
+            lighting.GlobalShadows = true
+        end
+        for _, fx in ipairs(lighting:GetChildren()) do
+            if fx:IsA("PostEffect") or fx:IsA("BloomEffect") or fx:IsA("BlurEffect")
+                or fx:IsA("ColorCorrectionEffect") or fx:IsA("SunRaysEffect")
+                or fx:IsA("DepthOfFieldEffect") or fx:IsA("Atmosphere") then
+                pcall(function() fx.Enabled = true end)
+            end
+        end
+        local terrain = workspace:FindFirstChildOfClass("Terrain")
+        if terrain then
+            pcall(function() terrain.Decoration = true end)
+        end
+    end)
 end
 local Lk= false
 local function Ek(...) pcall(function(...)
@@ -3950,7 +4091,7 @@ local function Zk(e,...)
     end
     return table.concat (u)
 end
-local zk= "Dice_Hub_Icon.png"
+local zk= "Vortex_Hub_Icon.png"
 local dk= "rbxassetid://10734950309" pcall(function(...)
     if writefile and((getcustomasset or getsynasset))then
         local e=getcustomasset or getsynasset
@@ -3962,123 +4103,548 @@ local dk= "rbxassetid://10734950309" pcall(function(...)
 end
 )
 local Xk=currentLang or "EN"
-local Gk={[ "EN" ]={[ "StatusTagReady" ]= "Status: Ready" ,[ "Tabs" ]={[ "Farm" ]= "Auto Farm" ;
-[ "EggSelect" ]= "Egg Selection" ;
-[ "Character" ]= "Character" ,[ "Settings" ]= "Settings" },[ "EggSelect" ]={[ "SecZones" ]= "Target Zones" ;
-[ "SecZonesDesc" ]= "Select zones to steal regular eggs from (Secret+ bypasses this filter)" ,[ "DropZonesTitle" ]= "Selected Zones" ,[ "DropZonesDesc" ]= "Click to choose which zones to farm eggs from" ;
-[ "SecRarities" ]= "Target Rarities" ;
-[ "SecRaritiesDesc" ]= "Select egg rarities to target" ;
-[ "DropRaritiesTitle" ]= "Selected Rarities" ;
-[ "DropRaritiesDesc" ]= "Click to choose which rarities to collect" ,[ "AlwaysSecretPlus" ]= "Always Steal Secret+ Eggs" ;
-[ "AlwaysSecretPlusDesc" ]= "Collect Secret, Eternal, Divine eggs from any zone automatically" },[ "Farm" ]={[ "SecModes" ]= "Auto Steal Modes" ,[ "TweenTitle" ]= "Auto Steal (Tween)" ,[ "TweenDesc" ]= "Smoothly fly to steal eggs continuously along the high-speed highway corridor" ;
-[ "TeleportTitle" ]= "Auto Steal (Teleport)" ;
-[ "TeleportDesc" ]= "Instantly warp to steal eggs in a rapid continuous loop" ,[ "SingleTitle" ]= "Single Steal (Teleport)" ,[ "SingleDesc" ]= "Teleport to steal 1 target egg and return to base" ;
-[ "SecPlace" ]= "Place & Hatch" ;
-[ "PlaceTitle" ]= "Place Eggs" ,[ "PlaceDesc" ]= "Fly home, place stashed eggs into open incubator stands and request hatch" ,[ "AutoPlaceTitle" ]= "Auto Place (Every 5)" ;
-[ "AutoPlaceDesc" ]= "Return home every 5 steals to deposit eggs" ;
-[ "HatchTitle" ]= "Auto Hatch" ,[ "HatchDesc" ]= "Continuously hatch ready eggs automatically from anywhere" ,[ "ReturnTitle" ]= "Auto Return" ,[ "ReturnDesc" ]= "Automatically fly back to safe area after stealing" ;
-[ "AutoTreadmillTitle" ]= "Auto Treadmill" ,[ "AutoTreadmillDesc" ]= "Run on base treadmill when no target eggs are spawned" ,[ "UpgradeTreadmillTitle" ]= "Auto Upgrade Treadmill" ;
-[ "UpgradeTreadmillDesc" ]= "Automatically upgrade base treadmill tier when you have enough cash" ;
-[ "BuyTrailsTitle" ]= "Auto Buy & Equip Trails" ,[ "BuyTrailsDesc" ]= "Automatically purchase and equip the best speed trail available" ,[ "HideNotEnoughMoneyTitle" ]= "Hide 'Not Enough Money' UI" ,[ "HideNotEnoughMoneyDesc" ]= "Automatically suppress and hide the red 'Not enough money' game alert" };
-[ "Character" ]={[ "SecSafety" ]= "Character & Safety" ,[ "GodmodeTitle" ]= "Godmode" ,[ "GodmodeDesc" ]= "Full immunity against map obstacles, traps, and hazards" ,[ "UnstickTitle" ]= "Get Unstuck" ;
-[ "UnstickDesc" ]= "Instantly break free from treadmills, seats, or map geometry" ,[ "SecFlight" ]= "Flight Settings" ;
-[ "SpeedTitle" ]= "Flight Speed" ,[ "SpeedDesc" ]= "Adjust cruise flight speed (studs/second)" };
-[ "Settings" ]={[ "SecDashboard" ]= "Live Dashboard" ;
-[ "DashTitle" ]= "Live Dashboard" ;
-[ "DashDesc" ]= "Status: %s\nFarm Mode: %s\nCarried Eggs: %d\nFlight Speed: %d studs/s" ;
-[ "SecBlacklist" ]= "Zone Preferences" ,[ "BlacklistToggleTitle" ]= "Target Zone: %s" ;
-[ "BlacklistToggleDesc" ]= "Enable egg stealing in %s (Secret+ always collected)" ;
-[ "SecUI" ]= "UI Customization" ,[ "TranspTitle" ]= "Window Transparency" ;
-[ "TranspDesc" ]= "Adjust background transparency of the UI window (0% - 90%)" ;
-[ "ThemeTitle" ]= "Select Theme" ;
-[ "SecPerformance" ]= "Performance & Graphics" ,[ "PerformanceTitle" ]= "Ultra Potato Mode (Maximum FPS Boost)" ,[ "PerformanceDesc" ]= "Disables textures, meshes, lights, shadows, effects and particles for maximum FPS" ;
-[ "Disable3DTitle" ]= "Disable 3D Rendering (GPU Saver 95%)" ,[ "Disable3DDesc" ]= "Freezes 3D viewport rendering to drop GPU usage to ~1%. Perfect for overnight farming!" ,[ "LangTitle" ]= "Language" ,[ "BtnTranslate" ]= "Switch to Thai" ;
-[ "DescTranslate" ]= "Switch interface language to Thai" ,[ "SecSystem" ]= "System Controls" ;
-[ "AntiAFKTitle" ]= "Anti-AFK (Double-Esc 10m / Mobile)" ,[ "AntiAFKDesc" ]= "Double-Esc menu pulse every 10m + Mobile touch + PC jitter resets idle timer safely without Idled" ,[ "ResetTitle" ]= "Reset Character State" ,[ "ResetDesc" ]= "Clear internal states and unlock character movement" ;
-[ "RejoinTitle" ]= "Rejoin Server" ,[ "RejoinDesc" ]= "Reconnect to the same server automatically" ;
-[ "UnloadTitle" ]= "Unload Script" ,[ "UnloadDesc" ]= "Completely terminate all loops and close the interface" };
-[ "Notifications" ]={[ "PlaceStarted" ]= "Flying back to base to place eggs..." ;
-[ "PlaceDone" ]= "Eggs placed on stands and hatch requested!" ,[ "AutoPlaceStarted" ]= "Auto Place (Every 5) enabled" ;
-[ "AutoPlaceStopped" ]= "Auto Place (Every 5) disabled" ,[ "NoEggFound" ]= "No eligible eggs found matching your filter" ,[ "UnstickDone" ]= "Unstick request sent successfully!" ;
-[ "TweenStarted" ]= "Auto Steal (Tween) activated" ,[ "TweenStopped" ]= "Auto Steal (Tween) deactivated" ;
-[ "TeleportStarted" ]= "Auto Steal (Teleport) activated" ;
-[ "TeleportStopped" ]= "Auto Steal (Teleport) deactivated" ;
+local Gk={[ "EN" ]={[ "StatusTagReady" ]= "Ready" ,[ "Tabs" ]={[ "Farm" ]= "Main" ;
+[ "EggSelect" ]= "Preference" ;
+[ "Character" ]= "Preference" ,[ "Settings" ]= "Settings" },[ "EggSelect" ]={[ "SecZones" ]= "Zones" ;
+[ "SecZonesDesc" ]= "Choose which zones to steal from" ,[ "DropZonesTitle" ]= "Zones" ,[ "DropZonesDesc" ]= "Select target zones" ;
+[ "SecRarities" ]= "Rarities" ;
+[ "SecRaritiesDesc" ]= "Choose which rarities to collect" ;
+[ "DropRaritiesTitle" ]= "Rarities" ;
+[ "DropRaritiesDesc" ]= "Select target rarities" ,[ "AlwaysSecretPlus" ]= "Auto Steal Secret" ;
+[ "AlwaysSecretPlusDesc" ]= "Always collect Secret and above" },[ "Farm" ]={[ "SecModes" ]= "" ,[ "TweenTitle" ]= "Auto Steal" ,[ "TweenDesc" ]= "Automatically steal eggs" ;
+[ "TeleportTitle" ]= "Auto Steal" ;
+[ "TeleportDesc" ]= "Automatically steal eggs" ,[ "SingleTitle" ]= "Single Steal" ,[ "SingleDesc" ]= "Steal one egg" ;
+[ "SecPlace" ]= "" ;
+[ "PlaceTitle" ]= "Auto Place" ,[ "PlaceDesc" ]= "Automatically place eggs at base" ,[ "AutoPlaceTitle" ]= "Auto Place" ;
+[ "AutoPlaceDesc" ]= "Automatically place eggs at base" ;
+[ "HatchTitle" ]= "Auto Hatch" ,[ "HatchDesc" ]= "Automatically hatch ready eggs" ,[ "ReturnTitle" ]= "Auto Return" ,[ "ReturnDesc" ]= "Return to safe area after stealing" ;
+[ "AutoTreadmillTitle" ]= "Auto Treadmill" ,[ "AutoTreadmillDesc" ]= "Run on treadmill when idle" ,[ "UpgradeTreadmillTitle" ]= "Auto Upgrade Treadmill" ;
+[ "UpgradeTreadmillDesc" ]= "Upgrade treadmill when you have enough cash" ;
+[ "BuyTrailsTitle" ]= "Auto Buy Trails" ,[ "BuyTrailsDesc" ]= "Buy and equip the best trail" ,[ "HideNotEnoughMoneyTitle" ]= "Hide Money Alert" ,[ "HideNotEnoughMoneyDesc" ]= "Hide not enough money messages" };
+[ "Character" ]={[ "SecSafety" ]= "" ,[ "GodmodeTitle" ]= "Godmode" ,[ "GodmodeDesc" ]= "Ignore damage and traps" ,[ "UnstickTitle" ]= "Get Unstuck" ;
+[ "UnstickDesc" ]= "Free yourself from stuck positions" ,[ "SecFlight" ]= "" ;
+[ "SpeedTitle" ]= "Flight Speed" ,[ "SpeedDesc" ]= "Adjust flight speed" };
+[ "Settings" ]={[ "SecDashboard" ]= "" ;
+[ "DashTitle" ]= "" ;
+[ "DashDesc" ]= "" ;
+[ "SecBlacklist" ]= "" ,[ "BlacklistToggleTitle" ]= "%s" ;
+[ "BlacklistToggleDesc" ]= "%s" ;
+[ "SecUI" ]= "" ,[ "TranspTitle" ]= "" ;
+[ "TranspDesc" ]= "" ;
+[ "ThemeTitle" ]= "" ;
+[ "SecPerformance" ]= "" ,[ "PerformanceTitle" ]= "" ,[ "PerformanceDesc" ]= "" ;
+[ "Disable3DTitle" ]= "" ,[ "Disable3DDesc" ]= "" ,[ "LangTitle" ]= "" ,[ "BtnTranslate" ]= "" ;
+[ "DescTranslate" ]= "" ,[ "SecSystem" ]= "" ;
+[ "AntiAFKTitle" ]= "Anti AFK" ,[ "AntiAFKDesc" ]= "Prevent being kicked for inactivity" ,[ "ResetTitle" ]= "Reset" ,[ "ResetDesc" ]= "Reset character state" ;
+[ "RejoinTitle" ]= "Rejoin Server" ,[ "RejoinDesc" ]= "Rejoin the same server" ;
+[ "UnloadTitle" ]= "Unload Script" ,[ "UnloadDesc" ]= "Stop the script and close the UI" };
+[ "Notifications" ]={[ "PlaceStarted" ]= "Placing eggs..." ;
+[ "PlaceDone" ]= "Eggs placed!" ,[ "AutoPlaceStarted" ]= "Auto Place enabled" ;
+[ "AutoPlaceStopped" ]= "Auto Place disabled" ,[ "NoEggFound" ]= "No eggs found" ,[ "UnstickDone" ]= "Unstuck!" ;
+[ "TweenStarted" ]= "Auto Steal enabled" ,[ "TweenStopped" ]= "Auto Steal disabled" ;
+[ "TeleportStarted" ]= "Auto Steal enabled" ;
+[ "TeleportStopped" ]= "Auto Steal disabled" ;
 [ "HatchStarted" ]= "Auto Hatch enabled" ;
 [ "HatchStopped" ]= "Auto Hatch disabled" ;
 [ "ReturnStarted" ]= "Auto Return enabled" ,[ "ReturnStopped" ]= "Auto Return disabled" ;
-[ "AutoTreadmillStarted" ]= "Auto Treadmill enabled (Runs when idle)" ,[ "AutoTreadmillStopped" ]= "Auto Treadmill disabled" ,[ "UpgradeTreadmillStarted" ]= "Auto Upgrade Treadmill enabled" ;
-[ "UpgradeTreadmillStopped" ]= "Auto Upgrade Treadmill disabled" ;
+[ "AutoTreadmillStarted" ]= "Auto Treadmill enabled" ,[ "AutoTreadmillStopped" ]= "Auto Treadmill disabled" ,[ "UpgradeTreadmillStarted" ]= "Auto Upgrade enabled" ;
+[ "UpgradeTreadmillStopped" ]= "Auto Upgrade disabled" ;
 [ "BuyTrailsStarted" ]= "Auto Buy Trails enabled" ;
 [ "BuyTrailsStopped" ]= "Auto Buy Trails disabled" ;
-[ "HideNotEnoughMoneyStarted" ]= "Hide 'Not Enough Money' alert enabled" ,[ "HideNotEnoughMoneyStopped" ]= "Hide 'Not Enough Money' alert disabled" ,[ "GodmodeStarted" ]= "Godmode enabled" ,[ "GodmodeStopped" ]= "Godmode disabled" ,[ "PerformanceStarted" ]= "Ultra Potato Mode enabled (Textures & effects removed)" ;
-[ "PerformanceStopped" ]= "Ultra Potato Mode disabled" ;
-[ "Disable3DStarted" ]= "3D Rendering disabled (GPU Saver Active)" ,[ "Disable3DStopped" ]= "3D Rendering restored" ,[ "AntiAFKStarted" ]= "Anti-AFK enabled (Double-Esc 10m & Mobile support)" ,[ "AntiAFKStopped" ]= "Anti-AFK disabled" ,[ "LangSwitched" ]= "Language switched to English successfully!" }},[ "TH" ]={[ "StatusTagReady" ]= "สถานะ: พร้อมทำงาน" ,[ "Tabs" ]={[ "Farm" ]= "ระบบฟาร์ม" ;
-[ "EggSelect" ]= "เลือกประเภทไข่" ,[ "Character" ]= "ตัวละคร" ;
-[ "Settings" ]= "ตั้งค่า" },[ "EggSelect" ]={[ "SecZones" ]= "เลือกโซนเป้าหมาย" ,[ "SecZonesDesc" ]= "เลือกโซนที่ต้องการไปขโมยไข่ (ไข่ระดับ Secret ขึ้นไปจะไม่สนโซน)" ,[ "DropZonesTitle" ]= "โซนเป้าหมายที่เลือก" ,[ "DropZonesDesc" ]= "คลิกเพื่อเลือกโซนที่ต้องการขโมยไข่" ,[ "SecRarities" ]= "เลือกระดับความหายาก" ,[ "SecRaritiesDesc" ]= "เลือกระดับความหายากของไข่ที่ต้องการขโมย" ,[ "DropRaritiesTitle" ]= "ระดับความหายากที่เลือก" ;
-[ "DropRaritiesDesc" ]= "คลิกเพื่อเลือกระดับความหายากที่ต้องการขโมย" ;
-[ "AlwaysSecretPlus" ]= "เก็บไข่ Secret+ ทุกโซนเสมอ" ;
-[ "AlwaysSecretPlusDesc" ]= "ขโมยไข่ระดับ Secret, Eternal, Divine ทันทีไม่ว่าจะเกิดที่โซนใด" };
-[ "Farm" ]={[ "SecModes" ]= "โหมดขโมยไข่อัตโนมัติ" ,[ "TweenTitle" ]= "ขโมยไข่อัตโนมัติ (บินเร็ว)" ,[ "TweenDesc" ]= "บินไปขโมยไข่และเก็บใส่กระเป๋าอย่างต่อเนื่องตามทางด่วนความเร็วสูง" ,[ "TeleportTitle" ]= "ขโมยไข่อัตโนมัติ (วาร์ป)" ;
-[ "TeleportDesc" ]= "วาร์ปไปขโมยไข่อย่างรวดเร็วและต่อเนื่อง" ,[ "SingleTitle" ]= "ขโมยไข่ใบเดียว" ,[ "SingleDesc" ]= "วาร์ปไปขโมยไข่เป้าหมาย 1 ใบแล้วกลับมาที่ฐานทันที" ;
-[ "SecPlace" ]= "นำส่งและฟักไข่" ;
-[ "PlaceTitle" ]= "วางไข่ในรัง" ;
-[ "PlaceDesc" ]= "บินกลับบ้านและนำไข่ในตัวไปวางบนแท่นฟักที่ว่างแล้วเริ่มฟักทันที" ,[ "AutoPlaceTitle" ]= "วางไข่อัตโนมัติ (ทุก 5 ฟอง)" ,[ "AutoPlaceDesc" ]= "กลับบ้านทุกครั้งที่ขโมยครบ 5 ฟองเพื่อนำไข่ไปวาง" ;
-[ "HatchTitle" ]= "ฟักไข่อัตโนมัติ" ,[ "HatchDesc" ]= "สั่งฟักไข่ที่พร้อมฟักอย่างต่อเนื่องจากทุกที่" ;
-[ "ReturnTitle" ]= "บินกลับพื้นที่ปลอดภัย" ,[ "ReturnDesc" ]= "บินกลับเข้าพื้นที่ปลอดภัยอัตโนมัติหลังขโมยไข่เสร็จ" ;
-[ "AutoTreadmillTitle" ]= "วิ่งลู่วิ่งอัตโนมัติ" ;
-[ "AutoTreadmillDesc" ]= "ไปวิ่งบนลู่วิ่งที่บ้านอัตโนมัติเมื่อไม่มีไข่ตามที่เลือกเกิด" ;
+[ "HideNotEnoughMoneyStarted" ]= "Hide money alert enabled" ,[ "HideNotEnoughMoneyStopped" ]= "Hide money alert disabled" ,[ "GodmodeStarted" ]= "Godmode enabled" ,[ "GodmodeStopped" ]= "Godmode disabled" ,[ "PerformanceStarted" ]= "" ;
+[ "PerformanceStopped" ]= "" ;
+[ "Disable3DStarted" ]= "" ,[ "Disable3DStopped" ]= "" ,[ "AntiAFKStarted" ]= "Anti AFK enabled" ,[ "AntiAFKStopped" ]= "Anti AFK disabled" ,[ "LangSwitched" ]= "" }},[ "TH" ]={[ "StatusTagReady" ]= "พร้อม" ,[ "Tabs" ]={[ "Farm" ]= "หลัก" ;
+[ "EggSelect" ]= "การตั้งค่า" ,[ "Character" ]= "การตั้งค่า" ;
+[ "Settings" ]= "ระบบ" },[ "EggSelect" ]={[ "SecZones" ]= "โซน" ,[ "SecZonesDesc" ]= "เลือกโซนที่ต้องการขโมย" ,[ "DropZonesTitle" ]= "โซน" ,[ "DropZonesDesc" ]= "เลือกโซนเป้าหมาย" ,[ "SecRarities" ]= "ระดับความหายาก" ,[ "SecRaritiesDesc" ]= "เลือกระดับไข่ที่ต้องการ" ,[ "DropRaritiesTitle" ]= "ระดับความหายาก" ;
+[ "DropRaritiesDesc" ]= "เลือกระดับที่ต้องการ" ;
+[ "AlwaysSecretPlus" ]= "ขโมย Secret อัตโนมัติ" ;
+[ "AlwaysSecretPlusDesc" ]= "เก็บไข่ Secret ขึ้นไปเสมอ" };
+[ "Farm" ]={[ "SecModes" ]= "" ,[ "TweenTitle" ]= "ขโมยอัตโนมัติ" ,[ "TweenDesc" ]= "ขโมยไข่อัตโนมัติ" ,[ "TeleportTitle" ]= "ขโมยอัตโนมัติ" ;
+[ "TeleportDesc" ]= "ขโมยไข่อัตโนมัติ" ,[ "SingleTitle" ]= "ขโมยใบเดียว" ,[ "SingleDesc" ]= "ขโมยไข่ 1 ใบ" ;
+[ "SecPlace" ]= "" ;
+[ "PlaceTitle" ]= "วางไข่อัตโนมัติ" ;
+[ "PlaceDesc" ]= "วางไข่ที่ฐานอัตโนมัติ" ,[ "AutoPlaceTitle" ]= "วางไข่อัตโนมัติ" ,[ "AutoPlaceDesc" ]= "วางไข่ที่ฐานอัตโนมัติ" ;
+[ "HatchTitle" ]= "ฟักไข่อัตโนมัติ" ,[ "HatchDesc" ]= "ฟักไข่ที่พร้อมอัตโนมัติ" ;
+[ "ReturnTitle" ]= "กลับอัตโนมัติ" ,[ "ReturnDesc" ]= "กลับพื้นที่ปลอดภัยหลังขโมย" ;
+[ "AutoTreadmillTitle" ]= "ลู่วิ่งอัตโนมัติ" ;
+[ "AutoTreadmillDesc" ]= "วิ่งลู่วิ่งเมื่อว่าง" ;
 [ "UpgradeTreadmillTitle" ]= "อัปเกรดลู่วิ่งอัตโนมัติ" ;
-[ "UpgradeTreadmillDesc" ]= "อัปเกรดระดับลู่วิ่งที่บ้านอัตโนมัติทันทีที่มีเงินพอ" ;
-[ "BuyTrailsTitle" ]= "ซื้อและใส่ Trail อัตโนมัติ" ,[ "BuyTrailsDesc" ]= "ซื้อเส้นทางเพิ่มความเร็วและสวมใส่อันที่ดีที่สุดอัตโนมัติเมื่อเงินพอ" ;
-[ "HideNotEnoughMoneyTitle" ]= "ซ่อนแจ้งเตือนเงินไม่พอ" ;
-[ "HideNotEnoughMoneyDesc" ]= "บล็อกและซ่อนข้อความสีแดง 'Not enough money' จากตัวเกมอัตโนมัติ" };
-[ "Character" ]={[ "SecSafety" ]= "ความปลอดภัยและตัวละคร" ;
+[ "UpgradeTreadmillDesc" ]= "อัปเกรดลู่วิ่งเมื่อมีเงินพอ" ;
+[ "BuyTrailsTitle" ]= "ซื้อ Trail อัตโนมัติ" ,[ "BuyTrailsDesc" ]= "ซื้อและใส่ Trail ที่ดีที่สุด" ;
+[ "HideNotEnoughMoneyTitle" ]= "ซ่อนแจ้งเตือนเงิน" ;
+[ "HideNotEnoughMoneyDesc" ]= "ซ่อนข้อความเงินไม่พอ" };
+[ "Character" ]={[ "SecSafety" ]= "" ;
 [ "GodmodeTitle" ]= "โหมดอมตะ" ;
-[ "GodmodeDesc" ]= "ป้องกันดาเมจจากสิ่งกีดขวางและกับดัก 100%" ;
-[ "UnstickTitle" ]= "แก้ตัวติด / ลงจากลู่วิ่ง" ,[ "UnstickDesc" ]= "หลุดออกจากสิ่งกีดขวางหรืออุปกรณ์ทันที" ,[ "SecFlight" ]= "การตั้งค่าการบิน" ,[ "SpeedTitle" ]= "ความเร็วการบิน" ;
-[ "SpeedDesc" ]= "ปรับความเร็วในการบิน (Studs/วินาที)" };
-[ "Settings" ]={[ "SecDashboard" ]= "แดชบอร์ดสถานะสด" ;
-[ "DashTitle" ]= "แดชบอร์ดสถานะสด" ;
-[ "DashDesc" ]= "สถานะ: %s\nโหมดฟาร์ม: %s\nจำนวนไข่ในตัว: %d ฟอง\nความเร็วการบิน: %d Studs/วิ" ;
-[ "SecBlacklist" ]= "ตัวเลือกโซนที่ต้องการ" ;
-[ "BlacklistToggleTitle" ]= "ขโมยในโซน: %s" ,[ "BlacklistToggleDesc" ]= "เปิด/ปิด การขโมยไข่ทั่วไปในโซน %s (ระดับ Secret+ จะเก็บเสมอ)" ;
-[ "SecUI" ]= "ปรับแต่งหน้าต่าง" ;
-[ "TranspTitle" ]= "ความโปร่งใสของหน้าต่าง" ,[ "TranspDesc" ]= "ปรับความโปร่งแสงของพื้นหลังหน้าต่าง (0% - 90%)" ;
-[ "ThemeTitle" ]= "เลือกธีมหน้าต่าง" ;
-[ "SecPerformance" ]= "ประสิทธิภาพและกราฟิก" ;
-[ "PerformanceTitle" ]= "โหมดภาพกากขั้นสุด (Ultra Potato Mode)" ;
-[ "PerformanceDesc" ]= "ลดกราฟิก ลบ Texture ของโมเดล ปิดเงา ปิดแสงไฟ และปิดเอฟเฟกต์ทั้งหมดเพื่อความลื่นขั้นสุด" ;
-[ "Disable3DTitle" ]= "ปิดเรนเดอร์ 3D / จอดำ (ประหยัด GPU 95%)" ,[ "Disable3DDesc" ]= "หยุดประมวลผลภาพ 3D ลดภาระการ์ดจอเหลือ 1% เหมาะสำหรับเปิดฟาร์มทิ้งไว้ข้ามคืน (หน้าต่าง UI ยังทำงานปกติ)" ,[ "LangTitle" ]= "ภาษา" ;
-[ "BtnTranslate" ]= "เปลี่ยนเป็นภาษาอังกฤษ" ;
-[ "DescTranslate" ]= "เปลี่ยนภาษาของหน้าต่างทั้งหมดเป็นภาษาอังกฤษ" ,[ "SecSystem" ]= "จัดการระบบ" ;
-[ "AntiAFKTitle" ]= "ป้องกัน AFK เตะ (กด Esc 2 ที / รองรับมือถือ)" ;
-[ "AntiAFKDesc" ]= "กด Esc เปิด-ปิดเมนูอัตโนมัติทุก 10 นาที + สัญญาณ Touch มือถือ รีเซ็ตตัวนับ 20 นาที ปลอดภัยไม่แตะเกม" ;
-[ "ResetTitle" ]= "รีเซ็ตสถานะตัวละคร" ;
-[ "ResetDesc" ]= "ล้างสถานะภายในทั้งหมดและปลดล็อกการเคลื่อนที่ทันที" ;
-[ "RejoinTitle" ]= "เข้าเซิร์ฟเวอร์ใหม่" ,[ "RejoinDesc" ]= "เชื่อมต่อกลับเข้าเซิร์ฟเวอร์เดิมใหม่อัตโนมัติ" ,[ "UnloadTitle" ]= "ปิดสคริปต์สมบูรณ์" ;
-[ "UnloadDesc" ]= "หยุดการทำงานของลูปทั้งหมดและปิดหน้าต่างอย่างปลอดภัย" };
-[ "Notifications" ]={[ "PlaceStarted" ]= "กำลังบินกลับบ้านเพื่อนำไข่ไปวาง..." ;
-[ "PlaceDone" ]= "วางไข่บนแท่นฟักและเริ่มฟักเรียบร้อย!" ;
-[ "AutoPlaceStarted" ]= "เปิดใช้งาน วางไข่อัตโนมัติ (ทุก 5 ฟอง)" ,[ "AutoPlaceStopped" ]= "ปิดใช้งาน วางไข่อัตโนมัติ" ,[ "NoEggFound" ]= "ไม่พบไข่ที่ตรงตามเงื่อนไขในขณะนี้" ;
-[ "UnstickDone" ]= "ส่งคำสั่งแก้ตัวติดเรียบร้อย!" ,[ "TweenStarted" ]= "เปิดใช้งาน ขโมยไข่อัตโนมัติ (บินเร็ว)" ,[ "TweenStopped" ]= "ปิดใช้งาน ขโมยไข่อัตโนมัติ (บินเร็ว)" ;
-[ "TeleportStarted" ]= "เปิดใช้งาน ขโมยไข่อัตโนมัติ (วาร์ป)" ,[ "TeleportStopped" ]= "ปิดใช้งาน ขโมยไข่อัตโนมัติ (วาร์ป)" ,[ "HatchStarted" ]= "เปิดใช้งาน ฟักไข่อัตโนมัติ" ;
-[ "HatchStopped" ]= "ปิดใช้งาน ฟักไข่อัตโนมัติ" ,[ "ReturnStarted" ]= "เปิดใช้งาน บินกลับพื้นที่ปลอดภัย" ,[ "ReturnStopped" ]= "ปิดใช้งาน บินกลับพื้นที่ปลอดภัย" ;
-[ "AutoTreadmillStarted" ]= "เปิดใช้งาน วิ่งลู่วิ่งอัตโนมัติ (ทำงานเมื่อว่าง)" ;
-[ "AutoTreadmillStopped" ]= "ปิดใช้งาน วิ่งลู่วิ่งอัตโนมัติ" ,[ "UpgradeTreadmillStarted" ]= "เปิดใช้งาน อัปเกรดลู่วิ่งอัตโนมัติ" ,[ "UpgradeTreadmillStopped" ]= "ปิดใช้งาน อัปเกรดลู่วิ่งอัตโนมัติ" ;
-[ "BuyTrailsStarted" ]= "เปิดใช้งาน ซื้อและใส่ Trail อัตโนมัติ" ;
-[ "BuyTrailsStopped" ]= "ปิดใช้งาน ซื้อและใส่ Trail อัตโนมัติ" ;
-[ "HideNotEnoughMoneyStarted" ]= "เปิดใช้งาน ซ่อนแจ้งเตือนเงินไม่พอ" ,[ "HideNotEnoughMoneyStopped" ]= "ปิดใช้งาน ซ่อนแจ้งเตือนเงินไม่พอ" ,[ "GodmodeStarted" ]= "เปิดใช้งาน โหมดอมตะ" ;
-[ "GodmodeStopped" ]= "ปิดใช้งาน โหมดอมตะ" ,[ "PerformanceStarted" ]= "เปิดใช้งาน โหมดภาพกากขั้นสุด (ลบ Texture และแสงเงา)" ;
-[ "PerformanceStopped" ]= "ปิดใช้งาน โหมดภาพกากขั้นสุด" ,[ "Disable3DStarted" ]= "เปิดใช้งาน โหมดประหยัด GPU (ปิดเรนเดอร์ 3D)" ;
-[ "Disable3DStopped" ]= "คืนค่าการแสดงผล 3D ตามปกติแล้ว" ;
-[ "AntiAFKStarted" ]= "เปิดใช้งาน ป้องกัน AFK (กด Esc 2 ที ทุก 10 นาที + รองรับมือถือ)" ;
-[ "AntiAFKStopped" ]= "ปิดใช้งาน ป้องกัน AFK" ;
-[ "LangSwitched" ]= "เปลี่ยนภาษาเป็นภาษาไทยเรียบร้อยแล้ว!" }}}
+[ "GodmodeDesc" ]= "ป้องกันดาเมจและกับดัก" ;
+[ "UnstickTitle" ]= "แก้ตัวติด" ,[ "UnstickDesc" ]= "หลุดจากจุดติด" ,[ "SecFlight" ]= "" ,[ "SpeedTitle" ]= "ความเร็วบิน" ;
+[ "SpeedDesc" ]= "ปรับความเร็วการบิน" };
+[ "Settings" ]={[ "SecDashboard" ]= "" ;
+[ "DashTitle" ]= "" ;
+[ "DashDesc" ]= "" ;
+[ "SecBlacklist" ]= "" ;
+[ "BlacklistToggleTitle" ]= "%s" ,[ "BlacklistToggleDesc" ]= "%s" ;
+[ "SecUI" ]= "" ;
+[ "TranspTitle" ]= "" ,[ "TranspDesc" ]= "" ;
+[ "ThemeTitle" ]= "" ;
+[ "SecPerformance" ]= "" ;
+[ "PerformanceTitle" ]= "" ;
+[ "PerformanceDesc" ]= "" ;
+[ "Disable3DTitle" ]= "" ,[ "Disable3DDesc" ]= "" ,[ "LangTitle" ]= "" ;
+[ "BtnTranslate" ]= "" ;
+[ "DescTranslate" ]= "" ,[ "SecSystem" ]= "" ;
+[ "AntiAFKTitle" ]= "ป้องกัน AFK" ;
+[ "AntiAFKDesc" ]= "ป้องกันการถูกเตะเพราะไม่เคลื่อนไหว" ;
+[ "ResetTitle" ]= "รีเซ็ต" ;
+[ "ResetDesc" ]= "รีเซ็ตสถานะตัวละคร" ;
+[ "RejoinTitle" ]= "เข้าเซิร์ฟใหม่" ,[ "RejoinDesc" ]= "เข้าเซิร์ฟเวอร์เดิมใหม่" ,[ "UnloadTitle" ]= "ปิดสคริปต์" ;
+[ "UnloadDesc" ]= "หยุดสคริปต์และปิดหน้าต่าง" };
+[ "Notifications" ]={[ "PlaceStarted" ]= "กำลังวางไข่..." ;
+[ "PlaceDone" ]= "วางไข่แล้ว!" ;
+[ "AutoPlaceStarted" ]= "เปิดวางไข่อัตโนมัติ" ,[ "AutoPlaceStopped" ]= "ปิดวางไข่อัตโนมัติ" ,[ "NoEggFound" ]= "ไม่พบไข่" ;
+[ "UnstickDone" ]= "แก้ตัวติดแล้ว!" ,[ "TweenStarted" ]= "เปิดขโมยอัตโนมัติ" ,[ "TweenStopped" ]= "ปิดขโมยอัตโนมัติ" ;
+[ "TeleportStarted" ]= "เปิดขโมยอัตโนมัติ" ,[ "TeleportStopped" ]= "ปิดขโมยอัตโนมัติ" ,[ "HatchStarted" ]= "เปิดฟักไข่อัตโนมัติ" ;
+[ "HatchStopped" ]= "ปิดฟักไข่อัตโนมัติ" ,[ "ReturnStarted" ]= "เปิดกลับอัตโนมัติ" ,[ "ReturnStopped" ]= "ปิดกลับอัตโนมัติ" ;
+[ "AutoTreadmillStarted" ]= "เปิดลู่วิ่งอัตโนมัติ" ;
+[ "AutoTreadmillStopped" ]= "ปิดลู่วิ่งอัตโนมัติ" ,[ "UpgradeTreadmillStarted" ]= "เปิดอัปเกรดลู่วิ่ง" ,[ "UpgradeTreadmillStopped" ]= "ปิดอัปเกรดลู่วิ่ง" ;
+[ "BuyTrailsStarted" ]= "เปิดซื้อ Trail" ;
+[ "BuyTrailsStopped" ]= "ปิดซื้อ Trail" ;
+[ "HideNotEnoughMoneyStarted" ]= "เปิดซ่อนแจ้งเตือนเงิน" ,[ "HideNotEnoughMoneyStopped" ]= "ปิดซ่อนแจ้งเตือนเงิน" ,[ "GodmodeStarted" ]= "เปิดโหมดอมตะ" ;
+[ "GodmodeStopped" ]= "ปิดโหมดอมตะ" ,[ "PerformanceStarted" ]= "" ;
+[ "PerformanceStopped" ]= "" ,[ "Disable3DStarted" ]= "" ;
+[ "Disable3DStopped" ]= "" ;
+[ "AntiAFKStarted" ]= "เปิดป้องกัน AFK" ;
+[ "AntiAFKStopped" ]= "ปิดป้องกัน AFK" ;
+[ "LangSwitched" ]= "" }}}
+
+-- ============================================================
+-- ADDED FEATURES: Egg ESP (HUD), Server Hop, Webhook (Vortex style)
+-- Does not replace existing farm / treadmill / place logic
+-- ============================================================
+local NyxESP = {
+	folder = nil,
+	cache = {},
+	conn = nil,
+	lastScan = 0}
+
+local function nyxEnsureEspFolder()
+	if NyxESP.folder and NyxESP.folder.Parent then
+		return NyxESP.folder
+	end
+	local parent = workspace.CurrentCamera or workspace
+	local f = Instance.new("Folder")
+	-- neutral name (anti-string scan)
+	f.Name = "fx_cache"
+	f.Parent = parent
+	NyxESP.folder = f
+	return f
+end
+
+local function nyxEspClear()
+	for uid, entry in pairs(NyxESP.cache) do
+		pcall(function()
+			if entry.highlight then entry.highlight:Destroy() end
+			if entry.billboard then entry.billboard:Destroy() end
+			if entry.arrow then entry.arrow:Destroy() end
+		end)
+		NyxESP.cache[uid] = nil
+	end
+	if NyxESP.folder then
+		pcall(function() NyxESP.folder:ClearAllChildren() end)
+	end
+end
+
+local function nyxRarityColor(rarity)
+	local t = tostring(rarity or "Common")
+	-- gold / yellow hierarchy: higher rarity = brighter gold
+	local rank = ({
+		Divine = 1, Eternal = 0.92, Secret = 0.85, Cosmic = 0.78,
+		Mythic = 0.7, Legendary = 0.62, Epic = 0.52, Rare = 0.42,
+		Uncommon = 0.32, Common = 0.22})[t] or 0.35
+	-- base dark gold -> bright yellow-gold
+	local r = math.floor(120 + rank * 135) -- 120..255
+	local g = math.floor(90 + rank * 145)  -- 90..235
+	local b = math.floor(20 + rank * 40)   -- 20..60
+	return Color3.fromRGB(r, g, b), rank
+end
+
+local function nyxEspAttach(uid, worldPos, rarity, areaName)
+	if not worldPos then return end
+	local folder = nyxEnsureEspFolder()
+	local entry = NyxESP.cache[uid]
+	local color, rank = nyxRarityColor(rarity)
+
+	if not entry then
+		-- anchor part (invisible)
+		local part = Instance.new("Part")
+		part.Name = "ESP_" .. tostring(uid):sub(1, 24)
+		part.Anchored = true
+		part.CanCollide = false
+		part.CanQuery = false
+		part.CanTouch = false
+		part.Transparency = 1
+		part.Size = Vector3.new(0.2, 0.2, 0.2)
+		part.CFrame = CFrame.new(worldPos)
+		part.Parent = folder
+
+		local hl = Instance.new("Highlight")
+		hl.Name = "EggESP_Highlight"
+		hl.Adornee = part
+		hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+		hl.FillTransparency = 0.82
+		hl.OutlineTransparency = 0.05
+		hl.FillColor = color
+		hl.OutlineColor = Color3.fromRGB(255, 210, 70)
+		hl.Parent = part
+
+		local bb = Instance.new("BillboardGui")
+		bb.Name = "EggESP_HUD"
+		bb.Adornee = part
+		bb.AlwaysOnTop = true
+		bb.Size = UDim2.fromOffset(160, 42)
+		bb.StudsOffsetWorldSpace = Vector3.new(0, 2.2, 0)
+		bb.MaxDistance = 2500
+		bb.Parent = part
+
+		local root = Instance.new("Frame")
+		root.Name = "Root"
+		root.BackgroundColor3 = Color3.fromRGB(28, 22, 8)
+		root.BackgroundTransparency = 0.25
+		root.BorderSizePixel = 0
+		root.Size = UDim2.fromScale(1, 1)
+		root.Parent = bb
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 6)
+		corner.Parent = root
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = color
+		stroke.Thickness = 1.2
+		stroke.Transparency = 0.2
+		stroke.Parent = root
+
+		local accent = Instance.new("Frame")
+		accent.Name = "Accent"
+		accent.BackgroundColor3 = Color3.fromRGB(255, 200, 55)
+		accent.BorderSizePixel = 0
+		accent.Size = UDim2.new(0, 3, 1, -8)
+		accent.Position = UDim2.new(0, 4, 0, 4)
+		accent.Parent = root
+		local ac = Instance.new("UICorner")
+		ac.CornerRadius = UDim.new(1, 0)
+		ac.Parent = accent
+
+		local title = Instance.new("TextLabel")
+		title.Name = "Title"
+		title.BackgroundTransparency = 1
+		title.Position = UDim2.new(0, 12, 0, 2)
+		title.Size = UDim2.new(1, -18, 0, 18)
+		title.Font = Enum.Font.GothamBold
+		title.TextSize = 12
+		title.TextXAlignment = Enum.TextXAlignment.Left
+		title.TextColor3 = Color3.fromRGB(255, 230, 120)
+		title.Text = tostring(rarity or "Egg")
+		title.Parent = root
+
+		local sub = Instance.new("TextLabel")
+		sub.Name = "Sub"
+		sub.BackgroundTransparency = 1
+		sub.Position = UDim2.new(0, 12, 0, 20)
+		sub.Size = UDim2.new(1, -18, 0, 16)
+		sub.Font = Enum.Font.Gotham
+		sub.TextSize = 10
+		sub.TextXAlignment = Enum.TextXAlignment.Left
+		sub.TextColor3 = Color3.fromRGB(220, 190, 90)
+		sub.Text = ""
+		sub.Parent = root
+
+		entry = {
+			part = part,
+			highlight = hl,
+			billboard = bb,
+			title = title,
+			sub = sub,
+			stroke = stroke,
+			accent = accent,
+			rank = rank}
+		NyxESP.cache[uid] = entry
+	end
+
+	entry.part.Position = worldPos
+	entry.highlight.FillColor = color
+	entry.stroke.Color = color
+	entry.accent.BackgroundTransparency = 0.15 + (1 - rank) * 0.5
+	entry.title.Text = tostring(rarity or "Egg")
+	local char = o.Character
+	local hrp = char and char:FindFirstChild("HumanoidRootPart")
+	local dist = hrp and math.floor((worldPos - hrp.Position).Magnitude + 0.5) or 0
+	entry.sub.Text = string.format("%s  ·  %dm", tostring(areaName or "Field"), dist)
+	-- subtle pulse on high rarity
+	pcall(function() entry.billboard.StudsOffset = Vector3.new(0, 1.8 + (rank or 0) * 0.35, 0) end)
+end
+
+local function nyxEggPos(rec)
+	if type(rec) ~= "table" then return nil end
+	if typeof(rec.BoundsCFrame) == "CFrame" then return rec.BoundsCFrame.Position end
+	if typeof(rec.BottomCFrame) == "CFrame" then return rec.BottomCFrame.Position end
+	if typeof(rec.CFrame) == "CFrame" then return rec.CFrame.Position end
+	if typeof(rec.Position) == "Vector3" then return rec.Position end
+	if type(rec.Position) == "table" and rec.Position.X then
+		return Vector3.new(rec.Position.X, rec.Position.Y, rec.Position.Z)
+	end
+	local m = rec.PhysicalModel
+	if m and m.Parent then
+		local ok, cf = pcall(function() return m:GetPivot() end)
+		if ok and cf then return cf.Position end
+		local pp = m:IsA("Model") and m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart")
+		if pp then return pp.Position end
+	end
+	return nil
+end
+
+local function nyxEspScan()
+	if not h or not h.eggESP then
+		return
+	end
+	local now = os.clock()
+	if now - (NyxESP.lastScan or 0) < 1.0 then
+		return
+	end
+	NyxESP.lastScan = now
+
+	local seen = {}
+
+	-- Primary: same egg list the farm uses
+	local records = nil
+	pcall(function()
+		if type(h4) == "function" then
+			records = h4(false)
+		end
+	end)
+	if type(records) == "table" then
+		for _, rec in pairs(records) do
+			if type(rec) == "table" then
+				local uid = rec.Uid or rec.uid or rec.Id
+				local state = rec.State or rec.state
+				if uid and state ~= "Carried" and state ~= 2 then
+					local pos = nyxEggPos(rec)
+					-- X gate only when we have a valid world position past highway
+					if pos then
+						local rarity = rec.Rarity or rec.AssetCategory or rec.Category or "Common"
+						local area = rec.AreaId or rec.Area or ""
+						nyxEspAttach(tostring(uid), pos, rarity, area)
+						seen[tostring(uid)] = true
+					end
+				end
+			end
+		end
+	end
+
+	-- Direct world slots (guarantees positions even if snapshot lags)
+	pcall(function()
+		local slots = r:FindFirstChild("AreaEggSlotsClient")
+		if not slots then return end
+		for _, model in ipairs(slots:GetChildren()) do
+			local yname = model.Name
+			if yname and yname ~= "" and not string.find(tostring(yname), "FirstArea") then
+				local ok, pivot = pcall(function() return model:GetPivot() end)
+				if ok and pivot and pivot.Position.X >= 530 then
+					local uid = tostring(yname)
+					if not seen[uid] then
+						local rarity = model:GetAttribute("Rarity") or model:GetAttribute("RarityTier") or model:GetAttribute("Category") or model:GetAttribute("AssetCategory") or "Common"
+						local area = model:GetAttribute("AreaId") or model:GetAttribute("Area") or ""
+						nyxEspAttach(uid, pivot.Position, rarity, area)
+						seen[uid] = true
+					end
+				end
+			end
+		end
+	end)
+
+	for uid, entry in pairs(NyxESP.cache) do
+		if not seen[uid] then
+			pcall(function()
+				if entry.part then entry.part:Destroy() end
+			end)
+			NyxESP.cache[uid] = nil
+		end
+	end
+end
+
+local function nyxEspStart()
+	if NyxESP.conn then return end
+	nyxEnsureEspFolder()
+	-- Background loop (does not compete with Auto Steal Heartbeat movement)
+	NyxESP.conn = true
+	task.spawn(function()
+		while NyxESP.conn and h and h.alive do
+			if h.eggESP then
+				pcall(nyxEspScan)
+			end
+			task.wait(1.0)
+		end
+	end)
+	task.defer(function() pcall(nyxEspScan) end)
+end
+
+local function nyxEspStop()
+	NyxESP.conn = nil
+	nyxEspClear()
+end
+
+-- Webhook — Vortex gold embed style (not the usual colorful bot style)
+local function nyxWebhook(title, description, fields)
+	if not h.webhookEnabled then return end
+	local url = tostring(h.webhookUrl or "")
+	if url == "" or not string.find(url, "discord.com/api/webhooks") then
+		return
+	end
+	local embed = {
+		title = "Vortex · " .. tostring(title or "Event"),
+		description = tostring(description or ""),
+		color = 0xFFD54A, -- near-white accent
+		footer = { text = "Vortex X Sage · Steal an Egg" },
+		timestamp = os.date("!%Y-%m-%dT%H:%M:%SZ")}
+	if type(fields) == "table" then
+		embed.fields = fields
+	end
+	local payload = a:JSONEncode({
+		username = "VortexXSage",
+		avatar_url = "",
+		embeds = { embed }})
+	task.spawn(function()
+		pcall(function()
+			local req = (syn and syn.request) or (http and http.request) or http_request or request
+			if req then
+				req({
+					Url = url,
+					Method = "POST",
+					Headers = { ["Content-Type"] = "application/json" },
+					Body = payload})
+			else
+				-- last resort (often blocked)
+				pcall(function()
+					game:HttpPost(url, payload, true, "application/json")
+				end)
+			end
+		end)
+	end)
+end
+
+-- Server hop
+local function nyxHopNow()
+	local ok, servers = pcall(function()
+		local cursor = ""
+		local url = string.format(
+			"https://games.roblox.com/v1/games/%d/servers/Public?sortOrder=Asc&limit=100%s",
+			game.PlaceId,
+			cursor
+		)
+		local body = game:HttpGet(url)
+		return a:JSONDecode(body)
+	end)
+	if not ok or type(servers) ~= "table" or type(servers.data) ~= "table" then
+		return false, "No servers"
+	end
+	local jobId = game.JobId
+	local candidates = {}
+	for _, s in ipairs(servers.data) do
+		if s.id and s.id ~= jobId and (s.playing or 0) < (s.maxPlayers or 99) then
+			table.insert(candidates, s.id)
+		end
+	end
+	if #candidates == 0 then
+		return false, "Empty list"
+	end
+	local pick = candidates[math.random(1, #candidates)]
+	h.hopCount = (h.hopCount or 0) + 1
+	if h.webhookOnHop then
+		nyxWebhook("Server Hop", "Teleporting to a new public server.", {
+			{ name = "Hop", value = tostring(h.hopCount) .. " / " .. tostring(h.maxHops or 15), inline = true },
+			{ name = "Job", value = "`" .. tostring(pick):sub(1, 12) .. "…`", inline = true }})
+	end
+	pcall(function()
+		TeleportService:TeleportToPlaceInstance(game.PlaceId, pick, o)
+	end)
+	return true
+end
+
+task.spawn(function()
+	while true do
+		task.wait(1)
+		if not h or not h.alive then
+			task.wait(2)
+		elseif h.autoHop then
+			if (h.hopCount or 0) >= (h.maxHops or 15) then
+				h.autoHop = false
+				nyxWebhook("Auto Hop", "Max hops reached — stopped.")
+			else
+				task.wait(math.max(5, h.hopDelay or 20))
+				if h.autoHop then
+					nyxHopNow()
+				end
+			end
+		end
+	end
+end)
+
+
+
+-- Auto Index (does not touch Auto Steal / farm controller)
+local function nyxTryIndex()
+	if not h or not h.autoIndex then return end
+	pcall(function()
+		local names = { "Index", "Codex", "Discover", "Bestiary", "Collection", "UnlockIndex", "ClaimIndex" }
+		local roots = { j, j:FindFirstChild("Packages") and j.Packages:FindFirstChild("Networking"), j:FindFirstChild("Network") }
+		for _, root in ipairs(roots) do
+			if root then
+				for _, d in ipairs(root:GetDescendants()) do
+					if d:IsA("RemoteEvent") or d:IsA("RemoteFunction") then
+						local ln = string.lower(d.Name)
+						for _, key in ipairs(names) do
+							if string.find(ln, string.lower(key), 1, true) then
+								pcall(function()
+									if d:IsA("RemoteEvent") then
+										d:FireServer()
+									else
+										d:InvokeServer()
+									end
+								end)
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		-- Proximity prompts labeled index/codex
+		for _, p in ipairs(workspace:GetDescendants()) do
+			if p:IsA("ProximityPrompt") then
+				local t = string.lower(tostring(p.ActionText or "") .. tostring(p.ObjectText or "") .. p.Name)
+				if string.find(t, "index") or string.find(t, "codex") or string.find(t, "discover") then
+					pcall(function()
+						if typeof(fireproximityprompt) == "function" then
+							fireproximityprompt(p)
+						end
+					end)
+				end
+			end
+		end
+	end)
+end
+task.spawn(function()
+	while true do
+		task.wait(4)
+		if h and h.alive and h.autoIndex then
+			nyxTryIndex()
+		end
+	end
+end)
+
+
 local Fk={}
 local hk,Ok,Yk,Tk
 local xk={ "Farm" ;
 "EggSelect" ;
-"Character" , "Settings" }
+"Settings" }
 local function Wk(e,...)
     local r=(e== "TH" )
     if h.delivering then
@@ -4165,7 +4731,7 @@ local function rM(e,r,y,...) pcall(function(...)
             if e then
                 e:Destroy()
             end
-            local j=u:FindFirstChild( "DiceAccentStroke" )or u:FindFirstChildOfClass( "UIStroke" )
+            local j=u:FindFirstChild( "NyxAccentStroke" )or u:FindFirstChildOfClass( "UIStroke" )
             if j then
                 j:Destroy()
             end
@@ -4187,16 +4753,23 @@ local function rM(e,r,y,...) pcall(function(...)
     end
     )
 end
-local function yM(...) rM(Fk.togTween ,Color3.fromRGB ( 0 , 195 , 255 ),Color3.fromRGB ( 24 , 40 , 46 ))rM(Fk.togTeleport ,Color3.fromRGB ( 168 , 85 , 247 ),Color3.fromRGB ( 36 , 24 , 46 ))rM(Fk.btnPlaceEgg ,Color3.fromRGB ( 16 , 215 , 130 ),Color3.fromRGB ( 24 , 45 , 36 ))rM(Fk.togAutoPlaceEvery5 ,Color3.fromRGB ( 14 , 165 , 233 ),Color3.fromRGB ( 24 , 38 , 46 ))rM(Fk.togGodmode ,Color3.fromRGB ( 244 , 63 , 94 ),Color3.fromRGB ( 46 , 24 , 28 ))rM(Fk.btnUnstick ,Color3.fromRGB ( 249 , 115 , 22 ),Color3.fromRGB ( 46 , 32 , 24 ))rM(Fk.btnReset ,Color3.fromRGB ( 99 , 102 , 241 ),Color3.fromRGB ( 25 , 26 , 46 ))rM(Fk.btnLangSettings ,Color3.fromRGB ( 245 , 180 , 30 ),Color3.fromRGB ( 46 , 38 , 24 ))
+local function yM(...)
+    local accent = Color3.fromRGB(150, 150, 150)
+    local bg = Color3.fromRGB(24, 24, 24)
+    if Fk.togTween then rM(Fk.togTween, accent, bg) end
+    if Fk.togAutoPlace then rM(Fk.togAutoPlace, accent, bg) end
+    if Fk.togGodmode then rM(Fk.togGodmode, accent, bg) end
+    if Fk.btnUnstick then rM(Fk.btnUnstick, accent, bg) end
+    if Fk.btnRejoin then rM(Fk.btnRejoin, accent, bg) end
+    if Fk.btnUnload then rM(Fk.btnUnload, Color3.fromRGB(130, 130, 130), bg) end
 end
 local function uM(e,...)
     local r=e or Xk or "EN"
     local y=Gk[r]or Gk.EN
     local u={hk,Ok;
-    Yk;
     Tk}
     local w={ "Farm" ;
-    "EggSelect" , "Character" ;
+    "EggSelect" ;
     "Settings" }
     for e,r in ipairs(u)do
         local u=w[e]
@@ -4255,26 +4828,50 @@ local function uM(e,...)
     )
 end
 local function wM(e,...)
-    local r=Gk[e]or Gk.EN uM(e)eM(Fk.secModes ,r.Farm.SecModes )eM(Fk.togTween ,r.Farm.TweenTitle ,r.Farm.TweenDesc )eM(Fk.togTeleport ,r.Farm.TeleportTitle ,r.Farm.TeleportDesc )eM(Fk.secPlace ,r.Farm.SecPlace )eM(Fk.btnPlaceEgg ,r.Farm.PlaceTitle ,r.Farm.PlaceDesc )eM(Fk.togAutoPlaceEvery5 ,r.Farm.AutoPlaceTitle ,r.Farm.AutoPlaceDesc )eM(Fk.togAutoHatch ,r.Farm.HatchTitle ,r.Farm.HatchDesc )eM(Fk.togAutoReturn ,r.Farm.ReturnTitle ,r.Farm.ReturnDesc )eM(Fk.togAutoTreadmill ,r.Farm.AutoTreadmillTitle ,r.Farm.AutoTreadmillDesc )eM(Fk.togAutoUpgradeTreadmill ,r.Farm.UpgradeTreadmillTitle ,r.Farm.UpgradeTreadmillDesc )eM(Fk.togAutoBuyTrails ,r.Farm.BuyTrailsTitle ,r.Farm.BuyTrailsDesc )
-    if r.EggSelect then
-        eM(Fk.secEggZones ,r.EggSelect.SecZones ,r.EggSelect.SecZonesDesc )eM(Fk.dropTargetZones ,r.EggSelect.DropZonesTitle ,r.EggSelect.DropZonesDesc )eM(Fk.secEggRarity ,r.EggSelect.SecRarities ,r.EggSelect.SecRaritiesDesc )eM(Fk.secEggRarities ,r.EggSelect.SecRarities ,r.EggSelect.SecRaritiesDesc )eM(Fk.dropTargetRarities ,r.EggSelect.DropRaritiesTitle ,r.EggSelect.DropRaritiesDesc )eM(Fk.togAlwaysSecret ,r.EggSelect.AlwaysSecretPlus ,r.EggSelect.AlwaysSecretPlusDesc )
-    end
-    eM(Fk.secSafety ,r.Character.SecSafety )eM(Fk.togGodmode ,r.Character.GodmodeTitle ,r.Character.GodmodeDesc )eM(Fk.btnUnstick ,r.Character.UnstickTitle ,r.Character.UnstickDesc )eM(Fk.secFlight ,r.Character.SecFlight )eM(Fk.sliderSpeed ,r.Character.SpeedTitle ,r.Character.SpeedDesc )eM(Fk.secDashboard ,r.Settings.SecDashboard )eM(Fk.paraLiveDash ,r.Settings.DashTitle )eM(Fk.secBlacklist ,r.Settings.SecBlacklist )eM(Fk.secUI ,r.Settings.SecUI )eM(Fk.dropLang ,r.Settings.LangTitle )eM(Fk.sliderTransp ,r.Settings.TranspTitle ,r.Settings.TranspDesc )eM(Fk.dropTheme ,r.Settings.ThemeTitle )eM(Fk.secPerformance ,r.Settings.SecPerformance )eM(Fk.togPerformance ,r.Settings.PerformanceTitle ,r.Settings.PerformanceDesc )eM(Fk.togDisable3D ,r.Settings.Disable3DTitle ,r.Settings.Disable3DDesc )eM(Fk.secSystem ,r.Settings.SecSystem )eM(Fk.togAntiAFK ,r.Settings.AntiAFKTitle ,r.Settings.AntiAFKDesc )eM(Fk.btnReset ,r.Settings.ResetTitle ,r.Settings.ResetDesc )eM(Fk.btnRejoin ,r.Settings.RejoinTitle ,r.Settings.RejoinDesc )eM(Fk.btnUnload ,r.Settings.UnloadTitle ,r.Settings.UnloadDesc )yM()
+    local r=Gk[e]or Gk.EN
+    uM(e)
+    pcall(function(...)
+        eM(Fk.togTween ,r.Farm.TweenTitle ,r.Farm.TweenDesc )
+        eM(Fk.togAutoPlace ,r.Farm.PlaceTitle ,r.Farm.PlaceDesc )
+        eM(Fk.togAutoHatch ,r.Farm.HatchTitle ,r.Farm.HatchDesc )
+        eM(Fk.togAutoReturn ,r.Farm.ReturnTitle ,r.Farm.ReturnDesc )
+        eM(Fk.togAutoTreadmill ,r.Farm.AutoTreadmillTitle ,r.Farm.AutoTreadmillDesc )
+        eM(Fk.togAutoUpgradeTreadmill ,r.Farm.UpgradeTreadmillTitle ,r.Farm.UpgradeTreadmillDesc )
+        eM(Fk.togAutoBuyTrails ,r.Farm.BuyTrailsTitle ,r.Farm.BuyTrailsDesc )
+        if r.EggSelect then
+            eM(Fk.dropTargetZones ,r.EggSelect.DropZonesTitle ,r.EggSelect.DropZonesDesc )
+            eM(Fk.dropTargetRarities ,r.EggSelect.DropRaritiesTitle ,r.EggSelect.DropRaritiesDesc )
+            eM(Fk.togAlwaysSecret ,r.EggSelect.AlwaysSecretPlus ,r.EggSelect.AlwaysSecretPlusDesc )
+        end
+        eM(Fk.sliderSpeed ,r.Character.SpeedTitle ,r.Character.SpeedDesc )
+        eM(Fk.togGodmode ,r.Character.GodmodeTitle ,r.Character.GodmodeDesc )
+        eM(Fk.btnUnstick ,r.Character.UnstickTitle ,r.Character.UnstickDesc )
+        eM(Fk.togAntiAFK ,r.Settings.AntiAFKTitle ,r.Settings.AntiAFKDesc )
+        eM(Fk.btnRejoin ,r.Settings.RejoinTitle ,r.Settings.RejoinDesc )
+        eM(Fk.btnUnload ,r.Settings.UnloadTitle ,r.Settings.UnloadDesc )
+    end)
+    yM()
+end
+local function jM(...)
+    -- boot loader removed
+    local function s(o,...) if o then task.spawn(o) end end
+    return s
 end
 
-local function aM(...) h.alive = false pcall(Ik)pcall(Ak)pcall(function(...) y:Set3dRenderingEnabled( true )
+local kM={ Gui=nil, Btn=nil }
+-- custom floating bubble removed; WindUI built-in minimize is used
+
+local function aM(...) h.alive = false pcall(nyxEspStop)pcall(Ik)pcall(Ak)pcall(function(...) y:Set3dRenderingEnabled( true )
     end
     )pcall(function(...)
-        local y=r:FindFirstChild( "DiceHub_EggESP" )
+        local y=r:FindFirstChild( "VortexXSage_EggESP" )
         if y then
             y:Destroy()
         end
     end
     )pcall(D4)pcall(u4)
     if kM and kM.Gui then
-        pcall(function(...) kM.Gui :Destroy()
-        end
-        )
+        pcall(function(...) kM.Gui :Destroy() end)
     end
     if h.gui then
         pcall(function(...) h.gui :Destroy()
@@ -4283,672 +4880,1089 @@ local function aM(...) h.alive = false pcall(Ik)pcall(Ak)pcall(function(...) y:S
     end
     pcall(function(...)
         for r,y in ipairs(game.CoreGui :GetChildren())do
-            if y.Name :find( "Dice_" )or y.Name :find( "DesyncSniperUI" )or y.Name :find( "WindUI" )then
+            if y.Name :find( "Vortex_" )or y.Name :find( "VortexXSageUI" )or y.Name :find( "WindUI" )then
                 y:Destroy()
             end
         end
     end
     )
 end
-
-
-
--- ==========================================
--- VORTEX X SAGE [Steal An Egg] - WindUI
--- ==========================================
-local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
-
-pcall(function()
-        WindUI:AddTheme({
-                Name = "VortexGoldSolid",
-                Accent = Color3.fromRGB(255, 200, 50),
-                Outline = Color3.fromRGB(255, 180, 40),
-                Text = Color3.fromRGB(255, 255, 255),
-                Placeholder = Color3.fromRGB(180, 180, 190),
-                Background = Color3.fromRGB(18, 18, 22),
-                Button = Color3.fromRGB(35, 35, 42),
-                Icon = Color3.fromRGB(255, 205, 70),
-        })
-        WindUI:SetTheme("VortexGoldSolid")
-end)
-
-local Window = WindUI:CreateWindow({
-        Title = "Vortex X Sage [Steal An Egg]",
-        Icon = "rbxassetid://118833096342184",
-        Author = "Israelcc",
-        Folder = "VortexXSage_StealAnEgg",
-        Background = "rbxassetid://133044138027516",
-        Size = UDim2.fromOffset(620, 480),
-        MinSize = Vector2.new(420, 320),
-        Resizable = true,
-        Transparent = false,
-        Theme = "VortexGoldSolid",
-        User = { Enabled = true, Anonymous = false },
-        OpenButton = {
-                Title = "VXS",
-                Icon = "rbxassetid://118833096342184",
-                CornerRadius = UDim.new(0, 16),
-                StrokeThickness = 2,
-                Color = ColorSequence.new(
-                        Color3.fromRGB(255, 200, 50),
-                        Color3.fromRGB(255, 160, 20)
-                ),
-                OnlyMobile = false,
-                Enabled = true,
-                Draggable = true,
-        },
-})
-
-pcall(function()
-        Window:Tag({ Title = "v1.0", Icon = "egg", Color = Color3.fromRGB(255, 200, 50) })
-end)
-
-pcall(function()
-        Window:EditOpenButton({
-                Title = "VXS",
-                Icon = "rbxassetid://118833096342184",
-                CornerRadius = UDim.new(0, 16),
-                StrokeThickness = 2,
-                Color = ColorSequence.new(
-                        Color3.fromRGB(255, 200, 50),
-                        Color3.fromRGB(255, 160, 20)
-                ),
-                OnlyMobile = false,
-                Enabled = true,
-                Draggable = true,
-        })
-end)
-
-pcall(function()
-        WindUI:Notify({ Title = "Login VortexHub", Content = "Login VortexHub", Duration = 3, Icon = "check" })
-end)
-
-local mainSec = Window:Section({ Title = "Principal", Opened = true })
-local toolsSec = Window:Section({ Title = "Tools", Opened = true })
-
-local InfoTab = mainSec:Tab({ Title = "Info", Icon = "info" })
-InfoTab:Select()
-InfoTab:Section({ Title = "Acerca del Script" })
-InfoTab:Paragraph({
-        Title = "Vortex X Sage [Steal An Egg]",
-        Desc = "Script multi-executor para Steal an Egg.\nIncluye auto steal (tween/teleport), place, hatch, treadmill, godmode, filtros de zona/rareza, character tools y emotes.\nCompatible con PC y movil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersion: 1.0",
-})
-InfoTab:Paragraph({
-        Title = "Desarrollador",
-        Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones.",
-})
-InfoTab:Divider()
-InfoTab:Paragraph({
-        Title = "Unete a nuestro Discord",
-        Desc = "Comunidad oficial para soporte y actualizaciones.\n\nhttps://discord.gg/Fn74MpzFUn",
-})
-InfoTab:Button({
-        Title = "Copiar enlace de Discord",
-        Desc = "Copia el invite de Discord de Vortex al portapapeles.",
-        Callback = function()
-                pcall(function()
-                        if setclipboard then setclipboard("https://discord.gg/Fn74MpzFUn")
-                        elseif setclip then setclip("https://discord.gg/Fn74MpzFUn")
-                        elseif toclipboard then toclipboard("https://discord.gg/Fn74MpzFUn")
-                        end
-                end)
-                pcall(function()
-                        WindUI:Notify({ Title = "Vortex X Sage", Content = "Link de Discord copiado!", Duration = 2 })
-                end)
-        end
-})
-
-local StealTab = mainSec:Tab({ Title = "Auto Steal", Icon = "zap" })
-local PlaceTab = mainSec:Tab({ Title = "Place & Hatch", Icon = "package" })
-local SelectTab = mainSec:Tab({ Title = "Egg Select", Icon = "list" })
-local CharTab = toolsSec:Tab({ Title = "Character", Icon = "user" })
-local SettingsTab = toolsSec:Tab({ Title = "Settings", Icon = "settings" })
-
--- AUTO STEAL (mismas funciones T4 / N4 / l4 / Q4)
-StealTab:Section({ Title = "Modes" })
-StealTab:Toggle({
-        Title = "Auto Steal (Tween)",
-        Desc = "Vuela a robar huevos y guarda en mochila.",
-        Value = false,
-        Callback = function(state)
-                if state then
-                        T4("TWEEN")
-                else
-                        if Y4 == "TWEEN" or h.pureTweenFarm then T4("NONE") end
-                end
-        end,
-})
-StealTab:Toggle({
-        Title = "Auto Steal (Teleport)",
-        Desc = "Teletransporte continuo a robar huevos.",
-        Value = false,
-        Callback = function(state)
-                if state then
-                        T4("WARP")
-                else
-                        if Y4 == "WARP" or h.autoFarmLoop then T4("NONE") end
-                end
-        end,
-})
-StealTab:Button({
-        Title = "Single Steal (Teleport)",
-        Desc = "Roba 1 huevo y regresa.",
-        Callback = function()
-                task.spawn(function()
-                        if Y4 ~= "NONE" then T4("NONE") task.wait(0.2) end
-                        local egg = N4()
-                        if egg then
-                                local ok = l4(egg, nil)
-                                if ok then
-                                        pcall(u4)
-                                        if h.autoGlide then
-                                                Q4(h.glideSpeed)
-                                                u4()
-                                        end
-                                end
-                        end
-                end)
-        end,
-})
-
--- PLACE & HATCH
-PlaceTab:Section({ Title = "Place / Hatch" })
-PlaceTab:Button({
-        Title = "Place Egg",
-        Desc = "Tween a casa, coloca huevos y hatch.",
-        Callback = function()
-                task.spawn(function()
-                        h.statusText = "[Manual] Depositing eggs..."
-                        g4(h.glideSpeed)
-                        v4()
-                        u4()
-                        h.isReturning = false
-                        h.delivering = false
-                end)
-        end,
-})
-PlaceTab:Toggle({
-        Title = "Auto Place (Every 5)",
-        Desc = "Cada 5 robos vuelve, coloca y espera 5s.",
-        Value = h.autoPlaceEvery5 == true,
-        Callback = function(state)
-                h.autoPlaceEvery5 = state
-                if not state then h.batchStealCount = 0 end
-        end,
-})
-PlaceTab:Toggle({
-        Title = "Auto Hatch",
-        Value = h.autoHatch ~= false,
-        Callback = function(state) h.autoHatch = state end,
-})
-PlaceTab:Toggle({
-        Title = "Auto Return",
-        Desc = "Regresa a zona segura tras robar.",
-        Value = h.autoGlide ~= false,
-        Callback = function(state) h.autoGlide = state end,
-})
-PlaceTab:Toggle({
-        Title = "Auto Treadmill",
-        Desc = "Cinta cuando no hay huevos.",
-        Value = h.autoTreadmill ~= false,
-        Callback = function(state)
-                h.autoTreadmill = state
-                pcall(x)
-                pcall(n4)
-                if not state and (h.onTreadmill or (L4 and L4())) then
-                        pcall(M4)
-                end
-        end,
-})
-
--- EGG SELECT (Principal) — listas multi-select, no toggles
-SelectTab:Section({ Title = "Filtros de farm" })
-SelectTab:Paragraph({
-        Title = "Como usar",
-        Desc = "Elige zonas y rarezas en las listas. Secret+ puede saltarse el filtro de zona si alwaysCollectSecretPlus esta activo.",
-})
-
-local function buildSelectedList(map, order)
-        local out = {}
-        if type(map) ~= "table" then return out end
-        for _, name in ipairs(order) do
-                if map[name] == true then
-                        out[#out + 1] = name
-                end
-        end
-        return out
-end
-
-local function applyMultiSelect(map, order, selected)
-        if type(map) ~= "table" then map = {} end
-        local set = {}
-        if type(selected) == "table" then
-                for _, v in pairs(selected) do
-                        if type(v) == "string" then set[v] = true end
-                        if type(v) == "table" and type(v.Title) == "string" then set[v.Title] = true end
-                end
-                -- WindUI a veces pasa array de strings
-                for i = 1, #selected do
-                        local v = selected[i]
-                        if type(v) == "string" then set[v] = true end
-                end
-        elseif type(selected) == "string" then
-                set[selected] = true
-        end
-        for _, name in ipairs(order) do
-                map[name] = set[name] == true
-        end
-        return map
-end
-
-SelectTab:Dropdown({
-        Title = "Zonas objetivo",
-        Desc = "Lista multi-select de zonas a farmear.",
-        Values = M,
-        Value = buildSelectedList(h.selectedZones, M),
-        Multi = true,
-        AllowNone = true,
-        Callback = function(selected)
-                if not h.selectedZones then h.selectedZones = {} end
-                applyMultiSelect(h.selectedZones, M, selected)
-                pcall(x)
-        end,
-})
-
-SelectTab:Dropdown({
-        Title = "Rarezas objetivo",
-        Desc = "Lista multi-select de rarezas a recolectar.",
-        Values = X,
-        Value = buildSelectedList(h.selectedRarities, X),
-        Multi = true,
-        AllowNone = true,
-        Callback = function(selected)
-                if not h.selectedRarities then h.selectedRarities = {} end
-                applyMultiSelect(h.selectedRarities, X, selected)
-                pcall(x)
-        end,
-})
-
-SelectTab:Toggle({
-        Title = "Always Steal Secret+",
-        Desc = "Siempre roba Secret/Eternal/Divine aunque la zona no este seleccionada.",
-        Value = h.alwaysCollectSecretPlus ~= false,
-        Callback = function(state)
-                h.alwaysCollectSecretPlus = state
-                pcall(x)
-        end,
-})
-
--- CHARACTER
-CharTab:Section({ Title = "Safety" })
-CharTab:Toggle({
-        Title = "Godmode",
-        Desc = "Invencible ante guards (desync).",
-        Value = false,
-        Callback = function(state)
-                if state then
-                        pcall(enableDesyncGodmode)
-                else
-                        pcall(disableDesyncGodmode)
-                end
-        end,
-})
-CharTab:Button({
-        Title = "Get Out Treadmill",
-        Callback = function()
-                pcall(M4)
-                pcall(C4)
-                pcall(D4)
-        end,
-})
-CharTab:Button({
-        Title = "Reset Character State",
-        Callback = function()
-                pcall(D4)
-                pcall(u4)
-        end,
-})
-CharTab:Slider({
-        Title = "Flight Speed",
-        Step = 25,
-        Value = { Min = 100, Max = 1000, Default = h.glideSpeed or 600 },
-        Callback = function(v)
-                h.glideSpeed = math.clamp(math.floor(v), 100, 1000)
-                pcall(Y, h.glideSpeed)
-        end,
-})
-
--- SETTINGS
-SettingsTab:Toggle({
-        Title = "Anti AFK",
-        Value = h.antiAFK ~= false,
-        Callback = function(state)
-                h.antiAFK = state
-                pcall(x)
-        end,
-})
-SettingsTab:Toggle({
-        Title = "Performance Mode",
-        Value = h.performanceMode == true,
-        Callback = function(state)
-                h.performanceMode = state
-                pcall(x)
-                if state and Mk then task.spawn(Mk) end
-        end,
-})
-SettingsTab:Toggle({
-        Title = "Disable 3D Rendering",
-        Value = h.disable3D == true,
-        Callback = function(state)
-                h.disable3D = state
-                pcall(x)
-                pcall(function()
-                        y:Set3dRenderingEnabled(not state)
-                end)
-        end,
-})
-SettingsTab:Button({
-        Title = "Unload Script",
-        Callback = function()
-                pcall(aM)
-                pcall(function() Window:Destroy() end)
-        end,
-})
-
-
-local function showBottomMessage(msg)
-        pcall(function()
-                WindUI:Notify({ Title = "Vortex X Sage", Content = tostring(msg), Duration = 2 })
-        end)
-end
-
--- =====================================
--- ========== EMOTES / ANIMACIONES ==========
--- (misma sección Extra, arriba de Config)
--- =====================================
-local emotesTab = toolsSec:Tab({ Title = "Emotes", Icon = "person-standing", ShowTabTitle = true, Border = true })
-
-local animationData = {
-    ["Old School"] = { Walk = 10921244891, Run = 10921240218, Jump = 10921242013, Fall = 10921241244, SwimIdle = 10921244018, Swim = 10921243048, Idle = 10921230744, Idle2 = 10921232093, Climb = 10921229866 },
-    ["Adidas Sports"] = { Walk = 18537392113, Run = 18537384940, Jump = 18537380791, Fall = 18537367238, SwimIdle = 18537387180, Swim = 18537389531, Idle = 18537376492, Idle2 = 18537371272, Climb = 18537363391 },
-    ["Adidas Community"] = { Walk = 122150855457006, Run = 82598234841035, Jump = 75290611992385, Fall = 98600215928904, SwimIdle = 109346520324160, Swim = 133308483266208, Idle = 122257458498464, Idle2 = 102357151005774, Climb = 88763136693023 },
-    ["Adidas Aura"] = { Walk = 83842218823011, Run = 118320322718866, Jump = 109996626521204, Fall = 95603166884636, SwimIdle = 94922130551805, Swim = 134530128383903, Idle = 110211186840347, Idle2 = 114191137265065, Climb = 97824616490448 },
-    ["Wicked Popular"] = { Walk = 92072849924640, Run = 72301599441680, Jump = 104325245285198, Fall = 121152442762481, Idle = 118832222982049, Idle2 = 76049494037641, SwimIdle = 113199415118199, Swim = 99384245425157, Climb = 131326830509784 },
-    ["Elder"] = { Walk = 10921111375, Run = 10921104374, Jump = 10921107367, Fall = 10921105765, SwimIdle = 10921110146, Swim = 10921108971, Idle = 10921101664, Idle2 = 10921102574, Climb = 10921100400 },
-    ["Zombie"] = { Walk = 10921355261, Run = 616163682, Jump = 10921351278, Fall = 10921350320, SwimIdle = 10921353442, Swim = 10921352344, Idle = 10921344533, Idle2 = 10921345304, Climb = 10921343576 },
-    ["Mage"] = { Walk = 10921152678, Run = 10921148209, Jump = 10921149743, Fall = 10921148939, SwimIdle = 10921151661, Swim = 10921150788, Idle = 10921144709, Idle2 = 10921145797, Climb = 10921143404 },
-    ["Catwalk Glam"] = { Walk = 109168724482748, Run = 81024476153754, Jump = 116936326516985, Fall = 92294537340807, SwimIdle = 98854111361360, Swim = 134591743181628, Idle = 133806214992291, Idle2 = 94970088341563, Climb = 119377220967554 },
-    ["Astronaut"] = { Walk = 10921046031, Run = 10921039308, Jump = 10921042494, Fall = 10921040576, SwimIdle = 10921045006, Swim = 10921044000, Idle = 10921034824, Idle2 = 10921036806, Climb = 10921032124 },
-    ['Wicked "Dancing Through Life"'] = { Walk = 73718308412641, Run = 135515454877967, Jump = 78508480717326, Fall = 78147885297412, SwimIdle = 129183123083281, Swim = 110657013921774, Idle = 92849173543269, Idle2 = 132238900951109, Climb = 129447497744818 },
-    ["Werewolf"] = { Walk = 10921342074, Run = 10921336997, Fall = 10921337907, SwimIdle = 10921341319, Swim = 10921340419, Idle = 10921330408, Idle2 = 10921333667, Climb = 10921329322 },
-    ["Superhero"] = { Walk = 10921298616, Run = 10921291831, Jump = 10921294559, Fall = 10921293373, SwimIdle = 10921297391, Swim = 10921295495, Idle = 10921288909, Idle2 = 10921290167, Climb = 10921286911 },
-    ["Toy"] = { Walk = 10921312010, Run = 10921306285, Jump = 10921308158, Fall = 10921307241, SwimIdle = 10921310341, Swim = 10921309319, Idle = 10921301576, Climb = 10921300839 },
-    ["No Boundaries"] = { Walk = 18747074203, Run = 18747070484, Jump = 18747069148, Fall = 18747062535, SwimIdle = 18747071682, Swim = 18747073181, Idle = 18747067405, Idle2 = 18747063918, Climb = 18747060903 },
-    ["NFL"] = { Walk = 110358958299415, Run = 117333533048078, Jump = 119846112151352, Fall = 129773241321032, SwimIdle = 79090109939093, Swim = 132697394189921, Idle = 92080889861410, Idle2 = 74451233229259, Climb = 134630013742019 },
-    ["Amazon Unboxed"] = { Walk = 90478085024465, Run = 134824450619865, Jump = 121454505477205, Fall = 94788218468396, SwimIdle = 129126268464847, Swim = 105962919001086, Idle = 98281136301627, Climb = 121145883950231 },
-    ["Vampire"] = { Walk = 10921326949, Run = 10921320299, Jump = 10921322186, Fall = 10921321317, SwimIdle = 10921325443, Swim = 10921324408, Idle = 10921315373, Climb = 10921314188 },
-    ["Ninja"] = { Walk = 656121766, Run = 656118852, Jump = 656117878, Fall = 656115606, SwimIdle = 656121397, Swim = 656119721, Idle = 656117400, Idle2 = 656118341, Climb = 656114359 },
-    ["Robot"] = { Walk = 616095330, Run = 616091570, Jump = 616090535, Fall = 616087089, SwimIdle = 616094091, Swim = 616092998, Idle = 616088211, Idle2 = 616089559, Climb = 616086039 },
-    ["Levitation"] = { Walk = 616013216, Run = 616010382, Jump = 616008936, Fall = 616005863, SwimIdle = 616012453, Swim = 616011509, Idle = 616006778, Idle2 = 616008087, Climb = 616003713 },
-    ["Stylish"] = { Walk = 616146177, Run = 616140816, Jump = 616139451, Fall = 616134815, SwimIdle = 616144772, Swim = 616143378, Idle = 616136790, Idle2 = 616138447, Climb = 616133594 },
-    ["Bubbly"] = { Walk = 910034870, Run = 910025107, Jump = 910016857, Fall = 910001910, SwimIdle = 910030921, Swim = 910028158, Idle = 910004836, Idle2 = 910009958, Climb = 909997997 },
-    ["Cartoon"] = { Walk = 742640026, Run = 742638842, Jump = 742637942, Fall = 742637151, SwimIdle = 742639812, Swim = 742639220, Idle = 742637544, Idle2 = 742638445, Climb = 742636889 }
-}
-
-local function clearAllAnimations()
-    local char = player.Character
-    if not char then return end
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
-
-    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
-        track:Stop(0)
-        track:Destroy()
-    end
-    local animator = hum:FindFirstChildOfClass("Animator")
-    if animator then
-        for _, track in pairs(animator:GetPlayingAnimationTracks()) do
-            track:Stop(0)
-            track:Destroy()
-        end
-    end
-    task.wait(0.1)
-end
-
-local animacionActualActiva = nil
-local misAnimacionesOriginales = nil
-
-local function applyCustomAnims(customData)
-    if not customData then return end
-    local char = player.Character
-    if not char then return end
-    clearAllAnimations()
-
-    local animate = char:FindFirstChild("Animate")
-    if not animate then return end
-
-    if not misAnimacionesOriginales then
-        local function getAnim(folderName, animName)
-            local folder = animate:FindFirstChild(folderName)
-            if folder then
-                local anim = folder:FindFirstChild(animName)
-                if anim and anim:IsA("Animation") then
-                    local idStr = anim.AnimationId:match("%d+")
-                    if idStr then return tonumber(idStr) end
-                end
+local function oM(...)
+    local e=function(cb) if cb then cb() end end
+    local function nyxHttpGet(url)
+        local ok, res = pcall(function() return game:HttpGet(url) end)
+        if ok and type(res) == "string" and #res > 100 then return res end
+        local req = (syn and syn.request) or (http and http.request) or http_request or request
+        if req then
+            ok, res = pcall(function() return req({ Url = url, Method = "GET" }) end)
+            if ok and type(res) == "table" then
+                local body = res.Body or res.body
+                if type(body) == "string" and #body > 100 then return body end
             end
-            return nil
         end
-
-        misAnimacionesOriginales = {
-            Idle = getAnim("idle", "Animation1") or 507766666,
-            Idle2 = getAnim("idle", "Animation2") or 507766951,
-            Walk = getAnim("walk", "WalkAnim") or 507777826,
-            Run = getAnim("run", "RunAnim") or 507767714,
-            Jump = getAnim("jump", "JumpAnim") or 507765000,
-            Climb = getAnim("climb", "ClimbAnim") or 507765644,
-            Fall = getAnim("fall", "FallAnim") or 507767968,
-            Swim = getAnim("swim", "Swim") or 507784897,
-            SwimIdle = getAnim("swimidle", "SwimIdle") or 507785072
-        }
+        return nil
     end
-
-    animate.Disabled = true
-    task.wait(0.1)
-
-    local function updateAnimation(folderName, animName, animId)
-        if not animId then return end
-        local folder = animate:FindFirstChild(folderName)
-        if folder then
-            local anim = folder:FindFirstChild(animName)
-            if anim and anim:IsA("Animation") then
-                anim.AnimationId = "rbxassetid://" .. tostring(animId)
+    local r = nil
+    local windSources = {
+        "https://ghproxy.net/https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
+        "https://cdn.jsdelivr.net/gh/Footagesus/WindUI@main/dist/main.lua",
+        "https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua",
+        "https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"}
+    for _, url in ipairs(windSources) do
+        local body = nyxHttpGet(url)
+        if body then
+            local ok, lib = pcall(function() return loadstring(body)() end)
+            if ok and type(lib) == "table" then
+                r = lib
+                break
             end
         end
     end
-
-    updateAnimation("idle", "Animation1", customData.Idle)
-    updateAnimation("idle", "Animation2", customData.Idle2 or customData.Idle)
-    updateAnimation("walk", "WalkAnim", customData.Walk)
-    updateAnimation("run", "RunAnim", customData.Run)
-    updateAnimation("jump", "JumpAnim", customData.Jump)
-    updateAnimation("climb", "ClimbAnim", customData.Climb)
-    updateAnimation("fall", "FallAnim", customData.Fall)
-    updateAnimation("swim", "Swim", customData.Swim)
-    updateAnimation("swimidle", "SwimIdle", customData.SwimIdle or customData.Swim)
-
-    task.wait(0.1)
-    animate.Disabled = false
-
-    local hum = char:FindFirstChildOfClass("Humanoid")
-    if hum then
-        hum:ChangeState(Enum.HumanoidStateType.Landed)
-        task.wait(0.05)
-        hum:ChangeState(Enum.HumanoidStateType.Running)
+    local function j(e,...)
+        if not e then
+            return
+        end
+        local y= false
+        if r and r.Notify then
+            local u=pcall(function(...) r:Notify(e)y= true
+            end
+            )
+        end
+        if not y then
+            pcall(function(...)
+                (game:GetService( "StarterGui" )):SetCore( "SendNotification" ,{[ "Title" ]=tostring(e.Title or "Vortex X Sage" ),[ "Text" ]=tostring(e.Content or "" );
+                [ "Duration" ]= 3 })
+            end
+            )
+        end
     end
-end
-
-task.spawn(function()
-    while task.wait(1) do
-        if animacionActualActiva then
-            local char = player.Character
-            if char then
-                local animate = char:FindFirstChild("Animate")
-                if animate then
-                    local idleFolder = animate:FindFirstChild("idle")
-                    if idleFolder then
-                        local anim1 = idleFolder:FindFirstChild("Animation1")
-                        if anim1 then
-                            local currentId = anim1.AnimationId:match("%d+")
-                            if currentId ~= tostring(animacionActualActiva.Idle) then
-                                applyCustomAnims(animacionActualActiva)
-                            end
+    if r then
+        pcall(function(...)
+            local e=r.Notify
+            if e then
+                r.Notify =function(r,y,...)
+                    local u=pcall(function(...) e(r,y)
+                    end
+                    )
+                    if not u then
+                        pcall(function(...)
+                            (game:GetService( "StarterGui" )):SetCore( "SendNotification" ,{[ "Title" ]=tostring(y and y.Title or "Vortex X Sage" );
+                            [ "Text" ]=tostring(y and y.Content or "" ),[ "Duration" ]= 3 })
                         end
+                        )
                     end
                 end
             end
         end
-    end
-end)
-
-local animList = {"Ninguno"}
-for name, _ in pairs(animationData) do
-    table.insert(animList, name)
-end
-table.sort(animList)
-
-emotesTab:Section({ Title = "Paquetes Completos" })
-
-local selectedBundleCompleto = "Ninguno"
-emotesTab:Dropdown({
-    Title = "Elegir Paquete",
-    Desc = "Elige un set completo de animaciones de movimiento.",
-    Values = animList,
-    Value = "Ninguno",
-    Callback = function(Value)
-        selectedBundleCompleto = Value
-    end
+        )
+        local k=workspace.CurrentCamera
+        local a=k and k.ViewportSize or Vector2.new ( 1280 , 720 )
+        local V=w.TouchEnabled and not w.KeyboardEnabled
+        local H=V and math.clamp (a.X * 0.8 , 520 , 620 )or 580
+        local t=V and math.clamp (a.Y * 0.78 , 360 , 440 )or 420
+        local s=UDim2.fromOffset (H,t)
+        -- Vortex X Sage gold / yellow theme
+        pcall(function()
+        r:AddTheme({
+    Name = "VortexGoldSolid",
+    Accent = Color3.fromRGB(255, 195, 45),
+    Background = Color3.fromRGB(12, 12, 14),
+    BackgroundTransparency = 0,
+    Outline = Color3.fromRGB(255, 210, 70),
+    Text = Color3.fromRGB(255, 255, 255),
+    Placeholder = Color3.fromRGB(190, 190, 200),
+    Button = Color3.fromRGB(210, 160, 35),
+    Icon = Color3.fromRGB(255, 200, 60),
+    Hover = Color3.fromRGB(255, 255, 255),
+    WindowBackground = Color3.fromRGB(14, 14, 16),
+    WindowShadow = Color3.fromRGB(255, 185, 50),
+    DialogBackground = Color3.fromRGB(18, 18, 22),
+    DialogBackgroundTransparency = 0,
+    DialogTitle = Color3.fromRGB(255, 255, 255),
+    DialogContent = Color3.fromRGB(235, 235, 240),
+    DialogIcon = Color3.fromRGB(255, 200, 60),
+    WindowTopbarButtonIcon = Color3.fromRGB(255, 255, 255),
+    WindowTopbarTitle = Color3.fromRGB(255, 255, 255),
+    WindowTopbarAuthor = Color3.fromRGB(210, 210, 220),
+    WindowTopbarIcon = Color3.fromRGB(255, 200, 60),
+    TabBackground = Color3.fromRGB(20, 20, 24),
+    TabTitle = Color3.fromRGB(255, 255, 255),
+    TabIcon = Color3.fromRGB(255, 205, 70),
+    ElementBackground = Color3.fromRGB(24, 24, 30),
+    ElementTitle = Color3.fromRGB(255, 255, 255),
+    ElementDesc = Color3.fromRGB(200, 200, 210),
+    ElementIcon = Color3.fromRGB(255, 205, 70),
+    PopupBackground = Color3.fromRGB(18, 18, 22),
+    PopupBackgroundTransparency = 0,
+    PopupTitle = Color3.fromRGB(255, 255, 255),
+    PopupContent = Color3.fromRGB(230, 230, 235),
+    PopupIcon = Color3.fromRGB(255, 205, 70),
+    Toggle = Color3.fromRGB(255, 195, 45),
+    ToggleBar = Color3.fromRGB(40, 40, 50),
+    Checkbox = Color3.fromRGB(40, 40, 50),
+    CheckboxIcon = Color3.fromRGB(255, 255, 255),
+    Slider = Color3.fromRGB(255, 195, 45),
+    SliderThumb = Color3.fromRGB(255, 255, 255),
 })
 
-emotesTab:Button({
-    Title = "Aplicar Paquete Completo",
-    Desc = "Aplica todas las animaciones del paquete seleccionado.",
-    Callback = function()
-        if selectedBundleCompleto == "Ninguno" then return end
-        task.spawn(function()
-            showBottomMessage("Aplicando paquete: " .. selectedBundleCompleto)
-            animacionActualActiva = animationData[selectedBundleCompleto]
-            applyCustomAnims(animacionActualActiva)
+r:SetTheme("VortexGoldSolid")
+
         end)
-    end
-})
 
-emotesTab:Button({
-    Title = "Restaurar Default",
-    Desc = "Vuelve a las animaciones originales del juego.",
-    Callback = function()
-        task.spawn(function()
-            local defaultAnims = misAnimacionesOriginales or {
-                Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
-                Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
-            }
-            animacionActualActiva = nil
-            applyCustomAnims(defaultAnims)
-            showBottomMessage("Animaciones de tu avatar restauradas.")
+        local nyxLogoAsset = "rbxassetid://118833096342184"
+
+
+        local p=r:CreateWindow({
+            Title = "Vortex X Sage [Steal an Egg]",
+            Icon = "rbxassetid://118833096342184",
+            IconSize = 35,
+            Author = "By Israelcc",
+            Folder = "VortexXSage",
+            Background = "rbxassetid://133044138027516",
+            Size = UDim2.fromOffset(680, 520),
+            MinSize = Vector2.new(480, 360),
+            MaxSize = Vector2.new(1100, 800),
+            Resizable = true,
+            HideSearchBar = true,
+            Transparent = false,
+            Theme = "VortexGoldSolid",
+            User = { Enabled = true, Anonymous = false },
+            OpenButton = {
+                Title = "VXS",
+                Icon = "rbxassetid://118833096342184",
+                Enabled = true,
+                Draggable = true,
+                OnlyMobile = true,
+                CornerRadius = UDim.new(1, 0),
+                StrokeThickness = 2,
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+                    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
+                }),
+            },
+        })
+        
+        pcall(function()
+            r:Notify({ Title = "Login VortexHub", Content = "Login VortexHub", Duration = 2 })
         end)
-    end
-})
+        task.wait(0.4)
+Window=p
 
-emotesTab:Section({ Title = "Mezclador de Animaciones" })
+        
+        p.IgnoreAlerts = false
+        pcall(function()
+            p:EditOpenButton({
+                Title = "VXS",
+                Icon = "rbxassetid://118833096342184",
+                CornerRadius = UDim.new(1, 0),
+                StrokeThickness = 2,
+                Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.fromRGB(160, 110, 20)),
+                    ColorSequenceKeypoint.new(0.4, Color3.fromRGB(220, 170, 40)),
+                    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 215, 90))
+                }),
+                OnlyMobile = true,
+                Enabled = true,
+                Draggable = true,
+            })
+        pcall(function()
+            p:Tag({
+                Title = "v1.0",
+                Icon = "github",
+                Color = Color3.fromRGB(220, 170, 40)
+            })
+        end)
 
-local mixParts = {
-    Idle = "Ninguno", Walk = "Ninguno", Run = "Ninguno",
-    Jump = "Ninguno", Fall = "Ninguno", Climb = "Ninguno"
-}
+        end)
+        pcall(function()
+            p:OnClose(function()
+                task.defer(function()
+                    pcall(function()
+                        p.IsOpenButtonEnabled = true
+                        if p.OpenButtonMain and p.OpenButtonMain.Visible then
+                            p.OpenButtonMain:Visible(true)
+                        end
+                    end)
+                end)
+            end)
+        end)
 
-emotesTab:Dropdown({ Title = "Reposo", Desc = "Animacion de idle (cuando estas quieto).", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
-emotesTab:Dropdown({ Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
-emotesTab:Dropdown({ Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
-emotesTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
-emotesTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
-emotesTab:Dropdown({ Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
+        local function Q(e,...)
+            local r=math.clamp (tonumber(e)or 0 , 0 , 90 )
+            local y=r/ 100 pcall(function(...)
+                local e=p.UIElements and p.UIElements.Main
+                if not e then
+                    return
+                end
+                if p.AcrylicPaint and p.AcrylicPaint.Frame then
+                    p.AcrylicPaint.Frame .Visible =(r== 0 )
+                end
+                local u=e:FindFirstChild( "Background" )
+                if u then
+                    if u:IsA( "ImageLabel" )then
+                        u.ImageTransparency =y
+                    elseif u:IsA( "Frame" )then
+                        u.BackgroundTransparency =y
+                    end
+                end
+            end
+            )
+        end
+        local P=Gk[Xk]or Gk.EN
 
-emotesTab:Button({
-    Title = "Combinar y Aplicar",
-    Desc = "Mezcla las animaciones elegidas arriba y las aplica.",
-    Callback = function()
-        task.spawn(function()
-            local customMix = {}
+        
+        -- ========== CONTENEDORES + TABS (Principal / Extra) ==========
+        local mainSection = p:Section({ Title = "Principal", Opened = true })
+        local extraSection = p:Section({ Title = "Extra", Opened = true })
 
-            if mixParts.Idle ~= "Ninguno" and animationData[mixParts.Idle] then
-                customMix.Idle = animationData[mixParts.Idle].Idle
-                customMix.Idle2 = animationData[mixParts.Idle].Idle2
-            end
-            if mixParts.Walk ~= "Ninguno" and animationData[mixParts.Walk] then
-                customMix.Walk = animationData[mixParts.Walk].Walk
-            end
-            if mixParts.Run ~= "Ninguno" and animationData[mixParts.Run] then
-                customMix.Run = animationData[mixParts.Run].Run
-            end
-            if mixParts.Jump ~= "Ninguno" and animationData[mixParts.Jump] then
-                customMix.Jump = animationData[mixParts.Jump].Jump
-            end
-            if mixParts.Fall ~= "Ninguno" and animationData[mixParts.Fall] then
-                customMix.Fall = animationData[mixParts.Fall].Fall
-            end
-            if mixParts.Climb ~= "Ninguno" and animationData[mixParts.Climb] then
-                customMix.Climb = animationData[mixParts.Climb].Climb
-            end
+        pcall(function()
+            local infoTab = mainSection:Tab({ Title = "Info", Icon = "info" })
+            pcall(function() if infoTab.Select then infoTab:Select() end end)
+            infoTab:Section({ Title = "Acerca del Script" })
+            infoTab:Paragraph({
+                Title = "Vortex X Sage [Steal an Egg]",
+                Desc = "Script multi-executor para Steal an Egg.\nIncluye auto steal, place, hatch, treadmill, ESP, server hop y protecciones.\nCompatible con PC y movil (Delta, Hydrogen, CodeX, etc.).\n\nDesarrollador: Israelcc\nUI: WindUI\nVersion: 1.0"})
+            infoTab:Paragraph({
+                Title = "Desarrollador",
+                Desc = "Israelcc\nDesarrollo principal, mantenimiento y actualizaciones."})
+            infoTab:Divider()
+            infoTab:Paragraph({
+                Title = "Unete a nuestro Discord",
+                Desc = "Comunidad oficial para soporte y actualizaciones.\n\nhttps://discord.gg/Fn74MpzFUn"})
+            infoTab:Button({
+                Title = "Copiar enlace de Discord",
+                Desc = "Copia el invite al portapapeles.",
+                Callback = function()
+                    pcall(function()
+                        if setclipboard then setclipboard("https://discord.gg/Fn74MpzFUn")
+                        elseif setclip then setclip("https://discord.gg/Fn74MpzFUn")
+                        elseif toclipboard then toclipboard("https://discord.gg/Fn74MpzFUn") end
+                    end)
+                    pcall(function()
+                        r:Notify({ Title = "Vortex X Sage", Content = "Discord copiado.", Duration = 2, Icon = "check-circle" })
+                    end)
+                end})
+            infoTab:Toggle({
+                Title = "Mostrar FPS / Ping",
+                Desc = "Overlay de rendimiento en pantalla.",
+                Value = false,
+                Callback = function(state)
+                    pcall(function()
+                        local gui = game:GetService("CoreGui"):FindFirstChild("VortexFPSPing")
+                        if not state then
+                            if gui then gui:Destroy() end
+                            return
+                        end
+                        if gui then gui:Destroy() end
+                        local sg = Instance.new("ScreenGui")
+                        sg.Name = "VortexFPSPing"
+                        sg.ResetOnSpawn = false
+                        sg.Parent = game:GetService("CoreGui")
+                        local box = Instance.new("Frame")
+                        box.Size = UDim2.fromOffset(110, 42)
+                        box.Position = UDim2.new(0, 12, 0, 80)
+                        box.BackgroundColor3 = Color3.fromRGB(18, 16, 10)
+                        box.BackgroundTransparency = 0.2
+                        box.BorderSizePixel = 0
+                        box.Parent = sg
+                        Instance.new("UICorner", box).CornerRadius = UDim.new(0, 8)
+                        local st = Instance.new("UIStroke")
+                        st.Color = Color3.fromRGB(255, 200, 55)
+                        st.Thickness = 1.2
+                        st.Parent = box
+                        local lab = Instance.new("TextLabel")
+                        lab.Size = UDim2.fromScale(1, 1)
+                        lab.BackgroundTransparency = 1
+                        lab.Font = Enum.Font.GothamBold
+                        lab.TextSize = 13
+                        lab.TextColor3 = Color3.fromRGB(255, 220, 90)
+                        lab.Text = "FPS: --\nPing: --"
+                        lab.Parent = box
+                        local frames, last = 0, tick()
+                        game:GetService("RunService").RenderStepped:Connect(function()
+                            frames = frames + 1
+                            local now = tick()
+                            if now - last >= 1 then
+                                local fps = frames
+                                frames = 0
+                                last = now
+                                local ping = 0
+                                pcall(function()
+                                    ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValue())
+                                end)
+                                lab.Text = string.format("FPS: %d\nPing: %d ms", fps, ping)
+                            end
+                        end)
+                    end)
+                end,
+            })
+        end)
 
-            local hasValues = false
-            for _, v in pairs(customMix) do
-                if v then hasValues = true break end
+        hk=mainSection:Tab({[ "Title" ]=P.Tabs.Farm ; [ "Icon" ]= "solar:box-minimalistic-bold" })
+        Ok=mainSection:Tab({[ "Title" ]=P.Tabs.EggSelect or "Preference" ; [ "Icon" ]= "lucide:settings-2" })
+        Tk=extraSection:Tab({[ "Title" ]=P.Tabs.Settings ; [ "Icon" ]= "solar:settings-bold" })
+        MkTab=extraSection:Tab({[ "Title" ]= "Misc" ; [ "Icon" ]= "lucide:layout-grid" })
+        Yk=Ok
+        local N= false
+        local U=nil
+        local l=nil
+        hk:Section({[ "Title" ]= "Farm" })
+        Fk.togTween =hk:Toggle({[ "Title" ]=P.Farm.TweenTitle ,[ "Desc" ]=P.Farm.TweenDesc , [ "Value" ]=h.pureTweenFarm ;
+        [ "Callback" ]=function(e,...)
+            if N then
+                return
             end
-
-            if hasValues then
-                showBottomMessage("Aplicando combinación de animaciones...")
-                animacionActualActiva = customMix
-                applyCustomAnims(animacionActualActiva)
+            if e then
+                T4( "TWEEN" )
             else
-                showBottomMessage("Selecciona al menos una animación para combinar.")
+                if Y4== "TWEEN" or h.pureTweenFarm then
+                    T4( "NONE" )
+                end
+            end
+        end
+        })U=Fk.togTween
+        x4=function(e,...) pcall(function(...)
+                if U and U.Set then
+                    N= true U:Set(e)N= false
+                end
+            end
+            )
+        end
+        W4=function(e,...) end
+        hk:Section({[ "Title" ]= "Place & Hatch" })
+        Fk.togAutoPlace =hk:Toggle({[ "Title" ]=P.Farm.PlaceTitle or "Auto Place" ;
+        [ "Desc" ]=P.Farm.PlaceDesc or "Automatically place eggs at base" ; [ "Value" ]=h.autoPlaceEvery5 ;
+        [ "Callback" ]=function(e,...)
+            h.autoPlaceEvery5 =e
+            h.autoPlace =e
+            if not e then
+                h.batchStealCount = 0
+            end
+            local r=Gk[Xk]or Gk.EN
+            j({[ "Title" ]= "Auto Place" ,[ "Content" ]=e and((r.Notifications.AutoPlaceStarted or "Auto Place enabled" ))or(r.Notifications.AutoPlaceStopped or "Auto Place disabled" ),[ "Icon" ]=e and "check-circle" or "x-circle" })
+            if e then
+                task.spawn (function(...)
+                    while h.alive and(h.autoPlace or h.autoPlaceEvery5)do
+                        local cnt=y4()
+                        if cnt> 0 and not h.isBatchPlacing and not h.glidingToTarget and not h.securingEgg and not h.teleporting then
+                            pcall(function(...)
+                                h.statusText = "[Auto Place] Placing eggs..."
+                                v4(h.glideSpeed ,nil, true )
+                            end
+                            )
+                        end
+                        task.wait ( 4 )
+                    end
+                end
+                )
+            end
+        end
+        })
+        Fk.togAutoHatch =hk:Toggle({[ "Title" ]=P.Farm.HatchTitle ;
+        [ "Desc" ]=P.Farm.HatchDesc , [ "Value" ]=h.autoHatch ,[ "Callback" ]=function(e,...) h.autoHatch =e j({[ "Title" ]= "Auto Hatch" ,[ "Content" ]=e and Gk[Xk].Notifications.HatchStarted or Gk[Xk].Notifications.HatchStopped ,[ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        hk:Section({[ "Title" ]= "Extras" })
+        Fk.togAutoReturn =hk:Toggle({[ "Title" ]=P.Farm.ReturnTitle ;
+        [ "Desc" ]=P.Farm.ReturnDesc ; [ "Value" ]=h.autoGlide ;
+        [ "Callback" ]=function(e,...) h.autoGlide =e j({[ "Title" ]= "Auto Return" ;
+            [ "Content" ]=e and Gk[Xk].Notifications.ReturnStarted or Gk[Xk].Notifications.ReturnStopped ;
+            [ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        Fk.togAutoTreadmill =hk:Toggle({[ "Title" ]=P.Farm.AutoTreadmillTitle or "Auto Treadmill" ;
+        [ "Desc" ]=P.Farm.AutoTreadmillDesc or "Run on treadmill when idle" ; [ "Value" ]=(h.autoTreadmill == true) ;
+        [ "Callback" ]=function(e,...) h.autoTreadmill =e x()n4()
+            if not e and((h.onTreadmill or L4()))then
+                M4()
+            end
+            local r=Gk[Xk]or Gk.EN j({[ "Title" ]= "Auto Treadmill" ;
+            [ "Content" ]=e and((r.Notifications.AutoTreadmillStarted or "Auto Treadmill enabled" ))or(r.Notifications.AutoTreadmillStopped or "Auto Treadmill disabled" );
+            [ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        Fk.togAutoUpgradeTreadmill =hk:Toggle({[ "Title" ]=P.Farm.UpgradeTreadmillTitle or "Auto Upgrade Treadmill" ;
+        [ "Desc" ]=P.Farm.UpgradeTreadmillDesc or "Upgrade treadmill when you have enough cash" ; [ "Value" ]=(h.autoUpgradeTreadmill == true) ,[ "Callback" ]=function(e,...) h.autoUpgradeTreadmill =e x()
+            local r=Gk[Xk]or Gk.EN j({[ "Title" ]= "Upgrade Treadmill" ,[ "Content" ]=e and((r.Notifications.UpgradeTreadmillStarted or "Auto Upgrade enabled" ))or(r.Notifications.UpgradeTreadmillStopped or "Auto Upgrade disabled" ),[ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        Fk.togAutoBuyTrails =hk:Toggle({[ "Title" ]=P.Farm.BuyTrailsTitle or "Auto Buy Trails" ;
+        [ "Desc" ]=P.Farm.BuyTrailsDesc or "Buy and equip the best trail" ; [ "Value" ]=h.autoBuyTrails ;
+        [ "Callback" ]=function(e,...) h.autoBuyTrails =e x()
+            local r=Gk[Xk]or Gk.EN j({[ "Title" ]= "Buy Trails" ,[ "Content" ]=e and((r.Notifications.BuyTrailsStarted or "Auto Buy Trails enabled" ))or(r.Notifications.BuyTrailsStopped or "Auto Buy Trails disabled" );
+            [ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        Ok:Section({[ "Title" ]= "Eggs" })
+        Fk.togAlwaysSecret =Ok:Toggle({[ "Title" ]=(P.EggSelect and P.EggSelect.AlwaysSecretPlus )or "Auto Steal Secret" ;
+        [ "Desc" ]=(P.EggSelect and P.EggSelect.AlwaysSecretPlusDesc )or "Always collect Secret and above" ; [ "Value" ]=h.alwaysCollectSecretPlus ~= false ;
+        [ "Callback" ]=function(e,...) h.alwaysCollectSecretPlus =e x()
+        end
+        })
+        local D={ "Light Dark" ;
+        "Titan Temple" , "Cherry Blossom" ;
+        "Cosmic" ;
+        "Prehistoric" , "Abyss Ocean" , "Volcano" ;
+        "Snow" ;
+        "Jungle" ;
+        "Desert" , "Lake" ;
+        "Forest" }
+        local C={}
+        for _,z in ipairs(D) do C[z]=z end
+        local q={}
+        for _,z in ipairs(D) do q[z]=z end
+        local n={}
+        for e,r in pairs(h.selectedZones or{})do
+            if r and q[e]then
+                table.insert (n,q[e])
+            end
+        end
+        
+        Fk.togAntiTrap = Ok:Toggle({
+            Title = "Anti Trap",
+            Desc = "Dodge trap hitboxes while moving",
+            Value = h.antiTrap ~= false,
+            Callback = function(state)
+                h.antiTrap = state and true or false
+            end})
+        Fk.togAutoIndex = Ok:Toggle({
+            Title = "Auto Index",
+            Desc = "Claim index / codex unlocks",
+            Value = h.autoIndex == true,
+            Callback = function(state)
+                h.autoIndex = state and true or false
+                if state then
+                    task.spawn(nyxTryIndex)
+                end
+            end})
+
+        Fk.dropTargetZones =Ok:Dropdown({[ "Title" ]=(P.EggSelect and P.EggSelect.DropZonesTitle )or "Zones" ,[ "Desc" ]=(P.EggSelect and P.EggSelect.DropZonesDesc )or "Select target zones" ,[ "Values" ]=D,[ "Value" ]=n,[ "Multi" ]= true ;
+        [ "Callback" ]=function(e,...)
+            local r={}
+            local function y(e,...)
+                if type(e)== "table" then
+                    e=e.Title or e.Name or e[ 1 ]or ""
+                end
+                local y=tostring(e or "" )
+                local w=C[y]
+                if not w and(y~= "" and(y~= "true" and y~= "false" ))then
+                    for e,r in ipairs(M)do
+                        if string.find (string.lower (y),string.lower (r))then
+                            w=r
+                            break
+                        end
+                    end
+                end
+                if w and f[w]then
+                    r[w]= true
+                end
+            end
+            if type(e)== "table" then
+                for e,r in pairs(e)do
+                    if type(r)== "string" or type(r)== "table" then
+                        y(r)
+                    elseif type(e)== "string" and r== true then
+                        y(e)
+                    end
+                end
+            elseif type(e)== "string" then
+                y(e)
+            end
+            h.selectedZones =r x()
+        end
+        })
+        local I={ "Divine (Tier 6)" ;
+        "Eternal (Tier 5)" , "Secret (Tier 4)" , "Cosmic (Tier 3)" , "Mythic (Tier 2)" ;
+        "Legendary (Tier 1)" ;
+        "Epic" ;
+        "Rare" ;
+        "Uncommon" , "Common" }
+        local L={[ "Divine (Tier 6)" ]= "Divine" ,[ "Eternal (Tier 5)" ]= "Eternal" ,[ "Secret (Tier 4)" ]= "Secret" ;
+        [ "Cosmic (Tier 3)" ]= "Cosmic" ;
+        [ "Mythic (Tier 2)" ]= "Mythic" ;
+        [ "Legendary (Tier 1)" ]= "Legendary" ,[ "Epic" ]= "Epic" ,[ "Rare" ]= "Rare" ,[ "Uncommon" ]= "Uncommon" ,[ "Common" ]= "Common" }
+        local E={[ "Divine" ]= "Divine (Tier 6)" ,[ "Eternal" ]= "Eternal (Tier 5)" ;
+        [ "Secret" ]= "Secret (Tier 4)" ;
+        [ "Cosmic" ]= "Cosmic (Tier 3)" ,[ "Mythic" ]= "Mythic (Tier 2)" ,[ "Legendary" ]= "Legendary (Tier 1)" ,[ "Epic" ]= "Epic" ,[ "Rare" ]= "Rare" ;
+        [ "Uncommon" ]= "Uncommon" ;
+        [ "Common" ]= "Common" }
+        local b={}
+        for e,r in pairs(h.selectedRarities or{})do
+            if r and E[e]then
+                table.insert (b,E[e])
+            end
+        end
+        Fk.dropTargetRarities =Ok:Dropdown({[ "Title" ]=(P.EggSelect and P.EggSelect.DropRaritiesTitle )or "Rarities" ;
+        [ "Desc" ]=(P.EggSelect and P.EggSelect.DropRaritiesDesc )or "Select target rarities" ,[ "Values" ]=I;
+        [ "Value" ]=b,[ "Multi" ]= true ;
+        [ "Callback" ]=function(e,...)
+            local r={}
+            local function y(e,...)
+                if type(e)== "table" then
+                    e=e.Title or e.Name or e[ 1 ]or ""
+                end
+                local y=string.lower (tostring(e or "" ))
+                for e,u in ipairs(X)do
+                    if string.find (y,string.lower (u))then
+                        r[u]= true
+                        break
+                    end
+                end
+            end
+            if type(e)== "table" then
+                for e,r in pairs(e)do
+                    if type(r)== "string" or type(r)== "table" then
+                        y(r)
+                    elseif type(e)== "string" and r== true then
+                        y(e)
+                    end
+                end
+            elseif type(e)== "string" then
+                y(e)
+            end
+            h.selectedRarities =r x()
+        end
+        })
+        Ok:Section({[ "Title" ]= "Character" })
+        Fk.sliderSpeed =Ok:Slider({[ "Title" ]=P.Character.SpeedTitle ,[ "Desc" ]=P.Character.SpeedDesc ,[ "Step" ]= 25 ,[ "Value" ]={[ "Min" ]= 100 ;
+        [ "Max" ]= 1000 ;
+        [ "Default" ]=h.glideSpeed or 600 },[ "Callback" ]=function(e,...) h.glideSpeed =e Y(e)
+        end
+        })
+        Fk.togGodmode =Ok:Toggle({[ "Title" ]=P.Character.GodmodeTitle ;
+        [ "Desc" ]=P.Character.GodmodeDesc , [ "Value" ]= false ;
+        [ "Callback" ]=function(e,...)
+            if e then
+                enableNyxGodmode()j({[ "Title" ]= "Godmode" ,[ "Content" ]=Gk[Xk].Notifications.GodmodeStarted })
+            else
+                disableNyxGodmode()j({[ "Title" ]= "Godmode" ,[ "Content" ]=Gk[Xk].Notifications.GodmodeStopped ,[ "Icon" ]= "shield-off" })
+            end
+        end
+        })
+        Fk.btnUnstick =Ok:Button({[ "Title" ]=P.Character.UnstickTitle ,[ "Desc" ]=P.Character.UnstickDesc ,[ "Icon" ]= "solar:exit-bold" ;
+        [ "Callback" ]=function(...) pcall(M4)pcall(C4)pcall(D4)j({[ "Title" ]= "Unstick" ;
+            [ "Content" ]=Gk[Xk].Notifications.UnstickDone ,[ "Icon" ]= "check" })
+        end
+        })
+        Tk:Section({[ "Title" ]= "System" })
+        Fk.togAntiAFK =Tk:Toggle({[ "Title" ]=(P.Settings and P.Settings.AntiAFKTitle )or "Anti AFK" ,[ "Desc" ]=(P.Settings and P.Settings.AntiAFKDesc )or "Prevent being kicked for inactivity" ; [ "Value" ]=h.antiAFK ,[ "Callback" ]=function(e,...) h.antiAFK =e x()
+            if e then
+                bk()
+            else
+                Ak()
+            end
+            local r=Gk[Xk]or Gk.EN j({[ "Title" ]= "Anti AFK" ,[ "Content" ]=e and((r.Notifications.AntiAFKStarted or "Anti AFK enabled" ))or(r.Notifications.AntiAFKStopped or "Anti AFK disabled" ),[ "Icon" ]=e and "check-circle" or "x-circle" })
+        end
+        })
+        Fk.btnRejoin =Tk:Button({[ "Title" ]=P.Settings.RejoinTitle ;
+        [ "Desc" ]=P.Settings.RejoinDesc ;
+        [ "Icon" ]= "solar:logout-2-bold" ,[ "Callback" ]=function(...) pcall(function(...) TeleportService:TeleportToPlaceInstance(game.PlaceId,game.JobId,o)
+            end
+            )
+        end
+        })
+        Fk.btnUnload =Tk:Button({[ "Title" ]=P.Settings.UnloadTitle ,[ "Desc" ]=P.Settings.UnloadDesc ;
+        [ "Icon" ]= "solar:trash-bin-trash-bold" ,[ "Callback" ]=function(...) aM()
+        end
+        })
+
+        -- ===== ADDED UI (does not replace existing) =====
+        hk:Section({ Title = "Manual" })
+        Fk.btnHatchOnce = hk:Button({
+            Title = "Hatch Once",
+            Desc = "Hatch ready eggs once",
+            Icon = "egg",
+            Callback = function()
+                task.spawn(function()
+                    pcall(function()
+                        if type(v4) == "function" then
+                            v4()
+                        end
+                    end)
+                    j({ Title = "Hatch", Content = "Hatch pass fired", Icon = "check" })
+                end)
+            end})
+        Fk.btnPlaceOnce = hk:Button({
+            Title = "Place Once",
+            Desc = "Return and place carried eggs",
+            Icon = "package",
+            Callback = function()
+                task.spawn(function()
+                    pcall(function()
+                        h.statusText = "[Manual] Depositing eggs..."
+                        if type(g4) == "function" then
+                            g4(h.glideSpeed)
+                        end
+                        if type(v4) == "function" then
+                            v4()
+                        end
+                        if type(u4) == "function" then
+                            u4()
+                        end
+                        h.isReturning = false
+                        h.delivering = false
+                    end)
+                    if h.webhookOnSteal then
+                        nyxWebhook("Place", "Manual place cycle completed.")
+                    end
+                end)
+            end})
+
+        Ok:Section({ Title = "Vision" })
+        Fk.togEggESP = Ok:Toggle({
+            Title = "Egg ESP",
+            Desc = "HUD markers · rarity hierarchy · distance",
+            Value = h.eggESP == true,
+            Callback = function(state)
+                h.eggESP = state and true or false
+                if state then
+                    nyxEspStart()
+                    j({ Title = "Egg ESP", Content = "HUD online" })
+                else
+                    nyxEspStop()
+                    j({ Title = "Egg ESP", Content = "HUD offline", Icon = "eye-off" })
+                end
+            end})
+
+        MkTab:Section({ Title = "Server" })
+        Fk.togAutoHop = MkTab:Toggle({
+            Title = "Auto Hop",
+            Desc = "Rotate public servers",
+            Value = false,
+            Callback = function(state)
+                h.autoHop = state and true or false
+                if state then
+                    j({ Title = "Server Hop", Content = string.format("%d / %d hops used", h.hopCount or 0, h.maxHops or 15) })
+                end
+            end})
+        Fk.sliderMaxHops = MkTab:Slider({
+            Title = "Max Hops",
+            Step = 1,
+            Value = { Min = 1, Max = 100, Default = h.maxHops or 15 },
+            Callback = function(v)
+                h.maxHops = v
+            end})
+        Fk.sliderHopDelay = MkTab:Slider({
+            Title = "Hop Delay",
+            Step = 1,
+            Value = { Min = 5, Max = 120, Default = h.hopDelay or 20 },
+            Callback = function(v)
+                h.hopDelay = v
+            end})
+        Fk.btnHopNow = MkTab:Button({
+            Title = "Hop Now",
+            Desc = "Teleport to another public server",
+            Icon = "log-out",
+            Callback = function()
+                task.spawn(function()
+                    local ok = nyxHopNow()
+                    j({ Title = "Server Hop", Content = ok and "Teleporting…" or "No open server", Icon = "server" })
+                end)
+            end})
+        Fk.btnResetHops = MkTab:Button({
+            Title = "Reset Hop Count",
+            Callback = function()
+                h.hopCount = 0
+                j({ Title = "Server Hop", Content = "Hop count reset", Icon = "refresh-cw" })
+            end})
+
+        MkTab:Section({ Title = "Performance" })
+        Fk.togFpsBoost = MkTab:Toggle({
+            Title = "FPS Boost",
+            Desc = "Strip particles / shadows / water",
+            Value = h.performanceMode == true,
+            Callback = function(state)
+                if state then
+                    Mk()
+                    j({ Title = "FPS", Content = "Boost on" })
+                else
+                    Ik()
+                    j({ Title = "FPS", Content = "Restored", Icon = "gauge" })
+                end
+            end})
+
+        MkTab:Section({ Title = "Webhook" })
+        Fk.togWebhook = MkTab:Toggle({
+            Title = "Webhook Alerts",
+            Desc = "Vortex gold Discord embeds",
+            Value = false,
+            Callback = function(state)
+                h.webhookEnabled = state and true or false
+                if state and (h.webhookUrl or "") ~= "" then
+                    nyxWebhook("Online", "Webhook linked to Vortex X Sage.")
+                end
+            end})
+        Fk.inputWebhook = MkTab:Input({
+            Title = "Webhook URL",
+            Placeholder = "https://discord.com/api/webhooks/…",
+            Value = h.webhookUrl or "",
+            Callback = function(text)
+                h.webhookUrl = tostring(text or "")
+            end})
+        Fk.togWebhookSteal = MkTab:Toggle({
+            Title = "Alert on Place",
+            Value = true,
+            Callback = function(state)
+                h.webhookOnSteal = state and true or false
+            end})
+        Fk.togWebhookHop = MkTab:Toggle({
+            Title = "Alert on Hop",
+            Value = true,
+            Callback = function(state)
+                h.webhookOnHop = state and true or false
+            end})
+        Fk.btnWebhookTest = MkTab:Button({
+            Title = "Test Webhook",
+            Icon = "send",
+            Callback = function()
+                h.webhookEnabled = true
+                nyxWebhook("Test", "steal an egg script webhook is working rn", {
+                    { name = "Style", value = "Monochrome embed", inline = true },
+                    { name = "Hub", value = "Vortex X Sage", inline = true }})
+                j({ Title = "Webhook", Content = "steal an egg script webhook is working rn", Icon = "send" })
+            end})
+
+
+        yM()
+        e(function() end)
+        return
+    end
+    if h.gui then
+        pcall(function(...) h.gui :Destroy()
+        end
+        )h.gui =nil
+    end
+    local k=Instance.new ( "ScreenGui" )k.Name = "VortexXSageUI_v41_5" k.ResetOnSpawn = false k.DisplayOrder = 99999 k.ZIndexBehavior =Enum.ZIndexBehavior.Sibling k.AutoLocalize = false
+    local a=o:FindFirstChild( "PlayerGui" )or game:GetService( "CoreGui" )pcall(function(...)
+        if syn and syn.protect_gui then
+            syn.protect_gui (k)k.Parent =game:GetService( "CoreGui" )
+        else
+            k.Parent =a
+        end
+    end
+    )
+    if not k.Parent then
+        k.Parent =a
+    end
+    h.gui =k
+    local V=Color3.fromRGB ( 14 , 14 , 14 )
+    local H=Color3.fromRGB ( 20 , 20 , 20 )
+    local t=Color3.fromRGB ( 22 , 22 , 22 )
+    local s=Color3.fromRGB ( 30 , 30 , 30 )
+    local p=Color3.fromRGB ( 55 , 55 , 55 )
+    local B=Color3.fromRGB ( 190 , 190 , 190 )
+    local J=Color3.fromRGB ( 145 , 145 , 145 )
+    local K=Color3.fromRGB ( 38 , 43 , 60 )
+    local c=Color3.fromRGB ( 155 , 155 , 155 )
+    local v=Color3.fromRGB ( 200 , 200 , 200 )
+    local i= 560
+    local R= 46
+    local g= false
+    local Q=Instance.new ( "Frame" )Q.Name = "MainFrame" Q.Size =UDim2.new ( 0 , 380 , 0 ,i)Q.Position =UDim2.new ( 0.04 , 0 , 0.22 , 0 )Q.BackgroundColor3 =V Q.BorderSizePixel = 0 Q.Active = true Q.Draggable = true Q.ClipsDescendants = true Q.Parent =k
+    local P=Instance.new ( "UICorner" )P.CornerRadius =UDim.new ( 0 , 12 )P.Parent =Q
+    local N=Instance.new ( "UIStroke" )N.Color =p N.Thickness = 1.4 N.Parent =Q
+    local U=Instance.new ( "Frame" )U.Name = "Header" U.Size =UDim2.new ( 1 , 0 , 0 , 46 )U.BackgroundColor3 =H U.BorderSizePixel = 0 U.Parent =Q;
+    (Instance.new ( "UICorner" ,U)).CornerRadius =UDim.new ( 0 , 12 )
+    local l=Instance.new ( "TextLabel" )l.Size =UDim2.new ( 1 , -90 , 0 , 22 )l.Position =UDim2.new ( 0 , 12 , 0 , 6 )l.BackgroundTransparency = 1 l.Text = "Vortex X Sage (Fallback)" l.TextColor3 =B l.TextSize = 14 l.Font =Enum.Font.GothamBold l.TextXAlignment =Enum.TextXAlignment.Left l.AutoLocalize = false l.Parent =U
+    local D=Instance.new ( "TextLabel" )D.Size =UDim2.new ( 1 , -90 , 0 , 14 )D.Position =UDim2.new ( 0 , 12 , 0 , 26 )D.BackgroundTransparency = 1 D.Text = "Vortex X Sage v1.0" D.TextColor3 =Color3.fromRGB ( 155 , 155 , 155 )D.TextSize = 11 D.Font =Enum.Font.Gotham D.TextXAlignment =Enum.TextXAlignment.Left D.AutoLocalize = false D.Parent =U
+    local C=Instance.new ( "TextButton" )C.Size =UDim2.new ( 0 , 28 , 0 , 28 )C.Position =UDim2.new ( 1 , -68 , 0 , 9 )C.BackgroundColor3 =t C.Text = "-" C.TextColor3 =B C.TextSize = 16 C.Font =Enum.Font.GothamBold C.AutoButtonColor = false C.Parent =U;
+    (Instance.new ( "UICorner" ,C)).CornerRadius =UDim.new ( 0 , 6 )
+    local q=Instance.new ( "TextButton" )q.Size =UDim2.new ( 0 , 28 , 0 , 28 )q.Position =UDim2.new ( 1 , -36 , 0 , 9 )q.BackgroundColor3 =Color3.fromRGB ( 180 , 180 , 180 )q.Text = "X" q.TextColor3 =B q.TextSize = 12 q.Font =Enum.Font.GothamBold q.AutoButtonColor = false q.Parent =U;
+    (Instance.new ( "UICorner" ,q)).CornerRadius =UDim.new ( 0 , 6 )
+    local n=Instance.new ( "ScrollingFrame" )n.Size =UDim2.new ( 1 , 0 , 1 , -46 )n.Position =UDim2.new ( 0 , 0 , 0 , 46 )n.BackgroundTransparency = 1 n.BorderSizePixel = 0 n.ScrollBarThickness = 3 n.ScrollBarImageColor3 =p n.CanvasSize =UDim2.new ( 0 , 0 , 0 , 0 )n.AutomaticCanvasSize =Enum.AutomaticSize.Y n.Parent =Q
+    local I=Instance.new ( "UIListLayout" )I.SortOrder =Enum.SortOrder.LayoutOrder I.Padding =UDim.new ( 0 , 7 )I.Parent =n
+    local L=Instance.new ( "UIPadding" )L.PaddingTop =UDim.new ( 0 , 8 )L.PaddingBottom =UDim.new ( 0 , 12 )L.PaddingLeft =UDim.new ( 0 , 10 )L.PaddingRight =UDim.new ( 0 , 10 )L.Parent =n C.MouseButton1Click :Connect(function(...) g=not g C.Text =g and "+" or "-" ;
+        (u:Create(Q,TweenInfo.new ( 0.25 ,Enum.EasingStyle.Quart ,Enum.EasingDirection.Out ),{[ "Size" ]=g and UDim2.new ( 0 , 330 , 0 ,R)or UDim2.new ( 0 , 330 , 0 ,i)})):Play()
+    end
+    )q.MouseButton1Click :Connect(function(...) aM()
+    end
+    )
+    local function E(e,r,...)
+        local y=Instance.new ( "Frame" )y.Size =UDim2.new ( 1 , 0 , 0 , 20 )y.BackgroundTransparency = 1 y.LayoutOrder =r y.Parent =n
+        local u=Instance.new ( "TextLabel" )u.Size =UDim2.new ( 1 , 0 , 1 , 0 )u.BackgroundTransparency = 1 u.Text =e u.TextColor3 =Color3.fromRGB ( 165 , 165 , 165 )u.TextSize = 11 u.Font =Enum.Font.GothamBold u.TextXAlignment =Enum.TextXAlignment.Left u.AutoLocalize = false u.Parent =y
+        return y
+    end
+    local function b(e,r,y,w,j,k,...)
+        local a=Instance.new ( "Frame" )a.Size =UDim2.new ( 1 , 0 , 0 , 52 )a.BackgroundColor3 =t a.LayoutOrder =j a.Parent =n;
+        (Instance.new ( "UICorner" ,a)).CornerRadius =UDim.new ( 0 , 8 )
+        local o=Instance.new ( "TextLabel" )o.Size =UDim2.new ( 1 , -60 , 0 , 18 )o.Position =UDim2.new ( 0 , 10 , 0 , 8 )o.BackgroundTransparency = 1 o.Text =e o.TextColor3 =w or B o.TextSize = 13 o.Font =Enum.Font.GothamBold o.TextXAlignment =Enum.TextXAlignment.Left o.AutoLocalize = false o.Parent =a
+        local V=Instance.new ( "TextLabel" )V.Size =UDim2.new ( 1 , -60 , 0 , 16 )V.Position =UDim2.new ( 0 , 10 , 0 , 26 )V.BackgroundTransparency = 1 V.Text =r V.TextColor3 =J V.TextSize = 10 V.Font =Enum.Font.Gotham V.TextXAlignment =Enum.TextXAlignment.Left V.AutoLocalize = false V.Parent =a
+        local H=Instance.new ( "TextButton" )H.Size =UDim2.new ( 0 , 44 , 0 , 24 )H.Position =UDim2.new ( 1 , -54 , 0.5 , -12 )H.BackgroundColor3 =y and w or K H.Text = "" H.AutoButtonColor = false H.Parent =a;
+        (Instance.new ( "UICorner" ,H)).CornerRadius =UDim.new ( 1 , 0 )
+        local s=Instance.new ( "Frame" )s.Size =UDim2.new ( 0 , 18 , 0 , 18 )s.Position =y and UDim2.new ( 1 , -21 , 0.5 , -9 )or UDim2.new ( 0 , 3 , 0.5 , -9 )s.BackgroundColor3 =y and v or c s.Parent =H;
+        (Instance.new ( "UICorner" ,s)).CornerRadius =UDim.new ( 1 , 0 )
+        local p=y
+        local function i(e,...) p=e
+            local r=TweenInfo.new ( 0.18 ,Enum.EasingStyle.Quart ,Enum.EasingDirection.Out );
+            (u:Create(H,r,{[ "BackgroundColor3" ]=p and w or K})):Play();
+            (u:Create(s,r,{[ "Position" ]=p and UDim2.new ( 1 , -21 , 0.5 , -9 )or UDim2.new ( 0 , 3 , 0.5 , -9 );
+            [ "BackgroundColor3" ]=p and v or c})):Play()
+        end
+        H.MouseButton1Click :Connect(function(...)
+            local e=not p i(e)k(e)
+        end
+        )
+        return i
+    end
+    local function A(e,r,y,u,w,...)
+        local j=Instance.new ( "Frame" )j.Size =UDim2.new ( 1 , 0 , 0 , 48 )j.BackgroundColor3 =t j.LayoutOrder =u j.Parent =n;
+        (Instance.new ( "UICorner" ,j)).CornerRadius =UDim.new ( 0 , 8 )
+        local k=Instance.new ( "TextLabel" )k.Size =UDim2.new ( 1 , -95 , 0 , 18 )k.Position =UDim2.new ( 0 , 10 , 0 , 6 )k.BackgroundTransparency = 1 k.Text =e k.TextColor3 =y or B k.TextSize = 13 k.Font =Enum.Font.GothamBold k.TextXAlignment =Enum.TextXAlignment.Left k.AutoLocalize = false k.Parent =j
+        local a=Instance.new ( "TextLabel" )a.Size =UDim2.new ( 1 , -95 , 0 , 16 )a.Position =UDim2.new ( 0 , 10 , 0 , 24 )a.BackgroundTransparency = 1 a.Text =r a.TextColor3 =J a.TextSize = 10 a.Font =Enum.Font.Gotham a.TextXAlignment =Enum.TextXAlignment.Left a.AutoLocalize = false a.Parent =j
+        local o=Instance.new ( "TextButton" )o.Size =UDim2.new ( 0 , 78 , 0 , 30 )o.Position =UDim2.new ( 1 , -86 , 0.5 , -15 )o.BackgroundColor3 =y o.Text = "RUN" o.TextColor3 =Color3.fromRGB ( 200 , 200 , 200 )o.TextSize = 11 o.Font =Enum.Font.GothamBold o.AutoButtonColor = false o.Parent =j;
+        (Instance.new ( "UICorner" ,o)).CornerRadius =UDim.new ( 0 , 6 )o.MouseButton1Click :Connect(w)
+    end
+    E( "MAIN" , 10 )
+    local S= false
+    local Z=nil
+    local z=nil Z=b( "Auto Steal" , "Automatically steal eggs" ,h.pureTweenFarm ,Color3.fromRGB ( 165 , 165 , 165 ), 11 ,function(e,...)
+        if S then
+            return
+        end
+        if e then
+            T4( "TWEEN" )
+        else
+            if Y4== "TWEEN" or h.pureTweenFarm then
+                T4( "NONE" )
+            end
+        end
+    end
+    )z=b( "Auto Steal (Teleport)" , "Teleport steal (disabled)" ,false ,Color3.fromRGB ( 80 , 80 , 80 ), 12 ,function(e,...)
+        if S then
+            return
+        end
+        if e then
+            T4( "WARP" )
+        else
+            if Y4== "WARP" or h.autoFarmLoop then
+                T4( "NONE" )
+            end
+        end
+    end
+    )x4=function(e,...) pcall(function(...)
+            if Z then
+                S= true Z(e)S= false
+            end
+        end
+        )
+    end
+    W4=function(e,...) pcall(function(...)
+            if z then
+                S= true z(e)S= false
+            end
+        end
+        )
+    end
+    A( "Single Steal (Teleport)" , "Teleport to steal 1 target egg and return" ,Color3.fromRGB ( 170 , 170 , 170 ), 13 ,function(...) task.spawn (function(...)
+            if Y4~= "NONE" then
+                T4( "NONE" )task.wait ( 0.2 )
+            end
+            local e=N4()
+            if e then
+                local y=l4(e,nil)
+                if y then
+                    pcall(u4)
+                    if h.autoGlide then
+                        Q4(h.glideSpeed )u4()
+                    end
+                end
+            end
+        end
+        )
+    end
+    )E( "PLACE" , 20 )A( "Place Egg" , "Tween home, place all carried eggs & hatch" ,Color3.fromRGB ( 155 , 155 , 155 ), 21 ,function(...) task.spawn (function(...) h.statusText = "[Manual] Depositing eggs..." g4(h.glideSpeed )v4()u4()h.isReturning = false h.delivering = false
+        end
+        )
+    end
+    )b( "Auto Place" , "Automatically place eggs at base" ,h.autoPlaceEvery5 ,Color3.fromRGB ( 190 , 190 , 190 ), 22 ,function(e,...) h.autoPlaceEvery5 =e
+        if not e then
+            h.batchStealCount = 0
+        end
+    end
+    )b( "Auto Hatch" , "Automatically hatch ready eggs" ,h.autoHatch ,Color3.fromRGB ( 155 , 155 , 155 ), 22 ,function(e,...) h.autoHatch =e
+    end
+    )b( "Auto Return" , "Return to safe area after stealing" ,h.autoGlide ,Color3.fromRGB ( 190 , 190 , 190 ), 23 ,function(e,...) h.autoGlide =e
+    end
+    )b( "Auto Treadmill" , "Run on treadmill when idle" ,h.autoTreadmill ,Color3.fromRGB ( 180 , 180 , 180 ), 24 ,function(e,...) h.autoTreadmill =e x()n4()
+        if not e and((h.onTreadmill or L4()))then
+            M4()
+        end
+    end
+    )E( "PREFERENCE" , 30 )b( "Godmode" , "Ignore damage and traps" , false ,Color3.fromRGB ( 160 , 160 , 160 ), 31 ,function(e,...)
+        if e then
+            enableNyxGodmode()
+        else
+            disableNyxGodmode()
+        end
+    end
+    )A( "Get Unstuck" , "Free yourself from stuck positions" ,Color3.fromRGB ( 155 , 155 , 155 ), 32 ,function(...) pcall(M4)pcall(C4)pcall(D4)
+    end
+    )E( "SETTINGS" , 40 )
+    local F=Instance.new ( "Frame" )F.Size =UDim2.new ( 1 , 0 , 0 , 48 )F.BackgroundColor3 =t F.LayoutOrder = 41 F.Parent =n;
+    (Instance.new ( "UICorner" ,F)).CornerRadius =UDim.new ( 0 , 8 )
+    local O=Instance.new ( "TextLabel" )O.Size =UDim2.new ( 1 , -130 , 0 , 18 )O.Position =UDim2.new ( 0 , 10 , 0 , 6 )O.BackgroundTransparency = 1 O.Text = "Flight Speed" O.TextColor3 =B O.TextSize = 13 O.Font =Enum.Font.GothamBold O.TextXAlignment =Enum.TextXAlignment.Left O.AutoLocalize = false O.Parent =F
+    local T=Instance.new ( "TextLabel" )T.Size =UDim2.new ( 0 , 70 , 0 , 24 )T.Position =UDim2.new ( 1 , -80 , 0.5 , -12 )T.BackgroundColor3 =V T.Text =string.format ( "%d Studs/s" ,h.glideSpeed or 600 )T.TextColor3 =Color3.fromRGB ( 190 , 190 , 190 )T.TextSize = 11 T.Font =Enum.Font.GothamBold T.AutoLocalize = false T.Parent =F;
+    (Instance.new ( "UICorner" ,T)).CornerRadius =UDim.new ( 0 , 6 )
+    local W=Instance.new ( "TextButton" )W.Size =UDim2.new ( 0 , 24 , 0 , 24 )W.Position =UDim2.new ( 1 , -110 , 0.5 , -12 )W.BackgroundColor3 =s W.Text = "-" W.TextColor3 =B W.TextSize = 14 W.Font =Enum.Font.GothamBold W.Parent =F;
+    (Instance.new ( "UICorner" ,W)).CornerRadius =UDim.new ( 0 , 6 )
+    local m=Instance.new ( "TextButton" )m.Size =UDim2.new ( 0 , 24 , 0 , 24 )m.Position =UDim2.new ( 1 , -138 , 0.5 , -12 )m.BackgroundColor3 =s m.Text = "+" m.TextColor3 =B m.TextSize = 14 m.Font =Enum.Font.GothamBold m.Parent =F;
+    (Instance.new ( "UICorner" ,m)).CornerRadius =UDim.new ( 0 , 6 )W.MouseButton1Click :Connect(function(...) h.glideSpeed =math.max ( 100 ,((h.glideSpeed or 600 ))- 25 )T.Text =string.format ( "%d Studs/s" ,h.glideSpeed )Y(h.glideSpeed )
+    end
+    )m.MouseButton1Click :Connect(function(...) h.glideSpeed =math.min ( 1000 ,((h.glideSpeed or 600 ))+ 25 )T.Text =string.format ( "%d Studs/s" ,h.glideSpeed )Y(h.glideSpeed )
+    end
+    )A( "Reset Character State" , "Clear velocity, cancel push & unfreeze" ,Color3.fromRGB ( 180 , 180 , 180 ), 42 ,function(...) pcall(D4)pcall(u4)
+    end
+    )A( "Unload Script" , "Destroy UI and stop all background loops" ,Color3.fromRGB ( 153 , 27 , 27 ), 43 ,function(...) aM()
+    end
+    )E( "EGG SELECT (ZONES & RARITIES)" , 45 )
+    local e4=Instance.new ( "TextButton" )e4.Size =UDim2.new ( 1 , 0 , 0 , 48 )e4.BackgroundColor3 =t e4.LayoutOrder = 46 e4.Text = "" e4.AutoButtonColor = false e4.Parent =n;
+    (Instance.new ( "UICorner" ,e4)).CornerRadius =UDim.new ( 0 , 8 )
+    local function r4(...)
+        local e= 0
+        for y,u in ipairs(M)do
+            if h.selectedZones and h.selectedZones [u]then
+                e=e+ 1
+            end
+        end
+        return e
+    end
+    local w4=Instance.new ( "TextLabel" )w4.Size =UDim2.new ( 1 , -50 , 0 , 18 )w4.Position =UDim2.new ( 0 , 10 , 0 , 6 )w4.BackgroundTransparency = 1 w4.Text =string.format ( "Target Zones (%d/12 Active)" ,r4())w4.TextColor3 =Color3.fromRGB ( 165 , 165 , 165 )w4.TextSize = 13 w4.Font =Enum.Font.GothamBold w4.TextXAlignment =Enum.TextXAlignment.Left w4.AutoLocalize = false w4.Parent =e4
+    local j4=Instance.new ( "TextLabel" )j4.Size =UDim2.new ( 1 , -50 , 0 , 16 )j4.Position =UDim2.new ( 0 , 10 , 0 , 26 )j4.BackgroundTransparency = 1 j4.Text = "Click to expand / collapse zone selection" j4.TextColor3 =J j4.TextSize = 10 j4.Font =Enum.Font.Gotham j4.TextXAlignment =Enum.TextXAlignment.Left j4.AutoLocalize = false j4.Parent =e4
+    local k4=Instance.new ( "TextLabel" )k4.Size =UDim2.new ( 0 , 30 , 0 , 30 )k4.Position =UDim2.new ( 1 , -38 , 0.5 , -15 )k4.BackgroundTransparency = 1 k4.Text = "" k4.TextColor3 =J k4.TextSize = 12 k4.Font =Enum.Font.GothamBold k4.Parent =e4
+    local a4=Instance.new ( "Frame" )a4.Size =UDim2.new ( 1 , 0 , 0 , 0 )a4.BackgroundColor3 =Color3.fromRGB ( 16 , 16 , 16 )a4.LayoutOrder = 47 a4.Visible = false a4.ClipsDescendants = true a4.Parent =n;
+    (Instance.new ( "UICorner" ,a4)).CornerRadius =UDim.new ( 0 , 8 )
+    local o4=Instance.new ( "UIGridLayout" )o4.CellSize =UDim2.new ( 0.48 , 0 , 0 , 32 )o4.CellPadding =UDim2.new ( 0.04 , 0 , 0 , 6 )o4.SortOrder =Enum.SortOrder.LayoutOrder o4.Parent =a4;
+    (Instance.new ( "UIPadding" ,a4)).PaddingTop =UDim.new ( 0 , 8 )a4.UIPadding.PaddingBottom =UDim.new ( 0 , 8 )a4.UIPadding.PaddingLeft =UDim.new ( 0 , 8 )a4.UIPadding.PaddingRight =UDim.new ( 0 , 8 )
+    local V4={}
+    for e,r in ipairs(M)do
+        local y=Instance.new ( "TextButton" )y.LayoutOrder =e y.Font =Enum.Font.GothamBold y.TextSize = 11 y.AutoButtonColor = false y.AutoLocalize = false ;
+        (Instance.new ( "UICorner" ,y)).CornerRadius =UDim.new ( 0 , 6 )
+        local function u(...)
+            local e=h.selectedZones and h.selectedZones [r]== true
+            if e then
+                y.BackgroundColor3 =d[r]or Color3.fromRGB ( 170 , 170 , 170 )y.TextColor3 =Color3.new ( 1 , 1 , 1 )y.Text = "" ..r
+            else
+                y.BackgroundColor3 =Color3.fromRGB ( 28 , 28 , 28 )y.TextColor3 =Color3.fromRGB ( 140 , 150 , 170 )y.Text =r
+            end
+        end
+        u()y.MouseButton1Click :Connect(function(...)
+            if not h.selectedZones then
+                h.selectedZones ={}
+            end
+            h.selectedZones [r]=not((h.selectedZones [r]== true ))u()x()w4.Text =string.format ( "Target Zones (%d/12 Active)" ,r4())
+        end
+        )y.Parent =a4 V4[r]=y
+    end
+    local H4= false e4.MouseButton1Click :Connect(function(...) H4=not H4 a4.Visible =H4 a4.Size =H4 and UDim2.new ( 1 , 0 , 0 , 240 )or UDim2.new ( 1 , 0 , 0 , 0 )k4.Text =H4 and "" or ""
+    end
+    )
+    local function t4(...)
+        local e= 0
+        for y,u in ipairs(X)do
+            if h.selectedRarities and h.selectedRarities [u]then
+                e=e+ 1
+            end
+        end
+        return e
+    end
+    local s4=Instance.new ( "TextButton" )s4.Size =UDim2.new ( 1 , 0 , 0 , 48 )s4.BackgroundColor3 =t s4.LayoutOrder = 48 s4.Text = "" s4.AutoButtonColor = false s4.Parent =n;
+    (Instance.new ( "UICorner" ,s4)).CornerRadius =UDim.new ( 0 , 8 )
+    local p4=Instance.new ( "TextLabel" )p4.Size =UDim2.new ( 1 , -50 , 0 , 18 )p4.Position =UDim2.new ( 0 , 10 , 0 , 6 )p4.BackgroundTransparency = 1 p4.Text =string.format ( "Target Rarities (%d/%d Active)" ,t4(),#X)p4.TextColor3 =Color3.fromRGB ( 255 , 180 , 0 )p4.TextSize = 13 p4.Font =Enum.Font.GothamBold p4.TextXAlignment =Enum.TextXAlignment.Left p4.AutoLocalize = false p4.Parent =s4
+    local B4=Instance.new ( "TextLabel" )B4.Size =UDim2.new ( 1 , -50 , 0 , 16 )B4.Position =UDim2.new ( 0 , 10 , 0 , 26 )B4.BackgroundTransparency = 1 B4.Text = "Click to expand / collapse rarity selection" B4.TextColor3 =J B4.TextSize = 10 B4.Font =Enum.Font.Gotham B4.TextXAlignment =Enum.TextXAlignment.Left B4.AutoLocalize = false B4.Parent =s4
+    local J4=Instance.new ( "TextLabel" )J4.Size =UDim2.new ( 0 , 30 , 0 , 30 )J4.Position =UDim2.new ( 1 , -38 , 0.5 , -15 )J4.BackgroundTransparency = 1 J4.Text = "" J4.TextColor3 =J J4.TextSize = 12 J4.Font =Enum.Font.GothamBold J4.Parent =s4
+    local K4=Instance.new ( "Frame" )K4.Size =UDim2.new ( 1 , 0 , 0 , 0 )K4.BackgroundColor3 =Color3.fromRGB ( 16 , 16 , 16 )K4.LayoutOrder = 49 K4.Visible = false K4.ClipsDescendants = true K4.Parent =n;
+    (Instance.new ( "UICorner" ,K4)).CornerRadius =UDim.new ( 0 , 8 )
+    local c4=Instance.new ( "UIGridLayout" )c4.CellSize =UDim2.new ( 0.48 , 0 , 0 , 32 )c4.CellPadding =UDim2.new ( 0.04 , 0 , 0 , 6 )c4.SortOrder =Enum.SortOrder.LayoutOrder c4.Parent =K4;
+    (Instance.new ( "UIPadding" ,K4)).PaddingTop =UDim.new ( 0 , 8 )K4.UIPadding.PaddingBottom =UDim.new ( 0 , 8 )K4.UIPadding.PaddingLeft =UDim.new ( 0 , 8 )K4.UIPadding.PaddingRight =UDim.new ( 0 , 8 )
+    for e,r in ipairs(X)do
+        local y=Instance.new ( "TextButton" )y.LayoutOrder =e y.Font =Enum.Font.GothamBold y.TextSize = 11 y.AutoButtonColor = false y.AutoLocalize = false ;
+        (Instance.new ( "UICorner" ,y)).CornerRadius =UDim.new ( 0 , 6 )
+        local function u(...)
+            local e=h.selectedRarities and h.selectedRarities [r]== true
+            if e then
+                y.BackgroundColor3 =G[r]or Color3.fromRGB ( 155 , 155 , 155 )y.TextColor3 =Color3.new ( 1 , 1 , 1 )y.Text = "" ..r
+            else
+                y.BackgroundColor3 =Color3.fromRGB ( 28 , 28 , 28 )y.TextColor3 =Color3.fromRGB ( 140 , 150 , 170 )y.Text =r
+            end
+        end
+        u()y.MouseButton1Click :Connect(function(...)
+            if not h.selectedRarities then
+                h.selectedRarities ={}
+            end
+            h.selectedRarities [r]=not((h.selectedRarities [r]== true ))u()x()p4.Text =string.format ( "Target Rarities (%d/%d Active)" ,t4(),#X)
+        end
+        )y.Parent =K4
+    end
+    local i4= false s4.MouseButton1Click :Connect(function(...) i4=not i4 K4.Visible =i4 K4.Size =i4 and UDim2.new ( 1 , 0 , 0 , 160 )or UDim2.new ( 1 , 0 , 0 , 0 )J4.Text =i4 and "" or ""
+    end
+    )e(function(...) Q.Visible = true
+    end
+    )
+end
+H( "[+] Initializing Vortex X Sage x WindUI v1.0 (Vortex X Sage Edition)..." )oM()task.spawn (function(...) task.wait ( 0.5 )
+    -- No A4 auto: el swap de Humanoid rompe salto y animaciones al cargar
+    if h.godmode then b4( true ) end
+    C4()
+    if o.Character then
+        z4(o.Character)
+        pcall(function()
+            local hum = o.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+                hum.PlatformStand = false
+                hum.Sit = false
+                if hum.UseJumpPower ~= nil then
+                    hum.UseJumpPower = true
+                end
+                if (hum.JumpPower or 0) < 50 then hum.JumpPower = 50 end
+                if (hum.JumpHeight or 0) < 7.2 then hum.JumpHeight = 7.2 end
+            end
+            local anim = o.Character:FindFirstChild("Animate")
+            if anim and anim:IsA("LocalScript") then
+                anim.Disabled = false
             end
         end)
     end
-})
-
-
-
-print("[Vortex X Sage] Steal An Egg WindUI loaded")
-
-
-task.spawn(function()
-        task.wait(0.5)
-        pcall(A4)
-        pcall(function() b4(true) end)
-        pcall(C4)
-        if o.Character then
-                pcall(z4, o.Character)
-        end
-        pcall(u4)
-end)
-o.CharacterAdded:Connect(function(char)
-        task.wait(0.6)
-        if h.alive then
-                pcall(D4)
-                pcall(n4)
-                pcall(C4)
-                pcall(A4)
-                pcall(function() b4(true) end)
-                pcall(z4, char)
-                pcall(u4)
-        end
-end)
+    u4()
+    H( "[+] Vortex X Sage ready." )
+end
+)o.CharacterAdded :Connect(function(e,...) task.wait ( 0.6 )
+    if h.alive then
+        D4()n4()C4()
+        -- A4 solo si farm/god lo necesita, no siempre (rompe salto)
+        if h.godmode then b4( true ) end
+        z4(e)
+        pcall(function()
+            local hum = e:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Freefall, true)
+                hum:SetStateEnabled(Enum.HumanoidStateType.Running, true)
+                hum.PlatformStand = false
+                hum.Sit = false
+                if hum.UseJumpPower ~= nil then hum.UseJumpPower = true end
+                if (hum.JumpPower or 0) < 50 then hum.JumpPower = 50 end
+                if (hum.JumpHeight or 0) < 7.2 then hum.JumpHeight = 7.2 end
+            end
+            local anim = e:FindFirstChild("Animate")
+            if anim and anim:IsA("LocalScript") then anim.Disabled = false end
+        end)
+        u4()
+    end
+end
+)
 if h.performanceMode then
-        pcall(function() if Mk then task.spawn(Mk) end end)
+    task.spawn (Mk)
 end
 if h.disable3D then
-        pcall(function() y:Set3dRenderingEnabled(false) end)
+    pcall(function(...) y:Set3dRenderingEnabled( false )
+    end
+    )
 end
 if h.antiAFK then
-        pcall(function() if bk then task.spawn(bk) end end)
+    task.spawn (bk)
 end
+H( "[+] Vortex X Sage v1.0 Ready!" )
