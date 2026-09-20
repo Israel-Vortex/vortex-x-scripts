@@ -1929,7 +1929,7 @@ local function wk(e,r,u,w,...)
     end
     r=math.max ( 60 ,r or h.glideSpeed or 350 )
     -- Altura ligera al ir por el huevo (6-9 studs)
-    local FARM_HOVER = 4
+    local FARM_HOVER = 2
     local V = e.Position + Vector3.new(0, FARM_HOVER, 0)
     V4(V, 14 )pcall(function(...) o:RequestStreamAroundAsync(V)
     end
