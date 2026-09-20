@@ -1,6 +1,7 @@
 -- ==========================================
 -- VORTEX X SAGE · Steal an Egg [WindUI]
 -- ==========================================
+
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local RunService = game:GetService("RunService")
@@ -1448,11 +1449,12 @@ t4=function(...)
 end
 s4=function(...)
     local e,r,y=t4()
+    -- Mas alto al dejar el huevo (vuelo)
     if r then
-        return r.Position +Vector3.new ( 0 , 3.5 , 0 )
+        return r.Position +Vector3.new ( 0 , 9 , 0 )
     end
     if y then
-        return y.Position +Vector3.new ( 0 , 3.5 , 0 )
+        return y.Position +Vector3.new ( 0 , 9 , 0 )
     end
     return Vector3.new ( 464.7 , 71.7 , -304 )
 end
@@ -1845,7 +1847,10 @@ local function wk(e,r,u,w,...)
         a.AutoRotate = false
     end
     r=math.max ( 60 ,r or h.glideSpeed or 350 )
-    local V=e.Position V4(V, 14 )pcall(function(...) o:RequestStreamAroundAsync(V)
+    -- Altura de vuelo (medio volando) al ir por el huevo
+    local FARM_HOVER = 8
+    local V = e.Position + Vector3.new(0, FARM_HOVER, 0)
+    V4(V, 14 )pcall(function(...) o:RequestStreamAroundAsync(V)
     end
     )k.AssemblyLinearVelocity =Vector3.zero k.AssemblyAngularVelocity =Vector3.zero
     local H=h.laneZ or L h.glidingToTarget = true h.stateTime =os.clock ()
@@ -1897,6 +1902,13 @@ local function wk(e,r,u,w,...)
         local g=math.sign (V.Y -e.Y )
         local Q=g*math.min (math.abs (V.Y -e.Y ),(r*B)*R)
         local P=e.Y +Q
+        -- Mantener altura de vuelo si aun esta lejos
+        if o > 12 then
+            local minY = V.Y - 1
+            if P < minY then
+                P = math.min(P + (r*B)*0.8, minY + 2)
+            end
+        end
         local N=K-e.Z
         local U=math.sign (N)*math.min (math.abs (N),r*B)
         local l=e.Z +U
@@ -1940,10 +1952,10 @@ R4=function(e,r,y,u,...)
         local w=j.Position.X
         local a=e.Position.X
         if w<= 535 and a> 510 then
-            local e=CFrame.new ( 500 , 70 , -364 )
+            local e=CFrame.new ( 500 , 78 , -364 )
             local a=((j.Position -e.Position )).Magnitude
             if a> 5 then
-                h.statusText = "[AutoSteal] Exiting Base -> Waypoint (500, 70, -364)..." H(string.format ( "[AutoSteal] Leaving base (X=%.1f): Gliding to waypoint (500, 70, -364) first (dist=%.1f studs)..." ,w,a))
+                h.statusText = "[AutoSteal] Exiting Base -> Waypoint (500, 78, -364)..." H(string.format ( "[AutoSteal] Leaving base (X=%.1f): Gliding to waypoint (500, 78, -364) first (dist=%.1f studs)..." ,w,a))
                 local j=wk(e,r,y,u)
                 if not j then
                     return false
@@ -1965,7 +1977,7 @@ Q4=function(e,r,...)
         j.AutoRotate = false
     end
     local k=h.laneZ or L
-    local a=Vector3.new (E- 10 , 70 ,k)e=math.max ( 100 ,e or h.glideSpeed or 350 )h.isReturning = true h.stateTime =os.clock ()V4(Vector3.new (E, 70 ,k), 20 )pcall(u4)w.AssemblyLinearVelocity =Vector3.zero w.AssemblyAngularVelocity =Vector3.zero
+    local a=Vector3.new (E- 10 , 78 ,k)e=math.max ( 100 ,e or h.glideSpeed or 350 )h.isReturning = true h.stateTime =os.clock ()V4(Vector3.new (E, 78 ,k), 20 )pcall(u4)w.AssemblyLinearVelocity =Vector3.zero w.AssemblyAngularVelocity =Vector3.zero
     local V=o4()
     local H=math.max (e,V)
     local s=os.clock ()+ 15
