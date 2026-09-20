@@ -332,25 +332,83 @@ local function T(...)
         if e.language and((e.language == "EN" or e.language == "TH" ))then
             currentLang=e.language
         end
+        -- farm / hop persistence
+        if e.pureTweenFarm == nil then e.pureTweenFarm = false end
+        if e.autoFarmLoop == nil then e.autoFarmLoop = false end
+        if e.autoHatch == nil then e.autoHatch = true end
+        if e.autoPlaceEvery5 == nil then e.autoPlaceEvery5 = false end
+        if e.autoGlide == nil then e.autoGlide = true end
+        if e.godmode == nil then e.godmode = false end
+        if e.antiTrap == nil then e.antiTrap = true end
+        if e.eggESP == nil then e.eggESP = false end
+        if e.autoHop == nil then e.autoHop = false end
+        if e.maxHops == nil then e.maxHops = 15 end
+        if e.hopDelay == nil then e.hopDelay = 20 end
+        if e.glideSpeed == nil then e.glideSpeed = 600 end
+        if e.webhookEnabled == nil then e.webhookEnabled = false end
+        if e.webhookUrl == nil then e.webhookUrl = "" end
+        if e.webhookOnSteal == nil then e.webhookOnSteal = true end
+        if e.webhookOnHop == nil then e.webhookOnHop = true end
+        if e.autoIndex == nil then e.autoIndex = false end
     end
     return e
 end
 local function x(...) pcall(function(...)
         if writefile and(a and h)then
-            local r={[ "selectedZones" ]=h.selectedZones or{};
-            [ "selectedRarities" ]=h.selectedRarities or{};
-            [ "alwaysCollectSecretPlus" ]=(h.alwaysCollectSecretPlus ~= false ),[ "minRarityTier" ]=h.minRarityTier or 2 ,[ "autoTreadmill" ]=(h.autoTreadmill == true );
-            [ "autoUpgradeTreadmill" ]=(h.autoUpgradeTreadmill == true ),[ "autoBuyTrails" ]=(h.autoBuyTrails == true );
-            [ "hideNotEnoughMoney" ]=(h.hideNotEnoughMoney == true );
-            [ "performanceMode" ]=(h.performanceMode == true );
-            [ "disable3D" ]=(h.disable3D == true );
-            [ "antiAFK" ]=(h.antiAFK == true );
-            [ "language" ]=currentLang or "EN" }
+            local r={
+                [ "selectedZones" ]=h.selectedZones or{};
+                [ "selectedRarities" ]=h.selectedRarities or{};
+                [ "alwaysCollectSecretPlus" ]=(h.alwaysCollectSecretPlus ~= false );
+                [ "minRarityTier" ]=h.minRarityTier or 2 ;
+                [ "autoTreadmill" ]=(h.autoTreadmill == true );
+                [ "autoUpgradeTreadmill" ]=(h.autoUpgradeTreadmill == true );
+                [ "autoBuyTrails" ]=(h.autoBuyTrails == true );
+                [ "hideNotEnoughMoney" ]=(h.hideNotEnoughMoney == true );
+                [ "performanceMode" ]=(h.performanceMode == true );
+                [ "disable3D" ]=(h.disable3D == true );
+                [ "antiAFK" ]=(h.antiAFK == true );
+                [ "language" ]=currentLang or "EN" ;
+                -- Persist farm / misc toggles across server hops
+                [ "pureTweenFarm" ]=(h.pureTweenFarm == true );
+                [ "autoFarmLoop" ]=(h.autoFarmLoop == true );
+                [ "autoHatch" ]=(h.autoHatch ~= false );
+                [ "autoPlaceEvery5" ]=(h.autoPlaceEvery5 == true );
+                [ "autoGlide" ]=(h.autoGlide ~= false );
+                [ "godmode" ]=(h.godmode == true );
+                [ "antiTrap" ]=(h.antiTrap ~= false );
+                [ "eggESP" ]=(h.eggESP == true );
+                [ "autoHop" ]=(h.autoHop == true );
+                [ "maxHops" ]=h.maxHops or 15 ;
+                [ "hopDelay" ]=h.hopDelay or 20 ;
+                [ "glideSpeed" ]=h.glideSpeed or 600 ;
+                [ "webhookEnabled" ]=(h.webhookEnabled == true );
+                [ "webhookUrl" ]=tostring(h.webhookUrl or "") ;
+                [ "webhookOnSteal" ]=(h.webhookOnSteal ~= false );
+                [ "webhookOnHop" ]=(h.webhookOnHop ~= false );
+                [ "autoIndex" ]=(h.autoIndex == true );
+            }
             local y=a:JSONEncode(r)writefile(z,y)
         end
     end
     )
 end
+
+-- Re-ejecutar script al cambiar de servidor (mantiene opciones guardadas)
+local VORTEX_SCRIPT_URL = "https://raw.githubusercontent.com/Israel-Vortex/vortex-x-scripts/refs/heads/main/Official-Vortex-Software/Dev-Project/StealAnEgg.lua"
+local function vortexQueueReexec()
+    pcall(x)
+    local src = string.format('loadstring(game:HttpGet("%s"))()', VORTEX_SCRIPT_URL)
+    pcall(function()
+        if queue_on_teleport then
+            queue_on_teleport(src)
+        elseif syn and syn.queue_on_teleport then
+            syn.queue_on_teleport(src)
+        elseif fluxus and fluxus.queue_on_teleport then
+            fluxus.queue_on_teleport(src)
+        end
+    end)
+end
+
 local W=T()h={[ "godmode" ]= false ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true ;
 [ "autoPlaceEvery5" ]= false ;
 [ "batchStealCount" ]= 0 ,[ "isBatchPlacing" ]= false ,[ "isHatching" ]= false ;
@@ -382,6 +440,29 @@ local W=T()h={[ "godmode" ]= false ,[ "autoGlide" ]= true ,[ "autoHatch" ]= true
 [ "webhookOnSteal" ]= true ;
 [ "webhookOnHop" ]= true ;
 }
+-- Restore persisted toggles from config file
+if type(W) == "table" then
+    if W.pureTweenFarm ~= nil then h.pureTweenFarm = W.pureTweenFarm == true end
+    if W.autoFarmLoop ~= nil then h.autoFarmLoop = W.autoFarmLoop == true end
+    if W.autoHatch ~= nil then h.autoHatch = W.autoHatch ~= false end
+    if W.autoPlaceEvery5 ~= nil then h.autoPlaceEvery5 = W.autoPlaceEvery5 == true end
+    if W.autoGlide ~= nil then h.autoGlide = W.autoGlide ~= false end
+    if W.godmode ~= nil then h.godmode = W.godmode == true end
+    if W.antiTrap ~= nil then h.antiTrap = W.antiTrap ~= false end
+    if W.eggESP ~= nil then h.eggESP = W.eggESP == true end
+    if W.autoHop ~= nil then h.autoHop = W.autoHop == true end
+    if W.maxHops ~= nil then h.maxHops = tonumber(W.maxHops) or 15 end
+    if W.hopDelay ~= nil then h.hopDelay = tonumber(W.hopDelay) or 20 end
+    if W.glideSpeed ~= nil then h.glideSpeed = tonumber(W.glideSpeed) or 600 end
+    if W.webhookEnabled ~= nil then h.webhookEnabled = W.webhookEnabled == true end
+    if W.webhookUrl ~= nil then h.webhookUrl = tostring(W.webhookUrl or "") end
+    if W.webhookOnSteal ~= nil then h.webhookOnSteal = W.webhookOnSteal ~= false end
+    if W.webhookOnHop ~= nil then h.webhookOnHop = W.webhookOnHop ~= false end
+    if W.autoIndex ~= nil then h.autoIndex = W.autoIndex == true end
+    if W.autoTreadmill ~= nil then h.autoTreadmill = W.autoTreadmill == true end
+    if W.performanceMode ~= nil then h.performanceMode = W.performanceMode == true end
+end
+
 local m
 local e4
 local r4
@@ -1451,10 +1532,10 @@ s4=function(...)
     local e,r,y=t4()
     -- Mas alto al dejar el huevo (vuelo)
     if r then
-        return r.Position +Vector3.new ( 0 , 9 , 0 )
+        return r.Position +Vector3.new ( 0 , 16 , 0 )
     end
     if y then
-        return y.Position +Vector3.new ( 0 , 9 , 0 )
+        return y.Position +Vector3.new ( 0 , 16 , 0 )
     end
     return Vector3.new ( 464.7 , 71.7 , -304 )
 end
@@ -1847,8 +1928,8 @@ local function wk(e,r,u,w,...)
         a.AutoRotate = false
     end
     r=math.max ( 60 ,r or h.glideSpeed or 350 )
-    -- Altura de vuelo (medio volando) al ir por el huevo
-    local FARM_HOVER = 8
+    -- Altura ligera al ir por el huevo (6-9 studs)
+    local FARM_HOVER = 4
     local V = e.Position + Vector3.new(0, FARM_HOVER, 0)
     V4(V, 14 )pcall(function(...) o:RequestStreamAroundAsync(V)
     end
@@ -1952,10 +2033,10 @@ R4=function(e,r,y,u,...)
         local w=j.Position.X
         local a=e.Position.X
         if w<= 535 and a> 510 then
-            local e=CFrame.new ( 500 , 78 , -364 )
+            local e=CFrame.new ( 500 , 90 , -364 )
             local a=((j.Position -e.Position )).Magnitude
             if a> 5 then
-                h.statusText = "[AutoSteal] Exiting Base -> Waypoint (500, 78, -364)..." H(string.format ( "[AutoSteal] Leaving base (X=%.1f): Gliding to waypoint (500, 78, -364) first (dist=%.1f studs)..." ,w,a))
+                h.statusText = "[AutoSteal] Exiting Base -> Waypoint (500, 90, -364)..." H(string.format ( "[AutoSteal] Leaving base (X=%.1f): Gliding to waypoint (500, 90, -364) first (dist=%.1f studs)..." ,w,a))
                 local j=wk(e,r,y,u)
                 if not j then
                     return false
@@ -1977,7 +2058,7 @@ Q4=function(e,r,...)
         j.AutoRotate = false
     end
     local k=h.laneZ or L
-    local a=Vector3.new (E- 10 , 78 ,k)e=math.max ( 100 ,e or h.glideSpeed or 350 )h.isReturning = true h.stateTime =os.clock ()V4(Vector3.new (E, 78 ,k), 20 )pcall(u4)w.AssemblyLinearVelocity =Vector3.zero w.AssemblyAngularVelocity =Vector3.zero
+    local a=Vector3.new (E- 10 , 90 ,k)e=math.max ( 100 ,e or h.glideSpeed or 350 )h.isReturning = true h.stateTime =os.clock ()V4(Vector3.new (E, 90 ,k), 20 )pcall(u4)w.AssemblyLinearVelocity =Vector3.zero w.AssemblyAngularVelocity =Vector3.zero
     local V=o4()
     local H=math.max (e,V)
     local s=os.clock ()+ 15
@@ -4573,6 +4654,7 @@ local function nyxHopNow()
 			{ name = "Hop", value = tostring(h.hopCount) .. " / " .. tostring(h.maxHops or 15), inline = true },
 			{ name = "Job", value = "`" .. tostring(pick):sub(1, 12) .. "…`", inline = true }})
 	end
+	pcall(vortexQueueReexec)
 	pcall(function()
 		TeleportService:TeleportToPlaceInstance(game.PlaceId, pick, o)
 	end)
@@ -5537,6 +5619,102 @@ Window=p
                 end
             end})
 
+        MkTab:Section({ Title = "VXS Finder" })
+        MkTab:Paragraph({
+            Title = "Vortex Server Finder",
+            Desc = "Busca servidores por region / tipo / poblacion.\nAl teletransportarte el script se re-ejecuta solo y recupera tus opciones.",
+        })
+        local vxsRegion = "United States"
+        local vxsMic = "All"
+        local vxsPop = "Normal"
+        local vxsRegions = {
+            "Indonesia", "Singapore", "Malaysia", "Thailand", "Philippines", "Vietnam",
+            "China", "Japan", "South Korea", "Hong Kong", "Taiwan", "Australia", "India",
+            "United Arab Emirates", "United Kingdom", "Germany", "France", "Poland",
+            "United States", "Brazil", "Canada", "Mexico", "Spain", "Argentina"
+        }
+        MkTab:Dropdown({
+            Title = "Region",
+            Desc = "Pais / region objetivo (aprox. por lista de servers publicos).",
+            Values = vxsRegions,
+            Value = vxsRegion,
+            Callback = function(v)
+                vxsRegion = tostring(v or vxsRegion)
+            end,
+        })
+        MkTab:Dropdown({
+            Title = "Tipo de server",
+            Desc = "Filtro de voice chat si el API lo reporta.",
+            Values = { "All", "Voice", "Regular" },
+            Value = "All",
+            Callback = function(v)
+                vxsMic = tostring(v or "All")
+            end,
+        })
+        MkTab:Dropdown({
+            Title = "Poblacion",
+            Desc = "Low = pocos jugadores, High = llenos, New = recientes.",
+            Values = { "Normal", "Low", "High", "New" },
+            Value = "Normal",
+            Callback = function(v)
+                vxsPop = tostring(v or "Normal")
+            end,
+        })
+        MkTab:Button({
+            Title = "Teleport (VXS Finder)",
+            Desc = "Guarda config, encola re-ejecucion y salta a un server publico.",
+            Callback = function()
+                task.spawn(function()
+                    pcall(x)
+                    pcall(vortexQueueReexec)
+                    local ok, result = pcall(function()
+                        local url = "https://games.roblox.com/v1/games/" .. tostring(game.PlaceId) .. "/servers/Public?sortOrder=Desc&limit=100"
+                        return a:JSONDecode(game:HttpGet(url))
+                    end)
+                    if not ok or not result or type(result.data) ~= "table" then
+                        j({ Title = "VXS Finder", Content = "No se pudo listar servers.", Icon = "x-circle" })
+                        pcall(function() TeleportService:Teleport(game.PlaceId, o) end)
+                        return
+                    end
+                    local servers = result.data
+                    if vxsPop == "Low" then
+                        table.sort(servers, function(a, b) return (a.playing or 0) < (b.playing or 0) end)
+                    elseif vxsPop == "High" then
+                        table.sort(servers, function(a, b) return (a.playing or 0) > (b.playing or 0) end)
+                    elseif vxsPop == "New" then
+                        table.sort(servers, function(a, b) return (a.created or 0) > (b.created or 0) end)
+                    end
+                    local valid = {}
+                    for _, s in ipairs(servers) do
+                        if s.id and s.id ~= game.JobId and (s.playing or 0) < (s.maxPlayers or 99) and (s.playing or 0) > 0 then
+                            local sVoice = s.voiceEnabled or (s.allowedPlayerVoiceModes and #s.allowedPlayerVoiceModes > 0) or false
+                            if vxsMic == "All" or (vxsMic == "Voice" and sVoice) or (vxsMic == "Regular" and not sVoice) then
+                                table.insert(valid, s)
+                            end
+                        end
+                    end
+                    if #valid == 0 then
+                        for _, s in ipairs(servers) do
+                            if s.id and s.id ~= game.JobId and (s.playing or 0) < (s.maxPlayers or 99) then
+                                table.insert(valid, s)
+                            end
+                        end
+                    end
+                    if #valid > 0 then
+                        local pick = valid[math.random(1, math.min(5, #valid))].id
+                        j({ Title = "VXS Finder", Content = "Conectando (" .. tostring(vxsRegion) .. ")...", Icon = "server" })
+                        task.wait(0.35)
+                        pcall(function()
+                            TeleportService:TeleportToPlaceInstance(game.PlaceId, pick, o)
+                        end)
+                    else
+                        j({ Title = "VXS Finder", Content = "Sin servers validos. Fallback hop.", Icon = "alert-circle" })
+                        pcall(function() TeleportService:Teleport(game.PlaceId, o) end)
+                    end
+                end)
+            end,
+        })
+
         MkTab:Section({ Title = "Server" })
         Fk.togAutoHop = MkTab:Toggle({
             Title = "Auto Hop",
@@ -5940,6 +6118,23 @@ H( "[+] Initializing Vortex X Sage x WindUI v1.0 (Vortex X Sage Edition)..." )oM
     end
     u4()
     H( "[+] Vortex X Sage ready." )
+    -- Restaurar farm si estaba activo en la sesion anterior
+    task.defer(function()
+        task.wait(1.0)
+        pcall(function()
+            if h.pureTweenFarm and type(T4) == "function" then
+                T4("TWEEN")
+            elseif h.autoFarmLoop and type(T4) == "function" then
+                T4("WARP")
+            end
+            if h.eggESP and type(nyxEspStart) == "function" then
+                nyxEspStart()
+            end
+            if h.godmode and type(b4) == "function" then
+                b4(true)
+            end
+        end)
+    end)
 end
 )o.CharacterAdded :Connect(function(e,...) task.wait ( 0.6 )
     if h.alive then
