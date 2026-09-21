@@ -111,6 +111,14 @@ local function showBottomMessage(msg)
 end
 
 local function SaveConfig()
+    pcall(function()
+        if flyEnabled ~= nil then SharedOpts.flyEnabled = flyEnabled end
+        if flySpeed ~= nil then SharedOpts.flySpeed = flySpeed end
+        if auraEnabled ~= nil then SharedOpts.auraEnabled = auraEnabled end
+        if auraRadius ~= nil then SharedOpts.auraRadius = auraRadius end
+        if auraAttraction ~= nil then SharedOpts.auraAttraction = auraAttraction end
+        if bubbleSize ~= nil then SharedOpts.bubbleSize = bubbleSize end
+    end)
     local config = {
         Armed = EmoteFlingConfig.Armed,
         AnimId = EmoteFlingConfig.AnimId,
@@ -124,7 +132,14 @@ local function SaveConfig()
         noclipEnabled = EmoteFlingConfig.noclipEnabled,
         ToggleKey = (EmoteFlingConfig.ToggleKey and typeof(EmoteFlingConfig.ToggleKey) == "EnumItem") and EmoteFlingConfig.ToggleKey.Name or "K",
         QuickFireKey = (EmoteFlingConfig.QuickFireKey and typeof(EmoteFlingConfig.QuickFireKey) == "EnumItem") and EmoteFlingConfig.QuickFireKey.Name or "T",
-        BubbleSize = bubbleSize,
+        BubbleSize = tonumber(SharedOpts.bubbleSize) or bubbleSize,
+        -- Fly / Aura / extras (via SharedOpts para no perder locals)
+        flyEnabled = SharedOpts.flyEnabled == true,
+        flySpeed = tonumber(SharedOpts.flySpeed) or 90,
+        auraEnabled = SharedOpts.auraEnabled == true,
+        auraRadius = tonumber(SharedOpts.auraRadius) or 50,
+        auraAttraction = tonumber(SharedOpts.auraAttraction) or 1000,
+        FloatingButtonsEnabled = EmoteFlingConfig.FloatingButtonsEnabled ~= false,
     }
     pcall(function() writefile(CONFIG_FILE, HttpService:JSONEncode(config)) end)
 end
@@ -153,6 +168,12 @@ local function LoadConfig()
             EmoteFlingConfig.antiFlingEnabled = config.antiFlingEnabled == true
             EmoteFlingConfig.noclipEnabled = config.noclipEnabled == true
             bubbleSize = math.clamp(tonumber(config.BubbleSize) or 42, 28, 64)
+            if config.flyEnabled ~= nil then flyEnabled = config.flyEnabled == true end
+            if config.flySpeed ~= nil then flySpeed = tonumber(config.flySpeed) or flySpeed end
+            if config.auraEnabled ~= nil then auraEnabled = config.auraEnabled == true end
+            if config.auraRadius ~= nil then radius = tonumber(config.auraRadius) or radius end
+            if config.auraAttraction ~= nil then attractionStrength = tonumber(config.auraAttraction) or attractionStrength end
+            if config.FloatingButtonsEnabled ~= nil then EmoteFlingConfig.FloatingButtonsEnabled = config.FloatingButtonsEnabled ~= false end
             if config.ToggleKey then pcall(function() EmoteFlingConfig.ToggleKey = Enum.KeyCode[config.ToggleKey] end) end
             if config.QuickFireKey then pcall(function() EmoteFlingConfig.QuickFireKey = Enum.KeyCode[config.QuickFireKey] end) end
             return true
@@ -1026,6 +1047,25 @@ local auraHeight = 100
 local auraRotSpeed = 10
 local auraAttraction = 1000
 local auraParts = {}
+-- Aplicar config guardada (listas/sliders/toggles de aura/fly)
+pcall(function()
+    if type(LoadedCFG) == "table" then
+        if LoadedCFG.auraEnabled ~= nil then auraEnabled = LoadedCFG.auraEnabled == true end
+        if LoadedCFG.auraRadius ~= nil then auraRadius = tonumber(LoadedCFG.auraRadius) or auraRadius end
+        if LoadedCFG.auraAttraction ~= nil then auraAttraction = tonumber(LoadedCFG.auraAttraction) or auraAttraction end
+        if LoadedCFG.flyEnabled ~= nil then flyEnabled = LoadedCFG.flyEnabled == true end
+        if LoadedCFG.flySpeed ~= nil then flySpeed = tonumber(LoadedCFG.flySpeed) or flySpeed end
+        if LoadedCFG.BubbleSize ~= nil then bubbleSize = math.clamp(tonumber(LoadedCFG.BubbleSize) or bubbleSize, 28, 64) end
+    end
+end)
+pcall(function()
+    SharedOpts.auraEnabled = auraEnabled
+    SharedOpts.auraRadius = auraRadius
+    SharedOpts.auraAttraction = auraAttraction
+    SharedOpts.flyEnabled = flyEnabled
+    SharedOpts.flySpeed = flySpeed
+    SharedOpts.bubbleSize = bubbleSize
+end)
 local auraMenu = nil
 local auraMenuVisible = false
 local auraBubbleFab = nil
@@ -1518,7 +1558,7 @@ utilityTab:Toggle({
     Value = false,
     Callback = function(state)
         if state ~= auraEnabled then
-            auraEnabled = state
+            auraEnabled = state; SharedOpts.auraEnabled = state; pcall(SaveConfig)
             setAuraBubbleVisual()
             Notify({ Title = "Aura de Items", Content = state and "ON" or "OFF", Duration = 2, Icon = "sparkles" })
         end
@@ -2310,3 +2350,10 @@ else
 end
 
 print("[Vortex X Sage] Survival Disaster WindUI loaded")
+-- Autosave Survival options
+task.spawn(function()
+    while true do
+        task.wait(15)
+        pcall(SaveConfig)
+    end
+end)
