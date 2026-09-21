@@ -1710,7 +1710,20 @@ local function executeDesyncLogic()
         setCharacterTransparency(realChar, 1)
         hrp.CFrame = CFrame.new(savedCFrame.X, platform.Position.Y + (platform.Size.Y/2) + 3, savedCFrame.Z)
 
-        workspace.CurrentCamera.CameraSubject = fakeHumanoid
+        -- Camara SIEMPRE en el clon (no en el personaje real)
+        local function lockCameraToClone()
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                if not cam then return end
+                cam.CameraType = Enum.CameraType.Custom
+                if fakeHumanoid and fakeHumanoid.Parent then
+                    cam.CameraSubject = fakeHumanoid
+                elseif fakeHrp and fakeHrp.Parent then
+                    cam.CameraSubject = fakeHrp
+                end
+            end)
+        end
+        lockCameraToClone()
 
         local rayParams = RaycastParams.new()
         rayParams.FilterType = Enum.RaycastFilterType.Exclude
@@ -1718,6 +1731,9 @@ local function executeDesyncLogic()
 
         desyncState.syncConnection = RunService.RenderStepped:Connect(function()
             if hrp and fakeChar and fakeHrp then
+                -- Reafirmar camara en el clon cada frame (Roblox a veces la devuelve al real)
+                lockCameraToClone()
+
                 local realPos = hrp.Position
                 local cloneCurrentY = fakeHrp.Position.Y
 
