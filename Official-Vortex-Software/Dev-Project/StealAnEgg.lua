@@ -83,6 +83,155 @@ for _, Table in getgc(true) do
     end
 end
 
+-- ==========================================
+-- VORTEX NOTIFY (pequeña, dorada, transparente)
+-- Solo 1 visible: la nueva reemplaza a la anterior
+-- ==========================================
+local VortexNotify = {}
+do
+	local TweenService = game:GetService("TweenService")
+	local CoreGui = game:GetService("CoreGui")
+	local currentFrame = nil
+	local currentToken = 0
+	local WIDTH, HEIGHT = 260, 58
+
+	local function getHost()
+		local host
+		pcall(function()
+			if gethui then host = gethui() end
+		end)
+		if not host then
+			host = CoreGui
+		end
+		local gui = host:FindFirstChild("VortexNotifyHost")
+		if not gui then
+			gui = Instance.new("ScreenGui")
+			gui.Name = "VortexNotifyHost"
+			gui.ResetOnSpawn = false
+			gui.IgnoreGuiInset = true
+			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			pcall(function()
+				if syn and syn.protect_gui then syn.protect_gui(gui) end
+			end)
+			gui.Parent = host
+		end
+		return gui
+	end
+
+	local function dismiss(frame, instant)
+		if not frame then return end
+		pcall(function()
+			if instant then
+				frame:Destroy()
+				return
+			end
+			local tw = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Position = UDim2.new(1, 40, 0, 16),
+				BackgroundTransparency = 1,
+			})
+			tw:Play()
+			task.delay(0.28, function()
+				pcall(function() frame:Destroy() end)
+			end)
+		end)
+	end
+
+	function VortexNotify.Show(title, text, duration)
+		duration = tonumber(duration) or 2.5
+		title = tostring(title or "Vortex X Sage")
+		text = tostring(text or "")
+
+		-- Quitar la anterior al instante
+		if currentFrame then
+			local old = currentFrame
+			currentFrame = nil
+			dismiss(old, true)
+		end
+
+		currentToken = currentToken + 1
+		local token = currentToken
+
+		local gui = getHost()
+		local frame = Instance.new("Frame")
+		frame.Name = "VN"
+		frame.AnchorPoint = Vector2.new(1, 0)
+		frame.Size = UDim2.fromOffset(WIDTH, HEIGHT)
+		frame.Position = UDim2.new(1, 20, 0, 16)
+		frame.BackgroundColor3 = Color3.fromRGB(18, 14, 8)
+		frame.BackgroundTransparency = 0.35
+		frame.BorderSizePixel = 0
+		frame.Parent = gui
+		currentFrame = frame
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = frame
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(255, 200, 55)
+		stroke.Thickness = 1.2
+		stroke.Transparency = 0.35
+		stroke.Parent = frame
+
+		local accent = Instance.new("Frame")
+		accent.Size = UDim2.new(0, 3, 1, -12)
+		accent.Position = UDim2.new(0, 6, 0, 6)
+		accent.BackgroundColor3 = Color3.fromRGB(255, 195, 45)
+		accent.BackgroundTransparency = 0.15
+		accent.BorderSizePixel = 0
+		accent.Parent = frame
+		Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
+
+		local titleL = Instance.new("TextLabel")
+		titleL.BackgroundTransparency = 1
+		titleL.Position = UDim2.new(0, 14, 0, 6)
+		titleL.Size = UDim2.new(1, -22, 0, 18)
+		titleL.Font = Enum.Font.GothamBold
+		titleL.TextSize = 13
+		titleL.TextXAlignment = Enum.TextXAlignment.Left
+		titleL.TextColor3 = Color3.fromRGB(255, 220, 90)
+		titleL.Text = title
+		titleL.Parent = frame
+
+		local bodyL = Instance.new("TextLabel")
+		bodyL.BackgroundTransparency = 1
+		bodyL.Position = UDim2.new(0, 14, 0, 26)
+		bodyL.Size = UDim2.new(1, -22, 0, 28)
+		bodyL.Font = Enum.Font.Gotham
+		bodyL.TextSize = 12
+		bodyL.TextXAlignment = Enum.TextXAlignment.Left
+		bodyL.TextYAlignment = Enum.TextYAlignment.Top
+		bodyL.TextWrapped = true
+		bodyL.TextColor3 = Color3.fromRGB(230, 220, 190)
+		bodyL.TextTransparency = 0.1
+		bodyL.Text = text
+		bodyL.Parent = frame
+
+		TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Position = UDim2.new(1, -16, 0, 16)
+		}):Play()
+
+		task.delay(duration, function()
+			if token ~= currentToken then return end
+			if currentFrame ~= frame then return end
+			currentFrame = nil
+			local tw = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+				Position = UDim2.new(1, 40, 0, 16),
+				BackgroundTransparency = 1
+			})
+			tw:Play()
+			pcall(function()
+				titleL.TextTransparency = 1
+				bodyL.TextTransparency = 1
+				stroke.Transparency = 1
+				accent.BackgroundTransparency = 1
+			end)
+			tw.Completed:Wait()
+			pcall(function() frame:Destroy() end)
+		end)
+	end
+end
+
 -- Internal aliases (used by compact logic below)
 local e, r, y, u, w, j, k, a, o = Players, Workspace, RunService, TweenService, UserInputService, ReplicatedStorage, ProximityPromptService, HttpService, LocalPlayer
 
@@ -386,6 +535,10 @@ local function x(...) pcall(function(...)
                 [ "webhookOnSteal" ]=(h.webhookOnSteal ~= false );
                 [ "webhookOnHop" ]=(h.webhookOnHop ~= false );
                 [ "autoIndex" ]=(h.autoIndex == true );
+                -- Listas / dropdowns
+                [ "vxsRegion" ]=tostring(h.vxsRegion or "United States");
+                [ "vxsMic" ]=tostring(h.vxsMic or "All");
+                [ "vxsPop" ]=tostring(h.vxsPop or "Normal");
             }
             local y=a:JSONEncode(r)writefile(z,y)
         end
@@ -461,6 +614,13 @@ if type(W) == "table" then
     if W.autoIndex ~= nil then h.autoIndex = W.autoIndex == true end
     if W.autoTreadmill ~= nil then h.autoTreadmill = W.autoTreadmill == true end
     if W.performanceMode ~= nil then h.performanceMode = W.performanceMode == true end
+    if type(W.selectedZones) == "table" then h.selectedZones = W.selectedZones end
+    if type(W.selectedRarities) == "table" then h.selectedRarities = W.selectedRarities end
+    if W.vxsRegion ~= nil then h.vxsRegion = tostring(W.vxsRegion) end
+    if W.vxsMic ~= nil then h.vxsMic = tostring(W.vxsMic) end
+    if W.vxsPop ~= nil then h.vxsPop = tostring(W.vxsPop) end
+    if W.alwaysCollectSecretPlus ~= nil then h.alwaysCollectSecretPlus = W.alwaysCollectSecretPlus ~= false end
+    if W.minRarityTier ~= nil then h.minRarityTier = tonumber(W.minRarityTier) or 2 end
 end
 
 local m
@@ -5016,26 +5176,30 @@ local function oM(...)
         if not e then
             return
         end
-        local y= false
-        if r and r.Notify then
-            local u=pcall(function(...) r:Notify(e)y= true
+        -- Vortex Notify (UI propia dorada / transparente)
+        pcall(function()
+            local title = tostring(e.Title or e.title or "Vortex X Sage")
+            local content = tostring(e.Content or e.content or e.Text or "")
+            local dur = tonumber(e.Duration or e.duration) or 2.5
+            if VortexNotify and VortexNotify.Show then
+                VortexNotify.Show(title, content, dur)
             end
-            )
-        end
-        if not y then
-            pcall(function(...)
-                (game:GetService( "StarterGui" )):SetCore( "SendNotification" ,{[ "Title" ]=tostring(e.Title or "Vortex X Sage" ),[ "Text" ]=tostring(e.Content or "" );
-                [ "Duration" ]= 3 })
-            end
-            )
-        end
+        end)
     end
     if r then
         pcall(function(...)
             local e=r.Notify
             if e then
-                r.Notify =function(r,y,...)
-                    local u=pcall(function(...) e(r,y)
+                r.Notify =function(self, y, ...)
+                    pcall(function()
+                        local title = tostring(y and (y.Title or y.title) or "Vortex X Sage")
+                        local content = tostring(y and (y.Content or y.content or y.Text) or "")
+                        local dur = tonumber(y and (y.Duration or y.duration)) or 2.5
+                        if VortexNotify and VortexNotify.Show then
+                            VortexNotify.Show(title, content, dur)
+                        end
+                    end)
+                    local u=pcall(function(...) e(self,y)
                     end
                     )
                     if not u then
@@ -5138,7 +5302,7 @@ r:SetTheme("VortexGoldSolid")
         })
         
         pcall(function()
-            r:Notify({ Title = "Login VortexHub", Content = "Login VortexHub", Duration = 2 })
+            VortexNotify.Show("Login VortexHub", "Login VortexHub", 2)
         end)
         task.wait(0.4)
 Window=p
@@ -5407,9 +5571,21 @@ Window=p
         local q={}
         for _,z in ipairs(D) do q[z]=z end
         local n={}
+        local seenN = {}
         for e,r in pairs(h.selectedZones or{})do
-            if r and q[e]then
-                table.insert (n,q[e])
+            local zoneName = nil
+            if r == true and type(e) == "string" and q[e] then
+                zoneName = q[e]
+            elseif type(e) == "number" and type(r) == "string" and q[r] then
+                zoneName = q[r]
+            elseif type(r) == "string" and q[r] then
+                zoneName = q[r]
+            elseif r and type(e) == "string" and q[e] then
+                zoneName = q[e]
+            end
+            if zoneName and not seenN[zoneName] then
+                seenN[zoneName] = true
+                table.insert(n, zoneName)
             end
         end
         
@@ -5419,6 +5595,7 @@ Window=p
             Value = h.antiTrap ~= false,
             Callback = function(state)
                 h.antiTrap = state and true or false
+                pcall(x)
             end})
         Fk.togAutoIndex = Ok:Toggle({
             Title = "Auto Index",
@@ -5482,9 +5659,21 @@ Window=p
         [ "Uncommon" ]= "Uncommon" ;
         [ "Common" ]= "Common" }
         local b={}
+        local seenB = {}
         for e,r in pairs(h.selectedRarities or{})do
-            if r and E[e]then
-                table.insert (b,E[e])
+            local rarName = nil
+            if r == true and type(e) == "string" and E[e] then
+                rarName = E[e]
+            elseif type(e) == "number" and type(r) == "string" and E[r] then
+                rarName = E[r]
+            elseif type(r) == "string" and E[r] then
+                rarName = E[r]
+            elseif r and type(e) == "string" and E[e] then
+                rarName = E[e]
+            end
+            if rarName and not seenB[rarName] then
+                seenB[rarName] = true
+                table.insert(b, rarName)
             end
         end
         Fk.dropTargetRarities =Ok:Dropdown({[ "Title" ]=(P.EggSelect and P.EggSelect.DropRaritiesTitle )or "Rarities" ;
@@ -5624,9 +5813,12 @@ Window=p
             Title = "Vortex Server Finder",
             Desc = "Busca servidores por region / tipo / poblacion.\nAl teletransportarte el script se re-ejecuta solo y recupera tus opciones.",
         })
-        local vxsRegion = "United States"
-        local vxsMic = "All"
-        local vxsPop = "Normal"
+        h.vxsRegion = tostring(h.vxsRegion or "United States")
+        h.vxsMic = tostring(h.vxsMic or "All")
+        h.vxsPop = tostring(h.vxsPop or "Normal")
+        local vxsRegion = h.vxsRegion
+        local vxsMic = h.vxsMic
+        local vxsPop = h.vxsPop
         local vxsRegions = {
             "Indonesia", "Singapore", "Malaysia", "Thailand", "Philippines", "Vietnam",
             "China", "Japan", "South Korea", "Hong Kong", "Taiwan", "Australia", "India",
@@ -5640,24 +5832,30 @@ Window=p
             Value = vxsRegion,
             Callback = function(v)
                 vxsRegion = tostring(v or vxsRegion)
+                h.vxsRegion = vxsRegion
+                pcall(x)
             end,
         })
         MkTab:Dropdown({
             Title = "Tipo de server",
             Desc = "Filtro de voice chat si el API lo reporta.",
             Values = { "All", "Voice", "Regular" },
-            Value = "All",
+            Value = vxsMic,
             Callback = function(v)
                 vxsMic = tostring(v or "All")
+                h.vxsMic = vxsMic
+                pcall(x)
             end,
         })
         MkTab:Dropdown({
             Title = "Poblacion",
             Desc = "Low = pocos jugadores, High = llenos, New = recientes.",
             Values = { "Normal", "Low", "High", "New" },
-            Value = "Normal",
+            Value = vxsPop,
             Callback = function(v)
                 vxsPop = tostring(v or "Normal")
+                h.vxsPop = vxsPop
+                pcall(x)
             end,
         })
         MkTab:Button({
@@ -6118,6 +6316,16 @@ H( "[+] Initializing Vortex X Sage x WindUI v1.0 (Vortex X Sage Edition)..." )oM
     end
     u4()
     H( "[+] Vortex X Sage ready." )
+-- Autosave config (listas + toggles) periodicamente
+task.spawn(function()
+    while true do
+        task.wait(25)
+        if h and h.alive ~= false then
+            pcall(x)
+        end
+    end
+end)
+
     -- Restaurar farm si estaba activo en la sesion anterior
     task.defer(function()
         task.wait(1.0)
