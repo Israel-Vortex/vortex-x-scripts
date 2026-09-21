@@ -355,7 +355,45 @@ task.wait(0.35)
 local UI_READY = false
 task.defer(function()
     task.wait(0.15)
-    UI_READY = true
+    
+-- ==========================================
+-- AUTO CONFIG SAVE/LOAD (Duels)
+-- Guarda toggles/sliders/dropdowns (Flags) y restaura al entrar
+-- ==========================================
+pcall(function()
+    local cm = Window and Window.ConfigManager
+    if not cm then return end
+    local cfgName = "VortexAuto"
+    local cfg
+    pcall(function()
+        if cm.CreateConfig then
+            cfg = cm:CreateConfig(cfgName)
+        end
+    end)
+    if not cfg then
+        pcall(function()
+            if cm.Config then cfg = cm:Config(cfgName) end
+        end)
+    end
+    if not cfg then return end
+    Window.CurrentConfig = cfg
+    task.defer(function()
+        task.wait(0.8)
+        pcall(function()
+            if cfg.Load then cfg:Load() end
+        end)
+    end)
+    task.spawn(function()
+        while true do
+            task.wait(15)
+            pcall(function()
+                if cfg.Save then cfg:Save() end
+            end)
+        end
+    end)
+end)
+
+UI_READY = true
 end)
 
 
@@ -519,6 +557,7 @@ InfoTab:Paragraph({
 InfoTab:Section({ Title = "Monitor" })
 
 InfoTab:Toggle({
+    Flag = "Mostrar_FPS_y_Ping",
     Title = "Mostrar FPS y Ping",
     Desc = "Contador FPS/Ping en la esquina (caja dorada).",
     Value = false,
@@ -734,6 +773,7 @@ emotesTab:Section({ Title = "Paquetes Completos" })
 
 local selectedBundleCompleto = "Ninguno"
 emotesTab:Dropdown({
+    Flag = "Elegir_Paquete",
     Title = "Elegir Paquete",
     Desc = "Elige un set completo de animaciones de movimiento.",
     Values = animList,
@@ -779,12 +819,18 @@ local mixParts = {
     Jump = "Ninguno", Fall = "Ninguno", Climb = "Ninguno"
 }
 
-emotesTab:Dropdown({ Title = "Reposo", Desc = "Animacion de idle (cuando estas quieto).", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
-emotesTab:Dropdown({ Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
-emotesTab:Dropdown({ Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
-emotesTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
-emotesTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
-emotesTab:Dropdown({ Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
+emotesTab:Dropdown({ Flag = "Reposo",
+    Title = "Reposo", Desc = "Animacion de idle (cuando estas quieto).", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
+emotesTab:Dropdown({ Flag = "Caminar",
+    Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
+emotesTab:Dropdown({ Flag = "Correr",
+    Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
+emotesTab:Dropdown({ Flag = "Saltar",
+    Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
+emotesTab:Dropdown({ Flag = "Caer",
+    Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
+emotesTab:Dropdown({ Flag = "Escalar",
+    Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
 
 emotesTab:Button({
     Title = "Combinar y Aplicar",
@@ -848,6 +894,7 @@ pcall(function()
 end)
 
 ConfigTab:Input({
+    Flag = "Background_Image_ID",
     Title = "Background Image ID",
     Desc = "Introduce el ID de Roblox (ej: rbxassetid://...) para cambiar el fondo",
     Value = "rbxassetid://133044138027516",
@@ -865,6 +912,7 @@ local ConfigManager = Window.ConfigManager
 local ConfigName = "default"
 
 local ConfigNameInput = ConfigTab:Input({
+    Flag = "Config_Name",
     Title = "Config Name",
     Icon = "file-cog",
     Callback = function(value)
@@ -878,6 +926,7 @@ local AllConfigs = ConfigManager:AllConfigs()
 local DefaultValue = table.find(AllConfigs, ConfigName) and ConfigName or nil
 
 local AllConfigsDropdown = ConfigTab:Dropdown({
+    Flag = "All_Configs",
     Title = "All Configs",
     Desc = "Select existing configs",
     Values = AllConfigs,
@@ -1226,6 +1275,7 @@ local bubbleSilentAim, bubbleSilentAimHit = createBubbleButton("BubbleSilentAim"
 local bubbleAutoShoot, bubbleAutoShootHit = createBubbleButton("BubbleAutoShoot", "target", BGAP / 2, BX_IN)
 
 bannableTab:Toggle({
+    Flag = "Edit_Bubble_Positions",
     Title = "Edit Bubble Positions",
     Desc = "Desbloquea las burbujas flotantes para arrastrarlas libremente.",
     Default = false,
@@ -1235,6 +1285,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Slider({
+    Flag = "Tamano_de_Bubbles",
     Title = "Tamano de Bubbles",
     Desc = "Agrandar o hacer mas pequenas las bubbles (cuadradas).",
     Step = 1,
@@ -1248,6 +1299,7 @@ bannableTab:Divider()
 bannableTab:Paragraph({ Title = "Bubbles Visibility", Desc = "Muestra u oculta cada bubble en pantalla." })
 
 bannableTab:Toggle({
+    Flag = "Show_Bubble_Ghost_GST",
     Title = "Show Bubble Ghost (GST)",
     Desc = "Muestra u oculta el botón flotante.",
     Default = false,
@@ -1255,6 +1307,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Toggle({
+    Flag = "Show_Bubble_Desync_DSY",
     Title = "Show Bubble Desync (DSY)",
     Desc = "Muestra u oculta el botón flotante.",
     Default = false,
@@ -1262,6 +1315,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Toggle({
+    Flag = "Show_Bubble_Kill_All_KAL",
     Title = "Show Bubble Kill All (KAL)",
     Desc = "Muestra u oculta el botón flotante de Kill All.",
     Default = false,
@@ -1269,6 +1323,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Toggle({
+    Flag = "Show_Bubble_Silent_Aim_SA",
     Title = "Show Bubble Silent Aim (SA)",
     Desc = "Muestra u oculta el botón flotante de Silent Aim.",
     Default = false,
@@ -1276,6 +1331,7 @@ bannableTab:Toggle({
 })
 
 bannableTab:Toggle({
+    Flag = "Show_Bubble_Auto_Shoot_ATS",
     Title = "Show Bubble Auto Shoot (ATS)",
     Desc = "Muestra u oculta el botón flotante de Auto Shoot.",
     Default = false,
@@ -1644,7 +1700,8 @@ end)
 
 Tabs.Farm:Section({ Title = "Auto Teleport (Pads)" })
 Tabs.Farm:Toggle({
-	Title = "Auto Teleport Main",
+	Flag = "Auto_Teleport_Main",
+    Title = "Auto Teleport Main",
 	Desc = "Va al pad principal segun duel type y fila.",
 	Value = false,
 	Callback = function(state)
@@ -1654,7 +1711,8 @@ Tabs.Farm:Toggle({
 	end,
 })
 Tabs.Farm:Toggle({
-	Title = "Auto Teleport Alt",
+	Flag = "Auto_Teleport_Alt",
+    Title = "Auto Teleport Alt",
 	Desc = "Va al pad alterno (solo uno a la vez).",
 	Value = false,
 	Callback = function(state)
@@ -1664,7 +1722,8 @@ Tabs.Farm:Toggle({
 	end,
 })
 Tabs.Farm:Dropdown({
-	Title = "Duel Type",
+	Flag = "Duel_Type",
+    Title = "Duel Type",
 	Desc = "Tipo de duelo del pad al que te teletransporta (1v1 a 4v4).",
 	Values = { "1v1", "2v2", "3v3", "4v4" },
 	Value = "1v1",
@@ -1673,7 +1732,8 @@ Tabs.Farm:Dropdown({
 	end,
 })
 Tabs.Farm:Dropdown({
-	Title = "Platform Row",
+	Flag = "Platform_Row",
+    Title = "Platform Row",
 	Desc = "Fila de plataformas (izquierda o derecha) para el Auto TP.",
 	Values = PLATFORM_ROWS,
 	Value = "Right Platforms",
@@ -1682,7 +1742,8 @@ Tabs.Farm:Dropdown({
 	end,
 })
 Tabs.Farm:Toggle({
-	Title = "Event Farm (Spawnables)",
+	Flag = "Event_Farm_Spawnables",
+    Title = "Event Farm (Spawnables)",
 	Desc = "Toca drops del evento automaticamente.",
 	Value = false,
 	Callback = function(state)
@@ -1808,6 +1869,7 @@ movementTab:Paragraph({
 })
 
 movementTab:Toggle({
+    Flag = "Velocidad_Speed",
     Title = "Velocidad (Speed)",
     Desc = "Aumenta tu velocidad de movimiento (con spoof anti-deteccion).",
     Default = false,
@@ -1830,6 +1892,7 @@ movementTab:Toggle({
 })
 
 movementTab:Slider({
+    Flag = "Valor_de_velocidad",
     Title = "Valor de velocidad",
     Desc = "Que tan rapido te mueves con Speed activo.",
     Value = { Min = 16, Max = 120, Default = 28 },
@@ -1842,6 +1905,7 @@ movementTab:Slider({
 })
 
 movementTab:Toggle({
+    Flag = "Vuelo_Fly",
     Title = "Vuelo (Fly)",
     Desc = "Te permite volar libremente por el mapa.",
     Default = false,
@@ -1857,6 +1921,7 @@ movementTab:Toggle({
 })
 
 movementTab:Slider({
+    Flag = "Velocidad_de_vuelo",
     Title = "Velocidad de vuelo",
     Desc = "Velocidad al usar Fly.",
     Value = { Min = 20, Max = 250, Default = 80 },
@@ -1866,6 +1931,7 @@ movementTab:Slider({
 })
 
 movementTab:Toggle({
+    Flag = "Salto_infinito",
     Title = "Salto infinito",
     Desc = "Puedes saltar sin limite en el aire.",
     Default = false,
@@ -1877,6 +1943,7 @@ movementTab:Toggle({
 
 -- Noclip
 movementTab:Toggle({
+    Flag = "Noclip",
     Title = "Noclip",
     Desc = "Atraviesa paredes y objetos del mapa.",
     Default = false,
@@ -1908,6 +1975,7 @@ movementTab:Toggle({
 
 -- Glitch de velocidad (igual que MM2: velocidad en aire, 16 en suelo)
 movementTab:Toggle({
+    Flag = "Glitch_de_Velocidad",
     Title = "Glitch de Velocidad",
     Desc = "Velocidad al saltar/caer; normal en el suelo. Se apaga el Speed permanente.",
     Default = false,
@@ -2399,6 +2467,7 @@ local function setKillAllState(state)
 end
 
 UIElements.TogKillAll = Tabs.Aim:Toggle({ 
+    Flag = "Activar_Kill_All_Posible_Ban_si_te_repor",
     Title = "Activar Kill All (Posible Ban si te reportan)",
     Desc = "Mata a todos los enemigos con cuchillo.",
     Value = false,
@@ -2424,6 +2493,7 @@ Tabs.Aim:Divider()
 Tabs.Aim:Paragraph({ Title = "Macro (Pistola)", Desc = "" })
 
 UIElements.TogMacro = Tabs.Aim:Toggle({
+    Flag = "Activar_Macro",
     Title = "Activar Macro", 
     Desc = "Dispara con un solo toque.",
     Value = false,
@@ -2434,6 +2504,7 @@ Tabs.Aim:Divider()
 Tabs.Aim:Paragraph({ Title = "Auto Shoot", Desc = "Disparo automatico al detectar enemigos." })
 
 UIElements.TogAutoShoot = Tabs.Aim:Toggle({
+    Flag = "Auto_Shoot",
     Title = "Auto Shoot",
     Desc = "Dispara automáticamente a la parte del cuerpo seleccionada.",
     Value = false,
@@ -2447,6 +2518,7 @@ UIElements.TogAutoShoot = Tabs.Aim:Toggle({
 })
 
 UIElements.TogAutoShootCuchillo = Tabs.Aim:Toggle({
+    Flag = "Auto_Shoot_Cuchillo",
     Title = "Auto Shoot (Cuchillo)",
     Desc = "Ataca o lanza el cuchillo automáticamente.",
     Value = false,
@@ -2455,6 +2527,7 @@ UIElements.TogAutoShootCuchillo = Tabs.Aim:Toggle({
 
 local asTargetIniciado = false
 UIElements.DropAutoShootPart = Tabs.Aim:Dropdown({
+    Flag = "Target_Parte_del_cuerpo_Auto_Shoot",
     Title = "Target: Parte del cuerpo (Auto Shoot)",
     Desc = "A que parte del enemigo apunta el Auto Shoot / Triggerbot.",
     Values = {"Cabeza", "Torso", "Cuerpo Completo"},
@@ -2467,6 +2540,7 @@ UIElements.DropAutoShootPart = Tabs.Aim:Dropdown({
 })
 
 UIElements.TogTriggerbot = Tabs.Aim:Toggle({
+    Flag = "Triggerbot",
     Title = "Triggerbot",
     Desc = "Al detectar enemigo: equipa la pistola y dispara (sin bloquear la camara).",
     Value = false,
@@ -2495,6 +2569,7 @@ Tabs.Aim:Divider()
 Tabs.Aim:Paragraph({ Title = "Silent Aim & FOV", Desc = "Redireccion de balas y campo de vision." })
 
 UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
+    Flag = "Silent_Aim",
     Title = "Silent Aim",
     Desc = "Redirige las balas al enemigo.",
     Value = false,
@@ -2509,6 +2584,7 @@ UIElements.TogSilentAimManual = Tabs.Aim:Toggle({
 
 local aimTargetIniciado = false
 UIElements.DropSilentAimPart = Tabs.Aim:Dropdown({
+    Flag = "Target_Parte_del_cuerpo",
     Title = "Target: Parte del cuerpo",
     Desc = "Parte del cuerpo a la que redirige el Silent Aim.",
     Values = {"Cabeza", "Torso", "Cuerpo Completo"},
@@ -2521,6 +2597,7 @@ UIElements.DropSilentAimPart = Tabs.Aim:Dropdown({
 })
 
 UIElements.TogSilentAimFOV = Tabs.Aim:Toggle({
+    Flag = "Silent_Aim_Con_FOV",
     Title = "Silent Aim (Con FOV)",
     Desc = "Igual que el Silent Aim, pero solo afecta a los enemigos dentro del círculo.",
     Value = false,
@@ -2536,6 +2613,7 @@ UIElements.TogSilentAimFOV = Tabs.Aim:Toggle({
 })
 
 UIElements.TogShowFOV = Tabs.Aim:Toggle({
+    Flag = "Mostrar_C_rculo_FOV",
     Title = "Mostrar Círculo FOV",
     Desc = "Dibuja un círculo en pantalla para el Silent Aim.",
     Value = false,
@@ -2543,6 +2621,7 @@ UIElements.TogShowFOV = Tabs.Aim:Toggle({
 })
 
 UIElements.SliFOVSize = Tabs.Aim:Slider({
+    Flag = "Tama_o_del_FOV",
     Title = "Tamaño del FOV",
     Desc = "Radio del circulo FOV del Silent Aim en pantalla.",
     Step = 1,
@@ -2554,6 +2633,7 @@ Tabs.Aim:Divider()
 Tabs.Aim:Paragraph({ Title = "Expandir Hitbox", Desc = "Aumenta el tamaño de la hitbox de los enemigos." })
 
 UIElements.TogHitbox = Tabs.Aim:Toggle({
+    Flag = "Aumentar_Hitbox",
     Title = "Aumentar Hitbox",
     Desc = "Expande la caja de colisión de los enemigos.",
     Value = false,
@@ -2578,6 +2658,7 @@ UIElements.TogHitbox = Tabs.Aim:Toggle({
 })
 
 UIElements.TogHbInv = Tabs.Aim:Toggle({
+    Flag = "Hitbox_Invisible",
     Title = "Hitbox Invisible", 
     Desc = "Oculta las cajas de los enemigos.",
     Value = false,
@@ -2585,6 +2666,7 @@ UIElements.TogHbInv = Tabs.Aim:Toggle({
 })
 
 UIElements.SliHitbox = Tabs.Aim:Slider({
+    Flag = "Tama_o_de_Hitbox",
     Title = "Tamaño de Hitbox",
     Desc = "10 - 20 max recomendado",
     Step = 1,
@@ -2593,6 +2675,7 @@ UIElements.SliHitbox = Tabs.Aim:Slider({
 })
 
 Tabs.Aim:Input({
+    Flag = "Escribir_Tama_o_Exacto",
     Title = "Escribir Tamaño Exacto",
     Placeholder = "Ej: 2, 12, 25...",
     Callback = function(Text)
@@ -3772,6 +3855,7 @@ end)
 visualsTab:Section({ Title = "Opciones de Identidad y Nombre" })
 
 visualsTab:Toggle({
+    Flag = "Ocultar_mi_Nombre_Visual",
     Title = "Ocultar mi Nombre (Visual)",
     Desc = "Vuelve tu nombre invisible en tu pantalla.",
     Default = false,
@@ -3783,6 +3867,7 @@ visualsTab:Toggle({
 })
 
 visualsTab:Toggle({
+    Flag = "Activar_Nombre_Falso",
     Title = "Activar Nombre Falso",
     Desc = "Reemplaza tu nombre por uno falso (Solo tú lo ves).",
     Default = false,
@@ -3794,6 +3879,7 @@ visualsTab:Toggle({
 })
 
 visualsTab:Input({
+    Flag = "Nuevo_Nombre_Falso",
     Title = "Nuevo Nombre Falso",
     Placeholder = "Escribe tu nombre falso...",
     Callback = function(txt)
@@ -3808,6 +3894,7 @@ visualsTab:Input({
 })
 
 visualsTab:Toggle({
+    Flag = "Tag_Content_Creator",
     Title = "Tag [Content Creator]",
     Desc = "Te pone la etiqueta de creador de contenido de manera visual.",
     Default = false,
@@ -3821,6 +3908,7 @@ visualsTab:Toggle({
 })
 
 visualsTab:Toggle({
+    Flag = "Efecto_Arco_ris_en_Nombre",
     Title = "Efecto Arcoíris en Nombre",
     Desc = "Hace que tu nombre brille cambiando de colores dinámicamente RGB.",
     Default = false,
@@ -3836,6 +3924,7 @@ visualsTab:Divider()
 visualsTab:Paragraph({ Title = "Enemy ESP", Desc = "" })
 
 local espToggleRef = visualsTab:Toggle({
+    Flag = "ESP_Active",
     Title = "ESP Active",
     Desc = "Resalta a los enemigos con Highlight",
     Default = false,
@@ -3857,6 +3946,7 @@ visualsTab:Keybind({
 })
 
 local profEspToggleRef = visualsTab:Toggle({
+    Flag = "Professional_ESP",
     Title = "Professional ESP",
     Desc = "ESP limpio: caja, linea, nombre y huesos del enemigo.",
     Default = false,
@@ -3908,7 +3998,8 @@ visualsTab:Colorpicker({
 visualsTab:Divider()
 visualsTab:Paragraph({ Title = "Ally ESP", Desc = "" })
 
-visualsTab:Toggle({ Title = "Ally ESP", Desc = "Resalta aliados en pantalla", Default = false, Callback = function(espAllyVal) allyEspEnabled = espAllyVal if not allyEspEnabled then clearAllAllyESP() end end })
+visualsTab:Toggle({ Flag = "Ally_ESP",
+    Title = "Ally ESP", Desc = "Resalta aliados en pantalla", Default = false, Callback = function(espAllyVal) allyEspEnabled = espAllyVal if not allyEspEnabled then clearAllAllyESP() end end })
 visualsTab:Colorpicker({ Title = "Ally Outline Color", Desc = "Color del contorno del ESP de aliados", Default = Color3.fromRGB(0, 255, 128), Callback = function(colorVal)
     allyOutlineColor = colorVal
     for plr, hl in pairs(allyEspMap) do
@@ -4059,6 +4150,7 @@ end
 Tabs.Graficos:Section({Title = "Modos Visuales (Elige solo uno)"})
 
 UIElements.TogTokyowami = Tabs.Graficos:Toggle({
+    Flag = "Shaders_Tokyowami",
     Title = "Shaders Tokyowami",
     Desc = "Aplica Shaders originales.",
     Callback = function(Value)
@@ -4092,6 +4184,7 @@ UIElements.TogTokyowami = Tabs.Graficos:Toggle({
 })
 
 UIElements.TogNight = Tabs.Graficos:Toggle({
+    Flag = "Modo_Noche",
     Title = "Modo Noche",
     Desc = "Modo noche ajustable.",
     Callback = function(Value)
@@ -4143,6 +4236,7 @@ UIElements.TogNight = Tabs.Graficos:Toggle({
 })
 
 UIElements.TogPink = Tabs.Graficos:Toggle({
+    Flag = "Pink_Hour",
     Title = "Pink Hour",
     Desc = "Estilo Synthwave. Cielo y ambiente ajustable con los sliders.",
     Callback = function(Value)
@@ -4191,6 +4285,7 @@ UIElements.TogPink = Tabs.Graficos:Toggle({
 Tabs.Graficos:Section({Title = "Ajustes: Modo Noche"})
 
 Tabs.Graficos:Slider({
+    Flag = "Claridad_del_Mapa",
     Title = "Claridad del Mapa",
     Desc = "Afecta solo al Modo Noche. Úsalo si está muy oscuro.",
     Step = 0.05,
@@ -4202,6 +4297,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Profundidad_de_Sombras",
     Title = "Profundidad de Sombras",
     Desc = "0 = Oscuridad total. 50 = Sombra suave y clara.",
     Step = 5,
@@ -4213,6 +4309,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Resplandor",
     Title = "Resplandor",
     Desc = "Ajusta qué tanto brillan las armas y las luces del mapa.",
     Step = 0.05,
@@ -4228,6 +4325,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Fondo_Borroso",
     Title = "Fondo Borroso",
     Desc = "0 = Sin borrosidad. Añade un efecto de cámara cinematográfica.",
     Step = 0.5,
@@ -4243,6 +4341,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Posici_n_de_la_Luna",
     Title = "Posición de la Luna",
     Desc = "Mueve la luna en el cielo.",
     Step = 5,
@@ -4256,6 +4355,7 @@ Tabs.Graficos:Slider({
 Tabs.Graficos:Section({Title = "Ajustes: Pink Hour"})
 
 Tabs.Graficos:Slider({
+    Flag = "Intensidad_del_Morado",
     Title = "Intensidad del Morado",
     Desc = "Añade oscuridad y tonos violetas al cielo y al mapa.",
     Step = 0.05,
@@ -4267,6 +4367,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Intensidad_del_Rosa",
     Title = "Intensidad del Rosa",
     Desc = "Agrega tonos magentas y rosas a las luces.",
     Step = 0.05,
@@ -4278,6 +4379,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Saturaci_n_de_Color",
     Title = "Saturación de Color",
     Desc = "0 = Grisáceo y apagado. 1 = Colores fluorescentes.",
     Step = 0.05,
@@ -4289,6 +4391,7 @@ Tabs.Graficos:Slider({
 })
 
 Tabs.Graficos:Slider({
+    Flag = "Resplandor_2",
     Title = "Resplandor",
     Desc = "Haz que el cielo y los neones brillen mas.",
     Step = 0.05,
