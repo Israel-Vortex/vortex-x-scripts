@@ -1173,6 +1173,7 @@ getgenv().invisState = getgenv().invisState or {
 
 getgenv().desyncState = getgenv().desyncState or {
     isDesynced = false,
+    realChar = nil,
     fakeChar = nil,
     platform = nil,
     syncConnection = nil,
@@ -1650,139 +1651,205 @@ local function executeGhostLogic()
 end
 
 local function executeDesyncLogic()
-    local realChar = LocalPlayer.Character
-    if not realChar then return end
-    local hrp = realChar:FindFirstChild("HumanoidRootPart")
-    local realHumanoid = realChar:FindFirstChild("Humanoid")
-    if not hrp or not realHumanoid then return end
-
     desyncState.isDesynced = not desyncState.isDesynced
 
-    WindUI:Notify({
-        Title = "Vortex X Sage",
-        Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"),
-        Duration = 2
-    })
+    pcall(function()
+        if VortexNotify and VortexNotify.Show then
+            VortexNotify.Show("Vortex X Sage", "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"), 2)
+        elseif WindUI then
+            WindUI:Notify({ Title = "Vortex X Sage", Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"), Duration = 2 })
+        end
+    end)
 
     if desyncState.isDesynced then
-        local savedCFrame = hrp.CFrame
-        desyncState.animCache = {}
-
-        realChar.Archivable = true
-        local fakeChar = realChar:Clone()
-        fakeChar.Name = _gameLikeName()
-
-        for _, v in ipairs(fakeChar:GetDescendants()) do
-            if v:IsA("LocalScript") or v:IsA("Script") then v:Destroy() end
+        -- Igual que Ghost: controlas el CLON + camara en el clon
+        local realChar = LocalPlayer.Character
+        if not realChar then
+            desyncState.isDesynced = false
+            return
+        end
+        local hrp = realChar:FindFirstChild("HumanoidRootPart")
+        local realHumanoid = realChar:FindFirstChildOfClass("Humanoid")
+        if not hrp or not realHumanoid then
+            desyncState.isDesynced = false
+            return
         end
 
-        fakeChar.Parent = workspace
-        desyncState.fakeChar = fakeChar
+        desyncState.realChar = realChar
+        local savedCFrame = realChar:GetPivot()
 
-        local fakeHrp = fakeChar:FindFirstChild("HumanoidRootPart")
-        local fakeHumanoid = fakeChar:FindFirstChild("Humanoid")
-        if fakeHrp then fakeHrp.Anchored = true end
-
-        for _, part in fakeChar:GetDescendants() do
-            if part:IsA("BasePart") and part ~= fakeHrp then 
-                part.CanCollide = false 
-                part.Anchored = false
-            end
-        end
-
-        fakeChar:PivotTo(savedCFrame)
-
-        local realAnimator = realHumanoid:FindFirstChild("Animator")
-        local fakeAnimator = fakeHumanoid and fakeHumanoid:FindFirstChild("Animator")
-        if fakeHumanoid and not fakeAnimator then
-            fakeAnimator = Instance.new("Animator", fakeHumanoid)
-        end
-
+        -- Plataforma alta: cuerpo real (server) queda arriba
+        local height = (CONFIG_BANNABLE and CONFIG_BANNABLE.DESYNC_HEIGHT) or 50
         local platform = Instance.new("Part")
         platform.Name = _gameLikeName()
-        platform.Size = Vector3.new(2048, 5, 2048) 
-        platform.CFrame = CFrame.new(savedCFrame.X, savedCFrame.Y + CONFIG_BANNABLE.DESYNC_HEIGHT, savedCFrame.Z)
+        platform.Size = Vector3.new(2048, 5, 2048)
+        platform.CFrame = CFrame.new(savedCFrame.Position.X, savedCFrame.Position.Y + height, savedCFrame.Position.Z)
         platform.Anchored = true
         platform.Transparency = 1
+        platform.CanCollide = true
         platform.Parent = workspace
         desyncState.platform = platform
 
-        setCharacterTransparency(realChar, 1)
-        hrp.CFrame = CFrame.new(savedCFrame.X, platform.Position.Y + (platform.Size.Y/2) + 3, savedCFrame.Z)
+        -- Clon visible en el suelo (lo controlas tu)
+        realChar.Archivable = true
+        local fakeChar = realChar:Clone()
+        fakeChar.Name = _gameLikeName()
+        for _, v in ipairs(fakeChar:GetDescendants()) do
+            if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then
+                v:Destroy()
+            end
+        end
+        fakeChar.Parent = workspace
+        fakeChar:PivotTo(savedCFrame)
+        desyncState.fakeChar = fakeChar
 
-        -- Camara SIEMPRE en el clon (no en el personaje real)
-        local function lockCameraToClone()
+        local fakeHrp = fakeChar:FindFirstChild("HumanoidRootPart")
+        local fakeHumanoid = fakeChar:FindFirstChildOfClass("Humanoid")
+        if fakeHrp then
+            fakeHrp.Anchored = false
+            fakeHrp.CanCollide = true
+            fakeHrp.AssemblyLinearVelocity = Vector3.zero
+            fakeHrp.AssemblyAngularVelocity = Vector3.zero
+        end
+        for _, part in ipairs(fakeChar:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = (part == fakeHrp) or part.Name == "Head" or part.Name:find("Torso") ~= nil
+            end
+        end
+        if fakeHumanoid then
+            fakeHumanoid.PlatformStand = false
+            fakeHumanoid.Sit = false
+            fakeHumanoid.WalkSpeed = realHumanoid.WalkSpeed
+            fakeHumanoid.JumpPower = realHumanoid.JumpPower
             pcall(function()
-                local cam = workspace.CurrentCamera
-                if not cam then return end
-                cam.CameraType = Enum.CameraType.Custom
-                if fakeHumanoid and fakeHumanoid.Parent then
-                    cam.CameraSubject = fakeHumanoid
-                elseif fakeHrp and fakeHrp.Parent then
-                    cam.CameraSubject = fakeHrp
+                if fakeHumanoid.UseJumpPower ~= nil then
+                    fakeHumanoid.UseJumpPower = true
                 end
             end)
         end
-        lockCameraToClone()
 
-        local rayParams = RaycastParams.new()
-        rayParams.FilterType = Enum.RaycastFilterType.Exclude
-        rayParams.FilterDescendantsInstances = {realChar, fakeChar, platform}
+        -- Cuerpo real arriba e invisible
+        setCharacterTransparency(realChar, 1)
+        setCharacterTransparency(fakeChar, 0)
+        hrp.CFrame = CFrame.new(savedCFrame.Position.X, platform.Position.Y + (platform.Size.Y / 2) + 3, savedCFrame.Position.Z)
+        pcall(function()
+            realHumanoid.PlatformStand = true
+        end)
 
-        desyncState.syncConnection = RunService.RenderStepped:Connect(function()
-            if hrp and fakeChar and fakeHrp then
-                -- Reafirmar camara en el clon cada frame (Roblox a veces la devuelve al real)
-                lockCameraToClone()
-
-                local realPos = hrp.Position
-                local cloneCurrentY = fakeHrp.Position.Y
-
-                local rayOrigin = Vector3.new(realPos.X, cloneCurrentY + 3, realPos.Z)
-                local raycastResult = workspace:Raycast(rayOrigin, Vector3.new(0, -1000, 0), rayParams)
-
-                local floorY = raycastResult and raycastResult.Position.Y or cloneCurrentY
-                local hipHeight = realHumanoid.HipHeight > 0 and realHumanoid.HipHeight or 2
-                local platformTop = platform.Position.Y + (platform.Size.Y / 2)
-                local expectedRealY = platformTop + hipHeight + (hrp.Size.Y / 2)
-                local jumpOffset = math.max(0, realPos.Y - expectedRealY)
-
-                local targetY = floorY + (fakeHrp.Size.Y / 2) + hipHeight + jumpOffset
-                fakeChar:SetPrimaryPartCFrame(CFrame.new(realPos.X, targetY, realPos.Z) * hrp.CFrame.Rotation)
-
-                if realAnimator and fakeAnimator then
-                    local playingTracks = realAnimator:GetPlayingAnimationTracks()
-                    for _, realTrack in ipairs(playingTracks) do
-                        local animId = realTrack.Animation.AnimationId
-                        local fakeTrack = desyncState.animCache[animId]
-                        if not fakeTrack then
-                            fakeTrack = fakeAnimator:LoadAnimation(realTrack.Animation)
-                            desyncState.animCache[animId] = fakeTrack
-                        end
-                        if not fakeTrack.IsPlaying then fakeTrack:Play() end
-                        fakeTrack.TimePosition = realTrack.TimePosition
-                        fakeTrack:AdjustWeight(realTrack.WeightTarget)
-                        fakeTrack:AdjustSpeed(realTrack.Speed)
-                    end
+        -- CLAVE (como Ghost): Character = clon -> control + camara en el clon
+        LocalPlayer.Character = fakeChar
+        task.wait(0.05)
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if cam then
+                cam.CameraType = Enum.CameraType.Custom
+                if fakeHumanoid then
+                    cam.CameraSubject = fakeHumanoid
+                elseif fakeHrp then
+                    cam.CameraSubject = fakeHrp
                 end
             end
         end)
-    else
-        if desyncState.syncConnection then desyncState.syncConnection:Disconnect(); desyncState.syncConnection = nil end
 
-        local returnCFrame = nil
-        if desyncState.fakeChar then
-            returnCFrame = desyncState.fakeChar:GetPivot()
-            desyncState.fakeChar:Destroy()
-            desyncState.fakeChar = nil
+        -- Mantener camara y Character en el clon (por si el juego los resetea)
+        if desyncState.syncConnection then
+            pcall(function() desyncState.syncConnection:Disconnect() end)
+            desyncState.syncConnection = nil
+        end
+        desyncState.syncConnection = RunService.RenderStepped:Connect(function()
+            if not desyncState.isDesynced then return end
+            local fc = desyncState.fakeChar
+            local rc = desyncState.realChar
+            if not fc or not fc.Parent then return end
+            pcall(function()
+                if LocalPlayer.Character ~= fc then
+                    LocalPlayer.Character = fc
+                end
+                local cam = workspace.CurrentCamera
+                if not cam then return end
+                cam.CameraType = Enum.CameraType.Custom
+                local fh = fc:FindFirstChildOfClass("Humanoid")
+                local fhrp = fc:FindFirstChild("HumanoidRootPart")
+                if fh and cam.CameraSubject ~= fh then
+                    cam.CameraSubject = fh
+                elseif fhrp and (not fh) and cam.CameraSubject ~= fhrp then
+                    cam.CameraSubject = fhrp
+                end
+                -- Mantener cuerpo real arriba
+                if rc and rc.Parent and desyncState.platform and desyncState.platform.Parent then
+                    local rhrp = rc:FindFirstChild("HumanoidRootPart")
+                    local plat = desyncState.platform
+                    if rhrp then
+                        local target = Vector3.new(
+                            (fhrp and fhrp.Position.X) or rhrp.Position.X,
+                            plat.Position.Y + (plat.Size.Y / 2) + 3,
+                            (fhrp and fhrp.Position.Z) or rhrp.Position.Z
+                        )
+                        if (rhrp.Position - target).Magnitude > 8 then
+                            rhrp.CFrame = CFrame.new(target)
+                        end
+                        rhrp.AssemblyLinearVelocity = Vector3.zero
+                    end
+                end
+            end)
+        end)
+    else
+        -- Desactivar: volver al personaje real
+        if desyncState.syncConnection then
+            pcall(function() desyncState.syncConnection:Disconnect() end)
+            desyncState.syncConnection = nil
         end
 
-        if desyncState.platform then desyncState.platform:Destroy(); desyncState.platform = nil end
+        local realChar = desyncState.realChar or LocalPlayer.Character
+        local fakeChar = desyncState.fakeChar
+        local returnCFrame = nil
+        if fakeChar and fakeChar.Parent then
+            pcall(function() returnCFrame = fakeChar:GetPivot() end)
+        end
 
-        if returnCFrame and hrp then hrp.CFrame = returnCFrame end
-        setCharacterTransparency(realChar, 0)
-        workspace.CurrentCamera.CameraSubject = realHumanoid
+        if realChar and realChar.Parent then
+            local hrp = realChar:FindFirstChild("HumanoidRootPart")
+            local realHumanoid = realChar:FindFirstChildOfClass("Humanoid")
+            pcall(function()
+                if realHumanoid then
+                    realHumanoid.PlatformStand = false
+                    realHumanoid.Sit = false
+                end
+            end)
+            if returnCFrame then
+                pcall(function() realChar:PivotTo(returnCFrame) end)
+            end
+            setCharacterTransparency(realChar, 0)
+            LocalPlayer.Character = realChar
+            task.wait(0.05)
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                if cam and realHumanoid then
+                    cam.CameraType = Enum.CameraType.Custom
+                    cam.CameraSubject = realHumanoid
+                end
+            end)
+            if hrp then
+                pcall(function()
+                    hrp.Anchored = false
+                    hrp.AssemblyLinearVelocity = Vector3.zero
+                end)
+            end
+        end
+
+        if desyncState.platform then
+            pcall(function() desyncState.platform:Destroy() end)
+            desyncState.platform = nil
+        end
+        if fakeChar then
+            pcall(function() fakeChar:Destroy() end)
+            desyncState.fakeChar = nil
+        end
+        desyncState.realChar = nil
+        desyncState.animCache = {}
     end
 end
+
 
 bannableTab:Keybind({
     Title = "Activate Ghost Mode (Invisibility)",
