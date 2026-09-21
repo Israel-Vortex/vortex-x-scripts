@@ -781,6 +781,7 @@ local function startFpsPingLoop()
 end
 
 Tabs.Info:Toggle({
+    Flag = "Mostrar_FPS_y_Ping",
     Title = "Mostrar FPS y Ping",
     Desc = "Muestra un contador de FPS y Ping en la esquina.",
     Default = false,
@@ -807,6 +808,7 @@ local origFogEnd = 100000
 local origShadowSoftness = 1
 
 UIElements.ToggleFPS = Tabs.Info:Toggle({
+    Flag = "FPS_Boost_Quitar_Texturas",
     Title = "FPS Boost (Quitar Texturas)",
     Value = false,
     Callback = function(state)
@@ -1075,6 +1077,7 @@ end
 -- SHADERS TOKYOWAMI
 -- ==========================================
 UIElements.TogTokyowami = Tabs.Graficos:Toggle({
+    Flag = "Shaders_Tokyowami",
     Title = "Shaders Tokyowami", Desc = "Aplica shaders originales.",
     Callback = function(Value)
         local Lighting = game:GetService("Lighting")
@@ -1101,6 +1104,7 @@ UIElements.TogTokyowami = Tabs.Graficos:Toggle({
 -- MODO NOCHE
 -- ==========================================
 UIElements.TogNight = Tabs.Graficos:Toggle({
+    Flag = "Modo_Noche",
     Title = "Modo Noche", Desc = "Modo noche ajustable.",
     Callback = function(Value)
         local Lighting = game:GetService("Lighting")
@@ -1138,6 +1142,7 @@ UIElements.TogNight = Tabs.Graficos:Toggle({
 -- PINK HOUR (VAPORWAVE)
 -- ==========================================
 UIElements.TogPink = Tabs.Graficos:Toggle({
+    Flag = "Pink_Hour",
     Title = "Pink Hour", Desc = "Estilo Synthwave. Cielo y ambiente ajustable.",
     Callback = function(Value)
         local Lighting = game:GetService("Lighting")
@@ -1164,17 +1169,26 @@ UIElements.TogPink = Tabs.Graficos:Toggle({
 })
 
 Tabs.Graficos:Section({Title = "Ajustes: Modo Noche"})
-Tabs.Graficos:Slider({ Title = "Brillo del Mapa", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.28}, Callback = function(v) shaderAjustes.Exposicion = v if nightActivo then game:GetService("Lighting").ExposureCompensation = v end end })
-Tabs.Graficos:Slider({ Title = "Profundidad de Sombras", Step = 5, Value = {Min = 0, Max = 50, Default = 5}, Callback = function(v) shaderAjustes.Sombras = v if nightActivo then game:GetService("Lighting").Ambient = Color3.fromRGB(v, v + 3, v + 10) end end })
-Tabs.Graficos:Slider({ Title = "Resplandor", Step = 0.05, Value = {Min = 0.1, Max = 1.0, Default = 0.45}, Callback = function(v) shaderAjustes.Neon = v if nightActivo then for _, effect in ipairs(nightEffects) do if effect:IsA("BloomEffect") then effect.Intensity = v end end end end })
-Tabs.Graficos:Slider({ Title = "Desenfoque de Fondo", Step = 0.5, Value = {Min = 0, Max = 10, Default = 2}, Callback = function(v) shaderAjustes.Desenfoque = v if nightActivo then for _, effect in ipairs(nightEffects) do if effect:IsA("BlurEffect") then effect.Size = v end end end end })
-Tabs.Graficos:Slider({ Title = "Posición de la Luna", Step = 5, Value = {Min = 0, Max = 360, Default = 85}, Callback = function(v) shaderAjustes.LunaPos = v if nightActivo then game:GetService("Lighting").GeographicLatitude = v end end })
+Tabs.Graficos:Slider({ Flag = "Brillo_del_Mapa",
+    Title = "Brillo del Mapa", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.28}, Callback = function(v) shaderAjustes.Exposicion = v if nightActivo then game:GetService("Lighting").ExposureCompensation = v end end })
+Tabs.Graficos:Slider({ Flag = "Profundidad_de_Sombras",
+    Title = "Profundidad de Sombras", Step = 5, Value = {Min = 0, Max = 50, Default = 5}, Callback = function(v) shaderAjustes.Sombras = v if nightActivo then game:GetService("Lighting").Ambient = Color3.fromRGB(v, v + 3, v + 10) end end })
+Tabs.Graficos:Slider({ Flag = "Resplandor",
+    Title = "Resplandor", Step = 0.05, Value = {Min = 0.1, Max = 1.0, Default = 0.45}, Callback = function(v) shaderAjustes.Neon = v if nightActivo then for _, effect in ipairs(nightEffects) do if effect:IsA("BloomEffect") then effect.Intensity = v end end end end })
+Tabs.Graficos:Slider({ Flag = "Desenfoque_de_Fondo",
+    Title = "Desenfoque de Fondo", Step = 0.5, Value = {Min = 0, Max = 10, Default = 2}, Callback = function(v) shaderAjustes.Desenfoque = v if nightActivo then for _, effect in ipairs(nightEffects) do if effect:IsA("BlurEffect") then effect.Size = v end end end end })
+Tabs.Graficos:Slider({ Flag = "Posici_n_de_la_Luna",
+    Title = "Posición de la Luna", Step = 5, Value = {Min = 0, Max = 360, Default = 85}, Callback = function(v) shaderAjustes.LunaPos = v if nightActivo then game:GetService("Lighting").GeographicLatitude = v end end })
 
 Tabs.Graficos:Section({Title = "Ajustes: Pink Hour"})
-Tabs.Graficos:Slider({ Title = "Intensidad del Morado", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.7}, Callback = function(v) shaderAjustes.PinkMorado = v UpdatePinkHourVibe() end })
-Tabs.Graficos:Slider({ Title = "Intensidad del Rosa", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.8}, Callback = function(v) shaderAjustes.PinkRosa = v UpdatePinkHourVibe() end })
-Tabs.Graficos:Slider({ Title = "Saturación de Color", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.4}, Callback = function(v) shaderAjustes.PinkSaturacion = v UpdatePinkHourVibe() end })
-Tabs.Graficos:Slider({ Title = "Resplandor", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0}, Callback = function(v) shaderAjustes.PinkNeon = v if pinkActivo then for _, effect in ipairs(pinkEffects) do if effect:IsA("BloomEffect") then effect.Intensity = v end end end end })
+Tabs.Graficos:Slider({ Flag = "Intensidad_del_Morado",
+    Title = "Intensidad del Morado", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.7}, Callback = function(v) shaderAjustes.PinkMorado = v UpdatePinkHourVibe() end })
+Tabs.Graficos:Slider({ Flag = "Intensidad_del_Rosa",
+    Title = "Intensidad del Rosa", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.8}, Callback = function(v) shaderAjustes.PinkRosa = v UpdatePinkHourVibe() end })
+Tabs.Graficos:Slider({ Flag = "Saturaci_n_de_Color",
+    Title = "Saturación de Color", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0.4}, Callback = function(v) shaderAjustes.PinkSaturacion = v UpdatePinkHourVibe() end })
+Tabs.Graficos:Slider({ Flag = "Resplandor_2",
+    Title = "Resplandor", Step = 0.05, Value = {Min = 0.0, Max = 1.0, Default = 0}, Callback = function(v) shaderAjustes.PinkNeon = v if pinkActivo then for _, effect in ipairs(pinkEffects) do if effect:IsA("BloomEffect") then effect.Intensity = v end end end end })
 
 
 -- Variables de colores por defecto
@@ -1188,6 +1202,7 @@ local gunDroppedNotified = false
 
 Tabs.ESP:Section({ Title = "ESP Principal" })
 UIElements.ToggleESP = Tabs.ESP:Toggle({
+    Flag = "Activar_ESP",
     Title = "Activar ESP",
     Desc = "Resalta jugadores por rol (Murderer, Sheriff, Inocente).",
     Value = false,
@@ -1202,24 +1217,28 @@ UIElements.ToggleESP = Tabs.ESP:Toggle({
 
 Tabs.ESP:Section({ Title = "Opciones Visuales" })
 UIElements.ToggleESPNames = Tabs.ESP:Toggle({
+    Flag = "Mostrar_Nombres",
     Title = "Mostrar Nombres",
     Desc = "Muestra el nombre y rol encima del jugador.",
     Value = false,
     Callback = function(state) espNamesEnabled = state end
 })
 UIElements.ToggleESPDistance = Tabs.ESP:Toggle({
+    Flag = "Mostrar_Distancia",
     Title = "Mostrar Distancia",
     Desc = "Muestra la distancia en metros.",
     Value = false,
     Callback = function(state) espDistanceEnabled = state end
 })
 UIElements.ToggleESPSkeleton = Tabs.ESP:Toggle({
+    Flag = "ESP_de_Esqueleto",
     Title = "ESP de Esqueleto",
     Desc = "Dibuja el esqueleto del jugador.",
     Value = false,
     Callback = function(state) espSkeletonEnabled = state end
 })
 UIElements.ToggleESPLines = Tabs.ESP:Toggle({
+    Flag = "Trazadores_Tracers",
     Title = "Trazadores (Tracers)",
     Desc = "Líneas desde la parte superior de la pantalla hasta el jugador.",
     Value = false,
@@ -1245,12 +1264,14 @@ Tabs.ESP:Colorpicker({
 
 Tabs.ESP:Section({ Title = "Arma Caída" })
 UIElements.ToggleESPGun = Tabs.ESP:Toggle({
+    Flag = "ESP_de_Arma_Ca_da",
     Title = "ESP de Arma Caída",
     Desc = "Resalta la pistola cuando está en el suelo (amarillo).",
     Value = false,
     Callback = function(state) gunDropESP = state end
 })
 UIElements.ToggleNotifyGun = Tabs.ESP:Toggle({
+    Flag = "Notificar_Arma_Ca_da",
     Title = "Notificar Arma Caída",
     Desc = "Aviso cuando la pistola del Sheriff cae al suelo.",
     Value = false,
@@ -1425,10 +1446,14 @@ local function updateSystem()
     end
 end
 
-UIElements.ToggleHideName = Tabs.ESP:Toggle({ Title = "Ocultar Mi Nombre", Value = false, Callback = function(state) hideNameEnabled = state; updateSystem(); sendNotification(state and "Nombre oculto." or "Nombre visible.") end })
-UIElements.ToggleFakeName = Tabs.ESP:Toggle({ Title = "Activar Nombre Falso", Value = false, Callback = function(state) fakeNameEnabled = state; updateSystem(); sendNotification(state and "Nombre falso activado." or "Nombre falso desactivado.") end })
-Tabs.ESP:Input({ Title = "Escribir Nuevo Nombre", Placeholder = "Escribe tu nombre falso...", Callback = function(Text) if Text ~= "" then spoofNameText = Text; if fakeNameEnabled then updateSystem() end; sendNotification("Nombre guardado: " .. spoofNameText) end end })
-UIElements.ToggleRbName = Tabs.ESP:Toggle({ Title = "Efecto Nombre Rainbow", Value = false, Callback = function(state) rainbowEnabled = state; updateSystem() end })
+UIElements.ToggleHideName = Tabs.ESP:Toggle({ Flag = "Ocultar_Mi_Nombre",
+    Title = "Ocultar Mi Nombre", Value = false, Callback = function(state) hideNameEnabled = state; updateSystem(); sendNotification(state and "Nombre oculto." or "Nombre visible.") end })
+UIElements.ToggleFakeName = Tabs.ESP:Toggle({ Flag = "Activar_Nombre_Falso",
+    Title = "Activar Nombre Falso", Value = false, Callback = function(state) fakeNameEnabled = state; updateSystem(); sendNotification(state and "Nombre falso activado." or "Nombre falso desactivado.") end })
+Tabs.ESP:Input({ Flag = "Escribir_Nuevo_Nombre",
+    Title = "Escribir Nuevo Nombre", Placeholder = "Escribe tu nombre falso...", Callback = function(Text) if Text ~= "" then spoofNameText = Text; if fakeNameEnabled then updateSystem() end; sendNotification("Nombre guardado: " .. spoofNameText) end end })
+UIElements.ToggleRbName = Tabs.ESP:Toggle({ Flag = "Efecto_Nombre_Rainbow",
+    Title = "Efecto Nombre Rainbow", Value = false, Callback = function(state) rainbowEnabled = state; updateSystem() end })
 
 
 -- 🔥 AGREGA ESTA LÍNEA AQUÍ (Ajusta el número a lo que necesites)
@@ -1880,6 +1905,7 @@ Tabs.Sheriff:Section({ Title = "Aimbot Predictivo" })
 local showCrosshairEnabled = true -- Que se vea por defecto
 
 UIElements.ToggleMira = Tabs.Sheriff:Toggle({
+    Flag = "Mostrar_Mira_del_Aimbot",
     Title = "Mostrar Mira del Aimbot", 
     Desc = "Dibuja el punto o cruz donde el aimbot está apuntando (independiente del Aimlock).",
     Value = true,
@@ -1892,6 +1918,7 @@ UIElements.ToggleMira = Tabs.Sheriff:Toggle({
 -- 🔫 AUTOSHOOT PREDICTIVO
 -- ==========================================
 UIElements.ToggleAutoShoot = Tabs.Sheriff:Toggle({ 
+    Flag = "AutoShoot_Predictivo",
     Title = "AutoShoot Predictivo", 
     Desc = "Disparo automático al equipar el arma.",
     Value = false,
@@ -1951,6 +1978,7 @@ end)
 Tabs.Bubbles:Section({ Title = "Visibilidad" })
 
 UIElements.ToggleShootBtn = Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_de_Disparo",
     Title = "Mostrar Bubble de Disparo",
     Desc = "Botón flotante para disparar manualmente (solo con Aimbot Predict).",
     Value = false,
@@ -1958,6 +1986,7 @@ UIElements.ToggleShootBtn = Tabs.Bubbles:Toggle({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_de_AutoShoot",
     Title = "Mostrar Bubble de AutoShoot",
     Desc = "Activa o desactiva el AutoShoot sin abrir el menú.",
     Value = false,
@@ -1965,6 +1994,7 @@ Tabs.Bubbles:Toggle({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Kill_All",
     Title = "Mostrar Bubble Kill All",
     Desc = "Botón flotante para ejecutar Kill All.",
     Value = false,
@@ -1974,6 +2004,7 @@ Tabs.Bubbles:Toggle({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Fling_Murder",
     Title = "Mostrar Bubble Fling Murder",
     Desc = "Botón flotante para flingear al Murderer.",
     Value = false,
@@ -1983,6 +2014,7 @@ Tabs.Bubbles:Toggle({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Fling_Sheriff",
     Title = "Mostrar Bubble Fling Sheriff",
     Desc = "Botón flotante para flingear al Sheriff.",
     Value = false,
@@ -1992,6 +2024,7 @@ Tabs.Bubbles:Toggle({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Get_Gun",
     Title = "Mostrar Bubble Get Gun",
     Desc = "Botón flotante para agarrar el arma caída manualmente.",
     Value = false,
@@ -2001,6 +2034,7 @@ Tabs.Bubbles:Toggle({
 })
 
 Tabs.Sheriff:Dropdown({
+    Flag = "Estilo_de_Mira_del_Aimbot",
     Title = "Estilo de Mira del Aimbot",
     Values = {"Dot", "Cross", "Ring"},
     Value = "Dot",
@@ -2018,6 +2052,7 @@ local aimlockActiveLoop = false
 local aimlockConCandadoHabilitado = false
 
 UIElements.ToggleNativeAimlock = Tabs.Sheriff:Toggle({
+    Flag = "Aimlock",
     Title = "Aimlock",
     Desc = "Apunta al Murderer al usar Shiftlock.",
     Value = false,
@@ -2091,6 +2126,7 @@ task.wait()
 Tabs.Murderer:Section({ Title = "Aura de Kill" })
 
 UIElements.ToggleAura = Tabs.Murderer:Toggle({
+    Flag = "Kill_Aura",
     Title = "Kill Aura",
     Desc = "Ataca automáticamente a jugadores cercanos según el modo de objetivo.",
     Value = false,
@@ -2102,6 +2138,7 @@ UIElements.ToggleAura = Tabs.Murderer:Toggle({
 })
 
 UIElements.SliderAura = Tabs.Murderer:Slider({
+    Flag = "Rango_del_Aura",
     Title = "Rango del Aura",
     Desc = "Distancia máxima del Kill Aura.",
     Step = 1,
@@ -2112,6 +2149,7 @@ UIElements.SliderAura = Tabs.Murderer:Slider({
 })
 
 Tabs.Murderer:Toggle({
+    Flag = "Disco_Visual",
     Title = "Disco Visual",
     Desc = "Muestra un disco en el piso con el rango del aura.",
     Value = true,
@@ -2122,6 +2160,7 @@ Tabs.Murderer:Toggle({
 })
 
 Tabs.Murderer:Dropdown({
+    Flag = "Modo_de_Objetivo",
     Title = "Modo de Objetivo",
     Desc = "Elige a quién ataca el aura: todos, murderer, sheriff o inocentes.",
     Values = {"All", "Sheriff", "Innocents"},
@@ -2197,6 +2236,7 @@ Tabs.Murderer:Button({
 })
 
 Tabs.Murderer:Slider({
+    Flag = "Velocidad_de_Kill_All",
     Title = "Velocidad de Kill All",
     Desc = "Tiempo entre cada objetivo (más bajo = más rápido).",
     Step = 0.05,
@@ -2262,6 +2302,7 @@ local isRoundActive = true
 local isBusy = false
 
 Tabs.AutoFarm:Toggle({
+    Flag = "Coin_Autofarm",
     Title = "Coin Autofarm",
     Desc = "Automatically collect coins from the map",
     Value = false,
@@ -2277,6 +2318,7 @@ Tabs.AutoFarm:Toggle({
 })
 
 Tabs.AutoFarm:Toggle({
+    Flag = "Candy_Autofarm",
     Title = "Candy Autofarm",
     Desc = "Collect Halloween candy for event rewards",
     Value = false,
@@ -2291,6 +2333,7 @@ Tabs.AutoFarm:Toggle({
 })
 
 Tabs.AutoFarm:Slider({
+    Flag = "Autofarm_Speed",
     Title = "Autofarm Speed",
     Desc = "Adjust collection speed",
     Step = 1,
@@ -2585,6 +2628,7 @@ Tabs.Teleport:Button({ Title = "Teletransporte al Arma Caída", Callback = funct
 end})
 
 UIElements.ToggleAutoGun = Tabs.Teleport:Toggle({
+    Flag = "Agarrar_Arma_Ca_da_Auto",
     Title = "Agarrar Arma Caída Auto",
     Desc = "Va automáticamente por la pistola cuando cae al suelo.",
     Value = false,
@@ -2635,7 +2679,8 @@ Tabs.Teleport:Button({
 
 Tabs.Teleport:Section({ Title = "Teletransporte a Jugador" })
 local targetToTp = nil
-local TpDropdown = Tabs.Teleport:Dropdown({ Title = "Seleccionar Jugador", Values = {"Loading..."}, Value = "Loading...", Callback = function(value) targetToTp = value end })
+local TpDropdown = Tabs.Teleport:Dropdown({ Flag = "Seleccionar_Jugador",
+    Title = "Seleccionar Jugador", Values = {"Loading..."}, Value = "Loading...", Callback = function(value) targetToTp = value end })
 Tabs.Teleport:Button({ Title = "Actualizar Lista", Callback = function()
     local playerNames = {} for _, p in pairs(Players:GetPlayers()) do if p ~= player then table.insert(playerNames, p.Name) end end
     TpDropdown:Refresh(playerNames) TpDropdown:Select(playerNames[1])
@@ -2684,6 +2729,7 @@ local function inyectarVuelo(char)
 end
 
 UIElements.ToggleFly = Tabs.Movimiento:Toggle({ 
+    Flag = "Volar",
     Title = "Volar", 
     Value = false, 
     Callback = function(state)
@@ -2703,6 +2749,7 @@ UIElements.ToggleFly = Tabs.Movimiento:Toggle({
 })
 
 UIElements.SliderFly = Tabs.Movimiento:Slider({ 
+    Flag = "Velocidad_de_Vuelo",
     Title = "Velocidad de Vuelo", 
     Step = 1, 
     Value = {Min = 10, Max = 200, Default = 50}, 
@@ -2736,7 +2783,8 @@ RunService.RenderStepped:Connect(function()
 end)
 
 local noclipConnection = nil
-UIElements.ToggleNoclip = Tabs.Movimiento:Toggle({ Title = "Noclip", Value = false, Callback = function(state)
+UIElements.ToggleNoclip = Tabs.Movimiento:Toggle({ Flag = "Noclip",
+    Title = "Noclip", Value = false, Callback = function(state)
     if state then if not noclipConnection then noclipConnection = RunService.Stepped:Connect(function() local char = player.Character if char then for _, part in pairs(char:GetDescendants()) do if part:IsA("BasePart") then part.CanCollide = false end end end end) end
     else if noclipConnection then noclipConnection:Disconnect(); noclipConnection = nil end end
 end})
@@ -2753,6 +2801,7 @@ local speedGlitchConnection = nil
 local jumpRequestConnection = nil
 
 UIElements.ToggleWalkSpeed = Tabs.Movimiento:Toggle({
+    Flag = "Velocidad_de_Caminar",
     Title = "Velocidad de Caminar",
     Value = false,
     Callback = function(state)
@@ -2784,6 +2833,7 @@ UIElements.ToggleWalkSpeed = Tabs.Movimiento:Toggle({
 })
 
 UIElements.ToggleSpeedGlitch = Tabs.Movimiento:Toggle({
+    Flag = "Glitch_de_Velocidad",
     Title = "Glitch de Velocidad",
     Value = false,
     Callback = function(state)
@@ -2844,6 +2894,7 @@ UIElements.ToggleSpeedGlitch = Tabs.Movimiento:Toggle({
 })
 
 UIElements.SliderWalk = Tabs.Movimiento:Slider({ 
+    Flag = "Adjust_Speed",
     Title = "Adjust Speed", 
     Step = 1, 
     Value = {Min = 16, Max = 100, Default = 25}, 
@@ -2876,7 +2927,8 @@ UserInputService.JumpRequest:Connect(function()
         end 
     end 
 end)
-UIElements.ToggleInfJump = Tabs.Movimiento:Toggle({ Title = "Salto Infinito", Value = false, Callback = function(state) infinityJumpEnabled = state end })
+UIElements.ToggleInfJump = Tabs.Movimiento:Toggle({ Flag = "Salto_Infinito",
+    Title = "Salto Infinito", Value = false, Callback = function(state) infinityJumpEnabled = state end })
 
 
 
@@ -3187,6 +3239,7 @@ RunService.RenderStepped:Connect(function()
 end)
 
 UIElements.ToggleGhost = Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Ghost",
     Title = "Mostrar Bubble Ghost",
     Value = false,
     Callback = function(state)
@@ -3207,6 +3260,7 @@ UIElements.ToggleGhost = Tabs.Bubbles:Toggle({
 })
 
 UIElements.ToggleBombBtn = Tabs.Bubbles:Toggle({
+    Flag = "Mostrar_Bubble_Bomb_Jump",
     Title = "Mostrar Bubble Bomb Jump",
     Value = false,
     Callback = function(state)
@@ -3402,6 +3456,7 @@ Tabs.Emotes:Section({ Title = "Paquetes Completos" })
 
 local selectedBundleCompleto = "None"
 Tabs.Emotes:Dropdown({
+    Flag = "Seleccionar_Paquete",
     Title = "Seleccionar Paquete", 
     Values = animList, 
     Value = "None", 
@@ -3442,12 +3497,18 @@ local mixParts = {
     Jump = "None", Fall = "None", Climb = "None"
 }
 
-Tabs.Emotes:Dropdown({Title = "Idle", Values = animList, Value = "None", Callback = function(Value) mixParts.Idle = Value end})
-Tabs.Emotes:Dropdown({Title = "Walk", Values = animList, Value = "None", Callback = function(Value) mixParts.Walk = Value end})
-Tabs.Emotes:Dropdown({Title = "Run", Values = animList, Value = "None", Callback = function(Value) mixParts.Run = Value end})
-Tabs.Emotes:Dropdown({Title = "Jump", Values = animList, Value = "None", Callback = function(Value) mixParts.Jump = Value end})
-Tabs.Emotes:Dropdown({Title = "Fall", Values = animList, Value = "None", Callback = function(Value) mixParts.Fall = Value end})
-Tabs.Emotes:Dropdown({Title = "Climb", Values = animList, Value = "None", Callback = function(Value) mixParts.Climb = Value end})
+Tabs.Emotes:Dropdown({Flag = "Idle",
+    Title = "Idle", Values = animList, Value = "None", Callback = function(Value) mixParts.Idle = Value end})
+Tabs.Emotes:Dropdown({Flag = "Walk",
+    Title = "Walk", Values = animList, Value = "None", Callback = function(Value) mixParts.Walk = Value end})
+Tabs.Emotes:Dropdown({Flag = "Run",
+    Title = "Run", Values = animList, Value = "None", Callback = function(Value) mixParts.Run = Value end})
+Tabs.Emotes:Dropdown({Flag = "Jump",
+    Title = "Jump", Values = animList, Value = "None", Callback = function(Value) mixParts.Jump = Value end})
+Tabs.Emotes:Dropdown({Flag = "Fall",
+    Title = "Fall", Values = animList, Value = "None", Callback = function(Value) mixParts.Fall = Value end})
+Tabs.Emotes:Dropdown({Flag = "Climb",
+    Title = "Climb", Values = animList, Value = "None", Callback = function(Value) mixParts.Climb = Value end})
 
 Tabs.Emotes:Button({
     Title = "Mezclar y Aplicar", 
@@ -3664,6 +3725,7 @@ local function getFlingPlayerNames()
 end
 
 local flingDropdown = Tabs.Troll:Dropdown({
+    Flag = "Seleccionar_Jugador_para_Fling",
     Title = "Seleccionar Jugador para Fling",
     Values = getFlingPlayerNames(),
     Value = getFlingPlayerNames()[1] or "Nobody else",
@@ -3743,6 +3805,7 @@ local function startFling()
 end
 
 Tabs.Troll:Toggle({
+    Flag = "Touch_Fling",
     Title = "Touch Fling",
     Desc = "Fling por contacto (misma lógica Multi-Hack).",
     Value = false,
@@ -3772,6 +3835,7 @@ Tabs.Troll:Toggle({
 
 -- Anti-Fling: keep the style already used in THIS script (not mm2)
 UIElements.ToggleAntiFling = Tabs.Troll:Toggle({
+    Flag = "Anti_Fling",
     Title = "Anti-Fling",
     Desc = "Desactiva colisión de otros jugadores y cancela fuerzas para no ser flingeado.",
     Value = false,
@@ -3813,6 +3877,7 @@ UIElements.ToggleAntiFling = Tabs.Troll:Toggle({
 Tabs.Bubbles:Section({ Title = "Editar / Mover" })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Desbloquear_Bubbles_Mover",
     Title = "Desbloquear Bubbles (Mover)",
     Desc = "Activa esto para arrastrar cada bubble por la pantalla. Apágalo para bloquearlas.",
     Value = false,
@@ -3826,6 +3891,7 @@ Tabs.Bubbles:Toggle({
 Tabs.Bubbles:Section({ Title = "Tamano" })
 
 Tabs.Bubbles:Slider({
+    Flag = "Tamano_de_Bubbles",
     Title = "Tamano de Bubbles",
     Desc = "Agrandar o hacer mas pequenas (siempre cuadradas).",
     Step = 1,
@@ -3836,6 +3902,7 @@ Tabs.Bubbles:Slider({
 })
 
 Tabs.Bubbles:Toggle({
+    Flag = "Ocultar_Bot_n_de_Abrir_Men",
     Title = "Ocultar Botón de Abrir Menú",
     Callback = function(Value)
         local guisToSearch = { player:FindFirstChild("PlayerGui") }
@@ -3886,6 +3953,7 @@ task.wait() -- 🔥 AÑADE ESTO
 Tabs.Config:Section({ Title = "Interfaz" })
 
 Tabs.Config:Toggle({
+    Flag = "Fondo_del_Panel",
     Title = "Fondo del Panel",
     Desc = "Activa o desactiva el fondo del panel del menú.",
     Default = true,
@@ -3899,6 +3967,7 @@ pcall(function()
 end)
 
 Tabs.Config:Input({
+    Flag = "ID_de_Imagen_de_Fondo",
     Title = "ID de Imagen de Fondo",
     Desc = "Introduce el ID de Roblox (ej: rbxassetid://...) para cambiar el fondo.",
     Value = "rbxassetid://133044138027516",
@@ -3918,6 +3987,7 @@ local ConfigManager = Window.ConfigManager
 local ConfigName = "default"
 
 local ConfigNameInput = Tabs.Config:Input({
+    Flag = "Nombre_de_Config",
     Title = "Nombre de Config",
     Desc = "Escribe un nombre para guardar o cargar la config.",
     Icon = "file-cog",
@@ -3937,6 +4007,7 @@ pcall(function()
 end)
 
 local AllConfigsDropdown = Tabs.Config:Dropdown({
+    Flag = "Todas_las_Configs",
     Title = "Todas las Configs",
     Desc = "Selecciona una configuración guardada de la lista.",
     Values = AllConfigs,
@@ -6907,3 +6978,41 @@ getgenv().DispararEventoDirecto = DispararEventoDirecto
 end)
 
 
+
+
+-- ==========================================
+-- AUTO CONFIG SAVE/LOAD (MM2)
+-- Guarda toggles/sliders/dropdowns (Flags) y restaura al entrar
+-- ==========================================
+pcall(function()
+    local cm = Window and Window.ConfigManager
+    if not cm then return end
+    local cfgName = "VortexAuto"
+    local cfg
+    pcall(function()
+        if cm.CreateConfig then
+            cfg = cm:CreateConfig(cfgName)
+        end
+    end)
+    if not cfg then
+        pcall(function()
+            if cm.Config then cfg = cm:Config(cfgName) end
+        end)
+    end
+    if not cfg then return end
+    Window.CurrentConfig = cfg
+    task.defer(function()
+        task.wait(0.8)
+        pcall(function()
+            if cfg.Load then cfg:Load() end
+        end)
+    end)
+    task.spawn(function()
+        while true do
+            task.wait(15)
+            pcall(function()
+                if cfg.Save then cfg:Save() end
+            end)
+        end
+    end)
+end)
