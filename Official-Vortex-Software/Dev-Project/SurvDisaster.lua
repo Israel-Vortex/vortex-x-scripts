@@ -15,6 +15,178 @@ local MarketplaceService = game:GetService("MarketplaceService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = Players.LocalPlayer
 
+-- ==========================================
+-- VORTEX NOTIFY (pequeña, dorada, transparente)
+-- Solo 1 visible: la nueva reemplaza a la anterior
+-- ==========================================
+local VortexNotify = {}
+do
+	local TweenService = game:GetService("TweenService")
+	local CoreGui = game:GetService("CoreGui")
+	local currentFrame = nil
+	local currentToken = 0
+	local WIDTH, HEIGHT = 260, 58
+
+	local function getHost()
+		local host
+		pcall(function()
+			if gethui then host = gethui() end
+		end)
+		if not host then
+			host = CoreGui
+		end
+		local gui = host:FindFirstChild("VortexNotifyHost")
+		if not gui then
+			gui = Instance.new("ScreenGui")
+			gui.Name = "VortexNotifyHost"
+			gui.ResetOnSpawn = false
+			gui.IgnoreGuiInset = true
+			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+			pcall(function()
+				if syn and syn.protect_gui then syn.protect_gui(gui) end
+			end)
+			gui.Parent = host
+		end
+		return gui
+	end
+
+	local function dismiss(frame, instant)
+		if not frame then return end
+		pcall(function()
+			if instant then
+				frame:Destroy()
+				return
+			end
+			local tw = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Position = UDim2.new(1, 40, 0, 16),
+				BackgroundTransparency = 1,
+			})
+			tw:Play()
+			task.delay(0.28, function()
+				pcall(function() frame:Destroy() end)
+			end)
+		end)
+	end
+
+	function VortexNotify.Show(title, text, duration)
+		duration = tonumber(duration) or 2.5
+		title = tostring(title or "Vortex X Sage")
+		text = tostring(text or "")
+
+		-- Quitar la anterior al instante
+		if currentFrame then
+			local old = currentFrame
+			currentFrame = nil
+			dismiss(old, true)
+		end
+
+		currentToken = currentToken + 1
+		local token = currentToken
+
+		local gui = getHost()
+		local frame = Instance.new("Frame")
+		frame.Name = "VN"
+		frame.AnchorPoint = Vector2.new(1, 0)
+		frame.Size = UDim2.fromOffset(WIDTH, HEIGHT)
+		frame.Position = UDim2.new(1, 20, 0, 16)
+		frame.BackgroundColor3 = Color3.fromRGB(18, 14, 8)
+		frame.BackgroundTransparency = 0.35
+		frame.BorderSizePixel = 0
+		frame.Parent = gui
+		currentFrame = frame
+
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0, 10)
+		corner.Parent = frame
+
+		local stroke = Instance.new("UIStroke")
+		stroke.Color = Color3.fromRGB(255, 200, 55)
+		stroke.Thickness = 1.2
+		stroke.Transparency = 0.35
+		stroke.Parent = frame
+
+		local accent = Instance.new("Frame")
+		accent.Size = UDim2.new(0, 3, 1, -12)
+		accent.Position = UDim2.new(0, 6, 0, 6)
+		accent.BackgroundColor3 = Color3.fromRGB(255, 195, 45)
+		accent.BackgroundTransparency = 0.15
+		accent.BorderSizePixel = 0
+		accent.Parent = frame
+		Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
+
+		local titleL = Instance.new("TextLabel")
+		titleL.BackgroundTransparency = 1
+		titleL.Position = UDim2.new(0, 14, 0, 6)
+		titleL.Size = UDim2.new(1, -22, 0, 18)
+		titleL.Font = Enum.Font.GothamBold
+		titleL.TextSize = 13
+		titleL.TextXAlignment = Enum.TextXAlignment.Left
+		titleL.TextColor3 = Color3.fromRGB(255, 220, 90)
+		titleL.Text = title
+		titleL.Parent = frame
+
+		local bodyL = Instance.new("TextLabel")
+		bodyL.BackgroundTransparency = 1
+		bodyL.Position = UDim2.new(0, 14, 0, 26)
+		bodyL.Size = UDim2.new(1, -22, 0, 28)
+		bodyL.Font = Enum.Font.Gotham
+		bodyL.TextSize = 12
+		bodyL.TextXAlignment = Enum.TextXAlignment.Left
+		bodyL.TextYAlignment = Enum.TextYAlignment.Top
+		bodyL.TextWrapped = true
+		bodyL.TextColor3 = Color3.fromRGB(230, 220, 190)
+		bodyL.TextTransparency = 0.1
+		bodyL.Text = text
+		bodyL.Parent = frame
+
+		TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+			Position = UDim2.new(1, -16, 0, 16)
+		}):Play()
+
+		task.delay(duration, function()
+			if token ~= currentToken then return end
+			if currentFrame ~= frame then return end
+			currentFrame = nil
+			local tw = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+				Position = UDim2.new(1, 40, 0, 16),
+				BackgroundTransparency = 1
+			})
+			tw:Play()
+			pcall(function()
+				titleL.TextTransparency = 1
+				bodyL.TextTransparency = 1
+				stroke.Transparency = 1
+				accent.BackgroundTransparency = 1
+			end)
+			tw.Completed:Wait()
+			pcall(function() frame:Destroy() end)
+		end)
+	end
+end
+
+-- Redirigir WindUI Notify -> VortexNotify
+pcall(function()
+    if WindUI and type(WindUI.Notify) == "function" then
+        local _old = WindUI.Notify
+        WindUI.Notify = function(self, opts)
+            opts = opts or {}
+            if type(self) == "table" and not opts.Title and self.Title then
+                opts = self
+                self = WindUI
+            end
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show(tostring(opts.Title or "Vortex X Sage"), tostring(opts.Content or opts.Text or ""), tonumber(opts.Duration) or 2.5)
+                end
+            end)
+            -- no llamar old para evitar doble notificacion
+        end
+    end
+end)
+
+
+
+
 local ModuleState = _G.ModuleState or { EmoteFlingActive = false, TurboFlingActive = false }
 _G.ModuleState = ModuleState
 
@@ -107,6 +279,11 @@ local function Notify(data)
 end
 
 local function showBottomMessage(msg)
+    pcall(function()
+        if VortexNotify and VortexNotify.Show then
+            VortexNotify.Show("Vortex X Sage", tostring(msg or ""), 2.2)
+        end
+    end)
     Notify({ Title = "Vortex X Sage", Content = tostring(msg), Duration = 2 })
 end
 
