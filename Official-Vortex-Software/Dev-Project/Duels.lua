@@ -576,9 +576,10 @@ local function showBottomMessage(msg)
     pcall(function()
         if VortexNotify and VortexNotify.Show then
             VortexNotify.Show("Vortex X Sage", tostring(msg or ""), 2.2)
+        elseif vortexNotify then
+            vortexNotify("Vortex X Sage", tostring(msg or ""), 2.2)
         end
     end)
-    WindUI:Notify({ Title = "Vortex X Sage", Content = msg, Duration = 2 })
 end
 
 -- forward refs (FPS/Ping + bubbles)
@@ -2554,7 +2555,7 @@ local function setKillAllState(state)
 
                     -- Hitbox mas pequeña en el enemigo (no te cubre)
                     pcall(function()
-                        setSpoofedSize(enemyHrp, Vector3.new(4.2, 4.2, 4.2))
+                        setSpoofedSize(enemyHrp, Vector3.new(2.8, 2.8, 2.8))
                         setSpoofedCollide(enemyHrp, false)
                     end)
 
@@ -2565,7 +2566,7 @@ local function setKillAllState(state)
                         if not myHrp.Parent or myHum.Health <= 0 then break end
 
                         -- Debajo + un poco alejado para que la hitbox no te cubra
-                        local base = enemyHrp.CFrame * CFrame.new(0, -4.0, 2.4)
+                        local base = enemyHrp.CFrame * CFrame.new(0, -3.2, 4.2)
                         myHrp.CFrame = base * CFrame.Angles(math.rad(90), 0, 0)
                         myHrp.AssemblyLinearVelocity = Vector3.zero
                         myHrp.AssemblyAngularVelocity = Vector3.zero
@@ -4589,3 +4590,32 @@ UI_READY = true
 -- Pequeña pausa final para que los toggles respondan al primer clic
 task.wait(0.1)
 print("[Vortex X Sage] DMvSS v3.2.7 loaded")
+
+-- Redirect WindUI notifications -> VortexNotify
+pcall(function()
+    if WindUI and type(WindUI) == "table" then
+        WindUI.Notify = function(_, opts)
+            opts = opts or {}
+            vortexNotify(opts.Title or opts.title, opts.Content or opts.content or opts.Text, opts.Duration or opts.duration)
+        end
+    end
+end)
+
+
+-- Force all notifications through VortexNotify (no WindUI notify UI)
+pcall(function()
+    local function hookNotify(tbl)
+        if type(tbl) ~= "table" then return end
+        tbl.Notify = function(_, opts)
+            opts = type(opts) == "table" and opts or { Content = tostring(opts) }
+            local title = opts.Title or opts.title or "Vortex X Sage"
+            local content = opts.Content or opts.content or opts.Text or opts.text or ""
+            local dur = opts.Duration or opts.duration or 2.5
+            if VortexNotify and VortexNotify.Show then
+                VortexNotify.Show(tostring(title), tostring(content), tonumber(dur) or 2.5)
+            end
+        end
+    end
+    if WindUI then hookNotify(WindUI) end
+    if Window then hookNotify(Window) end
+end)
