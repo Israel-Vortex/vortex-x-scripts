@@ -1,4 +1,5 @@
 local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
@@ -348,6 +349,62 @@ local lastPickup = 0
 local autoPickupActive = false
 local autoFarmActive = false
 local autoSellActive = false
+
+-- ==========================================
+-- CONFIG SAVE/LOAD (opciones, sliders, toggles)
+-- ==========================================
+local VCFG_FILE = "VortexX_Sage_MineMountain_Config.json"
+local VCFG = {}
+local function VSave()
+    pcall(function()
+        if not writefile then return end
+        local data = {
+            espActive = espActive == true,
+            playerEspActive = playerEspActive == true,
+            espScale = tonumber(espScale) or 0.7,
+            playerScale = tonumber(playerScale) or 0.6,
+            boulderScale = tonumber(boulderScale) or 0.6,
+            autoPickupActive = autoPickupActive == true,
+            autoFarmActive = autoFarmActive == true,
+            autoSellActive = autoSellActive == true,
+            speedActive = speedActive == true,
+            boulderEsp = (Mountain and Mountain.getBoulderEsp and Mountain.getBoulderEsp()) or nil,
+        }
+        -- extras if present
+        pcall(function()
+            data.flySpeed = (Move and Move.getFlySpeed and Move.getFlySpeed()) or data.flySpeed
+        end)
+        writefile(VCFG_FILE, HttpService:JSONEncode(data))
+    end)
+end
+local function VLoad()
+    pcall(function()
+        if not readfile then return end
+        local ok, raw = pcall(function()
+            if isfile and not isfile(VCFG_FILE) then return nil end
+            return readfile(VCFG_FILE)
+        end)
+        if ok and raw and raw ~= "" then
+            local ok2, data = pcall(function() return HttpService:JSONDecode(raw) end)
+            if ok2 and type(data) == "table" then
+                VCFG = data
+            end
+        end
+    end)
+end
+VLoad()
+-- apply loaded values to locals
+if VCFG.espActive ~= nil then espActive = VCFG.espActive == true end
+if VCFG.playerEspActive ~= nil then playerEspActive = VCFG.playerEspActive == true end
+if VCFG.espScale ~= nil then espScale = tonumber(VCFG.espScale) or espScale end
+if VCFG.playerScale ~= nil then playerScale = tonumber(VCFG.playerScale) or playerScale end
+if VCFG.boulderScale ~= nil then boulderScale = tonumber(VCFG.boulderScale) or boulderScale end
+if VCFG.autoPickupActive ~= nil then autoPickupActive = VCFG.autoPickupActive == true end
+if VCFG.autoFarmActive ~= nil then autoFarmActive = VCFG.autoFarmActive == true end
+if VCFG.autoSellActive ~= nil then autoSellActive = VCFG.autoSellActive == true end
+if VCFG.speedActive ~= nil then speedActive = VCFG.speedActive == true end
+
+
 local lastBagWarn = 0
 local instantPromptActive = false
 local instantPatched = {}
@@ -3356,9 +3413,9 @@ Tabs.Crystals:Section({ Title = "Opciones de ESP para Cristales" })
 
 Tabs.Crystals:Toggle({
         Title = "Activar ESP de Cristales",
-        Value = false,
+        Value = espActive,
         Callback = function(value)
-                espActive = value
+                espActive = value; VSave()
                 if not value then
                         clearEsp()
                 end
@@ -3371,7 +3428,7 @@ Tabs.Crystals:Slider({
         Step = 1,
         Value = { Min = 40, Max = 250, Default = 70 },
         Callback = function(value)
-                espScale = value / 100
+                espScale = value / 100; VSave()
                 applyEspScale()
         end,
 })
@@ -3404,9 +3461,9 @@ Tabs.Players:Section({ Title = "Opciones de ESP para Jugadores" })
 
 Tabs.Players:Toggle({
         Title = "Activar ESP de Jugadores",
-        Value = false,
+        Value = playerEspActive,
         Callback = function(value)
-                playerEspActive = value
+                playerEspActive = value; VSave()
                 if not value then
                         clearPlayerEsp()
                 end
@@ -3418,7 +3475,7 @@ Tabs.Players:Slider({
         Step = 1,
         Value = { Min = 40, Max = 250, Default = 60 },
         Callback = function(value)
-                playerScale = value / 100
+                playerScale = value / 100; VSave()
                 applyPlayerScale()
         end,
 })
@@ -3439,7 +3496,7 @@ Tabs.Boulders:Slider({
         Step = 1,
         Value = { Min = 40, Max = 250, Default = 60 },
         Callback = function(value)
-                boulderScale = value / 100
+                boulderScale = value / 100; VSave()
                 Mountain.applyScale()
         end,
 })
@@ -3527,7 +3584,7 @@ Tabs.Farming:Toggle({
         Title = "Auto Recoger Cristales (Auto Pickup)",
         Value = false,
         Callback = function(value)
-                autoPickupActive = value
+                autoPickupActive = value; VSave()
         end,
 })
 
@@ -3543,7 +3600,7 @@ Tabs.Farming:Toggle({
         Title = "Auto Farm Automático (TP + Recoger)",
         Value = false,
         Callback = function(value)
-                autoFarmActive = value
+                autoFarmActive = value; VSave()
         end,
 })
 
@@ -3551,7 +3608,7 @@ Tabs.Farming:Toggle({
         Title = "Auto Vender (al 50% / Mochila Llena)",
         Value = false,
         Callback = function(value)
-                autoSellActive = value
+                autoSellActive = value; VSave()
         end,
 })
 
@@ -3655,3 +3712,9 @@ Tabs.Settings:Paragraph({
         Title = "Universe Script - Mine a Mountain",
         Desc = "Script completamente funcional y optimizado con WindUI.",
 })
+task.spawn(function()
+    while true do
+        task.wait(20)
+        pcall(VSave)
+    end
+end)
