@@ -5609,38 +5609,54 @@ Window=p
             end})
 
         Fk.dropTargetZones =Ok:Dropdown({[ "Title" ]=(P.EggSelect and P.EggSelect.DropZonesTitle )or "Zones" ,[ "Desc" ]=(P.EggSelect and P.EggSelect.DropZonesDesc )or "Select target zones" ,[ "Values" ]=D,[ "Value" ]=n,[ "Multi" ]= true ;
-        [ "Callback" ]=function(e,...)
-            local r={}
-            local function y(e,...)
-                if type(e)== "table" then
-                    e=e.Title or e.Name or e[ 1 ]or ""
+        [ "Callback" ]=function(sel,...)
+            local map = {}
+            local function addItem(item)
+                if type(item) == "table" then
+                    item = item.Title or item.Name or item[1] or ""
                 end
-                local y=tostring(e or "" )
-                local w=C[y]
-                if not w and(y~= "" and(y~= "true" and y~= "false" ))then
-                    for e,r in ipairs(M)do
-                        if string.find (string.lower (y),string.lower (r))then
-                            w=r
-                            break
+                local s = tostring(item or "")
+                if s == "" or s == "true" or s == "false" then return end
+                -- exact match
+                if C[s] then
+                    map[C[s]] = true
+                    return
+                end
+                -- case-insensitive match against D
+                local sl = string.lower(s)
+                for _, z in ipairs(D) do
+                    if string.lower(z) == sl or string.find(sl, string.lower(z), 1, true) then
+                        map[z] = true
+                        return
+                    end
+                end
+            end
+            if type(sel) == "table" then
+                if #sel > 0 then
+                    for i = 1, #sel do
+                        addItem(sel[i])
+                    end
+                else
+                    for k, v in pairs(sel) do
+                        if type(v) == "string" or type(v) == "table" then
+                            addItem(v)
+                        elseif v == true and type(k) == "string" then
+                            addItem(k)
+                        elseif type(k) == "number" and type(v) == "string" then
+                            addItem(v)
                         end
                     end
                 end
-                if w and f[w]then
-                    r[w]= true
-                end
+            elseif type(sel) == "string" then
+                addItem(sel)
             end
-            if type(e)== "table" then
-                for e,r in pairs(e)do
-                    if type(r)== "string" or type(r)== "table" then
-                        y(r)
-                    elseif type(e)== "string" and r== true then
-                        y(e)
-                    end
-                end
-            elseif type(e)== "string" then
-                y(e)
+            -- Guardar estado completo de zonas (true/false exacto)
+            local full = {}
+            for _, z in ipairs(D) do
+                full[z] = map[z] == true
             end
-            h.selectedZones =r x()
+            h.selectedZones = full
+            pcall(x)
         end
         })
         local I={ "Divine (Tier 6)" ;
@@ -5679,32 +5695,59 @@ Window=p
         Fk.dropTargetRarities =Ok:Dropdown({[ "Title" ]=(P.EggSelect and P.EggSelect.DropRaritiesTitle )or "Rarities" ;
         [ "Desc" ]=(P.EggSelect and P.EggSelect.DropRaritiesDesc )or "Select target rarities" ,[ "Values" ]=I;
         [ "Value" ]=b,[ "Multi" ]= true ;
-        [ "Callback" ]=function(e,...)
-            local r={}
-            local function y(e,...)
-                if type(e)== "table" then
-                    e=e.Title or e.Name or e[ 1 ]or ""
+        [ "Callback" ]=function(sel,...)
+            -- map limpio de rarezas (evitar shadowing de variables)
+            local map = {}
+            local function addItem(item)
+                if type(item) == "table" then
+                    item = item.Title or item.Name or item[1] or ""
                 end
-                local y=string.lower (tostring(e or "" ))
-                for e,u in ipairs(X)do
-                    if string.find (y,string.lower (u))then
-                        r[u]= true
-                        break
+                local s = string.lower(tostring(item or ""))
+                if s == "" then return end
+                -- match por nombre base en X y tambien labels con (Tier N)
+                for _, name in ipairs(X) do
+                    local nl = string.lower(name)
+                    if s == nl or string.find(s, nl, 1, true) or string.find(nl, s, 1, true) then
+                        map[name] = true
+                        return
+                    end
+                end
+                -- match por display E[key] = "Divine (Tier 6)"
+                for key, label in pairs(E) do
+                    local ll = string.lower(tostring(label))
+                    if s == ll or string.find(s, string.lower(key), 1, true) or string.find(ll, s, 1, true) then
+                        map[key] = true
+                        return
                     end
                 end
             end
-            if type(e)== "table" then
-                for e,r in pairs(e)do
-                    if type(r)== "string" or type(r)== "table" then
-                        y(r)
-                    elseif type(e)== "string" and r== true then
-                        y(e)
+            if type(sel) == "table" then
+                local isArray = (#sel > 0)
+                if isArray then
+                    for i = 1, #sel do
+                        addItem(sel[i])
+                    end
+                else
+                    for k, v in pairs(sel) do
+                        if type(v) == "string" or type(v) == "table" then
+                            addItem(v)
+                        elseif v == true and type(k) == "string" then
+                            addItem(k)
+                        elseif type(k) == "number" and type(v) == "string" then
+                            addItem(v)
+                        end
                     end
                 end
-            elseif type(e)== "string" then
-                y(e)
+            elseif type(sel) == "string" then
+                addItem(sel)
             end
-            h.selectedRarities =r x()
+            -- Guardar mapa completo: rarezas no seleccionadas = false (estado exacto del usuario)
+            local full = {}
+            for _, name in ipairs(X) do
+                full[name] = map[name] == true
+            end
+            h.selectedRarities = full
+            pcall(x)
         end
         })
         Ok:Section({[ "Title" ]= "Character" })
