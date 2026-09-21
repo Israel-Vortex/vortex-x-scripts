@@ -7187,3 +7187,33 @@ pcall(function()
         end
     end)
 end)
+
+
+-- Redirect WindUI notifications -> VortexNotify
+pcall(function()
+    if WindUI and type(WindUI) == "table" then
+        WindUI.Notify = function(_, opts)
+            opts = opts or {}
+            vortexNotify(opts.Title or opts.title, opts.Content or opts.content or opts.Text, opts.Duration or opts.duration)
+        end
+    end
+end)
+
+
+-- Force all notifications through VortexNotify (no WindUI notify UI)
+pcall(function()
+    local function hookNotify(tbl)
+        if type(tbl) ~= "table" then return end
+        tbl.Notify = function(_, opts)
+            opts = type(opts) == "table" and opts or { Content = tostring(opts) }
+            local title = opts.Title or opts.title or "Vortex X Sage"
+            local content = opts.Content or opts.content or opts.Text or opts.text or ""
+            local dur = opts.Duration or opts.duration or 2.5
+            if VortexNotify and VortexNotify.Show then
+                VortexNotify.Show(tostring(title), tostring(content), tonumber(dur) or 2.5)
+            end
+        end
+    end
+    if WindUI then hookNotify(WindUI) end
+    if Window then hookNotify(Window) end
+end)
