@@ -625,7 +625,7 @@ local Tabs = {
     Bubbles = MainSection:Tab({ Title = "Bubbles", Icon = "solar:widget-bold" }),
     -- Extra
     Graficos = MainSection:Tab({ Title = "Graphics", Icon = "solar:palette-bold" }),
-    Emotes = TrollSection:Tab({ Title = "Emotes", Icon = "solar:smile-circle-bold" }),
+    Emotes = TrollSection:Tab({ Title = "Animaciones", Icon = "solar:smile-circle-bold" }),
     Config = TrollSection:Tab({ Title = "Config", Icon = "solar:settings-bold" })
 }
 pcall(function() Tabs.Info:Select() end)
@@ -2760,24 +2760,92 @@ UIElements.SliderFly = Tabs.Movimiento:Slider({
 
 local cachedControls = nil
 RunService.RenderStepped:Connect(function()
-    if flying and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        if not cachedControls then
+    if not flying then return end
+    local char = player.Character
+    if not char then return end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hrp then return end
+
+    if not cachedControls then
+        pcall(function()
             local pScripts = player:FindFirstChild("PlayerScripts")
-            if pScripts then 
-                local pModule = pScripts:FindFirstChild("PlayerModule") 
-                if pModule then 
-                    local PlayerModule = require(pModule)
-                    cachedControls = PlayerModule:GetControls() 
-                end 
+            local pModule = pScripts and pScripts:FindFirstChild("PlayerModule")
+            if pModule then
+                local PlayerModule = require(pModule)
+                if PlayerModule and PlayerModule.GetControls then
+                    cachedControls = PlayerModule:GetControls()
+                end
             end
-        end
-        
-        -- Validación estricta: Nos aseguramos de que bg y bv existan en el cuerpo ACTUAL
-        if cachedControls and bv and bv.Parent == player.Character.HumanoidRootPart and bg and bg.Parent == player.Character.HumanoidRootPart then
-            local moveVector = cachedControls:GetMoveVector()
-            local moveDir = camera.CFrame:VectorToWorldSpace(moveVector)
-            bv.Velocity = moveDir * flySpeed
-            bg.CFrame = camera.CFrame
+        end)
+    end
+
+    -- Recrear movers si se perdieron (respawn / mobile)
+    if not bv or bv.Parent ~= hrp or not bg or bg.Parent ~= hrp then
+        pcall(function()
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+        end)
+        bv = Instance.new("BodyVelocity")
+        bv.Name = "VXS_FlyBV"
+        bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
+        bv.Velocity = Vector3.zero
+        bv.Parent = hrp
+        bg = Instance.new("BodyGyro")
+        bg.Name = "VXS_FlyBG"
+        bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
+        bg.P = 9e4
+        bg.CFrame = hrp.CFrame
+        bg.Parent = hrp
+    end
+
+    if hum then
+        pcall(function()
+            hum.PlatformStand = false
+            hum.AutoRotate = false
+            if hum.WalkSpeed < 16 then hum.WalkSpeed = 16 end
+        end)
+    end
+
+    local cam = workspace.CurrentCamera or camera
+    local moveDir = Vector3.zero
+    if cachedControls then
+        pcall(function()
+            local mv = cachedControls:GetMoveVector()
+            if mv and mv.Magnitude > 0.05 then
+                moveDir = cam.CFrame:VectorToWorldSpace(Vector3.new(mv.X, 0, mv.Z))
+            end
+        end)
+    end
+    -- Fallback movil: Humanoid.MoveDirection
+    if moveDir.Magnitude < 0.05 and hum and hum.MoveDirection.Magnitude > 0.05 then
+        local md = hum.MoveDirection
+        local look = cam.CFrame.LookVector
+        moveDir = Vector3.new(md.X, look.Y * md.Magnitude * 0.9, md.Z)
+    end
+    -- Teclado
+    if moveDir.Magnitude < 0.05 and not UserInputService:GetFocusedTextBox() then
+        local look, right = cam.CFrame.LookVector, cam.CFrame.RightVector
+        local k = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then k = k + look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then k = k - look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then k = k - right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then k = k + right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then k = k + Vector3.yAxis end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then k = k - Vector3.yAxis end
+        if k.Magnitude > 0.05 then moveDir = k end
+    end
+
+    if moveDir.Magnitude > 0.05 then
+        bv.Velocity = moveDir.Unit * flySpeed
+    else
+        local v = bv.Velocity
+        bv.Velocity = Vector3.new(v.X * 0.85, math.max(v.Y * 0.9, 1.2), v.Z * 0.85)
+    end
+    if bg then
+        local flat = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+        if flat.Magnitude > 0.05 then
+            bg.CFrame = CFrame.new(hrp.Position, hrp.Position + flat.Unit)
         end
     end
 end)
@@ -3463,30 +3531,50 @@ Tabs.Emotes:Dropdown({
     Callback = function(Value) selectedBundleCompleto = Value end
 })
 
-Tabs.Emotes:Button({
-    Title = "Aplicar Paquete Completo", 
-    Callback = function()
-        if selectedBundleCompleto == "None" then return end
+local function restoreDefaultAnimsMM2()
+    local defaultAnims = misAnimacionesOriginales or {
+        Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
+        Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
+    }
+    animacionActualActiva = nil
+    applyCustomAnims(defaultAnims)
+end
+
+Tabs.Emotes:Toggle({
+    Flag = "Activar_Paquete",
+    Title = "Activar Paquete",
+    Desc = "ON = aplica el paquete. OFF = restaura default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
-            sendNotification("Aplicando paquete: " .. selectedBundleCompleto)
-            animacionActualActiva = animationData[selectedBundleCompleto]
-            applyCustomAnims(animacionActualActiva)
+            if state then
+                if selectedBundleCompleto == "None" or not animationData[selectedBundleCompleto] then
+                    sendNotification("Elige un paquete primero.")
+                    return
+                end
+                sendNotification("Paquete ON: " .. selectedBundleCompleto)
+                animacionActualActiva = animationData[selectedBundleCompleto]
+                applyCustomAnims(animacionActualActiva)
+            else
+                restoreDefaultAnimsMM2()
+                sendNotification("Paquete OFF · default")
+            end
         end)
     end
 })
 
-Tabs.Emotes:Button({
-    Title = "Restaurar Predeterminado", 
-    Callback = function()
-        task.spawn(function()
-            local defaultAnims = misAnimacionesOriginales or {
-                Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
-                Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
-            }
-            animacionActualActiva = nil 
-            applyCustomAnims(defaultAnims)
-            sendNotification("Animaciones por defecto restauradas.")
-        end)
+Tabs.Emotes:Toggle({
+    Flag = "Forzar_Default",
+    Title = "Forzar Default",
+    Desc = "Restaura animaciones originales del avatar.",
+    Default = false,
+    Callback = function(state)
+        if state then
+            task.spawn(function()
+                restoreDefaultAnimsMM2()
+                sendNotification("Animaciones default restauradas.")
+            end)
+        end
     end
 })
 
@@ -3510,28 +3598,33 @@ Tabs.Emotes:Dropdown({Flag = "Fall",
 Tabs.Emotes:Dropdown({Flag = "Climb",
     Title = "Climb", Values = animList, Value = "None", Callback = function(Value) mixParts.Climb = Value end})
 
-Tabs.Emotes:Button({
-    Title = "Mezclar y Aplicar", 
-    Callback = function()
+Tabs.Emotes:Toggle({
+    Flag = "Activar_Mezcla",
+    Title = "Activar Mezcla",
+    Desc = "ON = aplica mezcla. OFF = restaura default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
+            if not state then
+                restoreDefaultAnimsMM2()
+                sendNotification("Mezcla OFF · default")
+                return
+            end
             local customMix = {}
-            
-            if mixParts.Idle ~= "None" then
+            if mixParts.Idle ~= "None" and animationData[mixParts.Idle] then
                 customMix.Idle = animationData[mixParts.Idle].Idle
                 customMix.Idle2 = animationData[mixParts.Idle].Idle2
             end
-            if mixParts.Walk ~= "None" then customMix.Walk = animationData[mixParts.Walk].Walk end
-            if mixParts.Run ~= "None" then customMix.Run = animationData[mixParts.Run].Run end
-            if mixParts.Jump ~= "None" then customMix.Jump = animationData[mixParts.Jump].Jump end
-            if mixParts.Fall ~= "None" then customMix.Fall = animationData[mixParts.Fall].Fall end
-            if mixParts.Climb ~= "None" then customMix.Climb = animationData[mixParts.Climb].Climb end
-
+            if mixParts.Walk ~= "None" and animationData[mixParts.Walk] then customMix.Walk = animationData[mixParts.Walk].Walk end
+            if mixParts.Run ~= "None" and animationData[mixParts.Run] then customMix.Run = animationData[mixParts.Run].Run end
+            if mixParts.Jump ~= "None" and animationData[mixParts.Jump] then customMix.Jump = animationData[mixParts.Jump].Jump end
+            if mixParts.Fall ~= "None" and animationData[mixParts.Fall] then customMix.Fall = animationData[mixParts.Fall].Fall end
+            if mixParts.Climb ~= "None" and animationData[mixParts.Climb] then customMix.Climb = animationData[mixParts.Climb].Climb end
             local hasValues = false
             for _, v in pairs(customMix) do if v then hasValues = true break end end
-            
             if hasValues then
-                sendNotification("Aplicando mezcla...")
-                animacionActualActiva = customMix 
+                sendNotification("Mezcla ON")
+                animacionActualActiva = customMix
                 applyCustomAnims(animacionActualActiva)
             else
                 sendNotification("Selecciona al menos una animación.")
