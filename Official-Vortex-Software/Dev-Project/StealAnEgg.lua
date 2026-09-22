@@ -83,6 +83,7 @@ for _, Table in getgc(true) do
     end
 end
 
+
 -- ==========================================
 -- VORTEX NOTIFY (pequeña, dorada, transparente)
 -- Solo 1 visible: la nueva reemplaza a la anterior
@@ -6424,3 +6425,19 @@ if h.antiAFK then
     task.spawn (bk)
 end
 H( "[+] Vortex X Sage v1.0 Ready!" )
+
+-- Notificaciones: solo VXS (sin WindUI)
+pcall(function()
+	if WindUI then
+		WindUI.Notify = function(_, opts)
+			opts = type(opts) == "table" and opts or {}
+			VortexNotify.Show(opts.Title or opts.title or "Vortex X Sage", opts.Content or opts.content or opts.Text or opts.text or "", opts.Duration or opts.duration or 2.5)
+		end
+	end
+end)
+
+pcall(function()
+	if VortexNotify and VortexNotify.Show then
+		
+	end
+end)
