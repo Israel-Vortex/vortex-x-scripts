@@ -1292,6 +1292,11 @@ for _, sk in ipairs(SKY_PRESETS) do
 end
 
 -- ---------- UI ----------
+CustomTab:Paragraph({
+    Title = "Personalizacion VXS",
+    Desc = "Kill sounds al eliminar enemigos (detect team) y cielo custom. Solo tu escuchas los sonidos.",
+})
+
 CustomTab:Section({ Title = "Kill Sounds" })
 
 CustomTab:Toggle({
