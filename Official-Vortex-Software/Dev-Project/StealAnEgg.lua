@@ -5460,6 +5460,227 @@ Window=p
 
         hk=mainSection:Tab({[ "Title" ]=P.Tabs.Farm ; [ "Icon" ]= "solar:box-minimalistic-bold" })
         Ok=mainSection:Tab({[ "Title" ]=P.Tabs.EggSelect or "Preference" ; [ "Icon" ]= "lucide:settings-2" })
+
+        -- ========== EMOTES / ANIMACIONES (toggles, no buttons) ==========
+        do
+            local emotesTab = extraSection:Tab({ Title = "Animaciones", Icon = "person-standing", ShowTabTitle = true, Border = true })
+            local animationData = {
+                ["Old School"] = { Walk = 10921244891, Run = 10921240218, Jump = 10921242013, Fall = 10921241244, SwimIdle = 10921244018, Swim = 10921243048, Idle = 10921230744, Idle2 = 10921232093, Climb = 10921229866 },
+                ["Adidas Sports"] = { Walk = 18537392113, Run = 18537384940, Jump = 18537380791, Fall = 18537367238, SwimIdle = 18537387180, Swim = 18537389531, Idle = 18537376492, Idle2 = 18537371272, Climb = 18537363391 },
+                ["Zombie"] = { Walk = 10921355261, Run = 616163682, Jump = 10921351278, Fall = 10921350320, SwimIdle = 10921353442, Swim = 10921352344, Idle = 10921344533, Idle2 = 10921345304, Climb = 10921343576 },
+                ["Mage"] = { Walk = 10921152678, Run = 10921148209, Jump = 10921149743, Fall = 10921148939, SwimIdle = 10921151661, Swim = 10921150788, Idle = 10921144709, Idle2 = 10921145797, Climb = 10921143404 },
+                ["Astronaut"] = { Walk = 10921046031, Run = 10921039308, Jump = 10921042494, Fall = 10921040576, SwimIdle = 10921045006, Swim = 10921044000, Idle = 10921034824, Idle2 = 10921036806, Climb = 10921032124 },
+                ["Elder"] = { Walk = 10921111375, Run = 10921104374, Jump = 10921107367, Fall = 10921105765, SwimIdle = 10921110146, Swim = 10921108971, Idle = 10921101664, Idle2 = 10921102574, Climb = 10921100400 },
+                ["Ninja"] = { Walk = 656117400, Run = 656118341, Jump = 656117878, Fall = 656115606, SwimIdle = 656119721, Swim = 656119797, Idle = 656117941, Idle2 = 656118344, Climb = 656114359 },
+                ["Superhero"] = { Walk = 656118253, Run = 656117949, Jump = 656117724, Fall = 656115732, SwimIdle = 656119721, Swim = 656119797, Idle = 656117241, Idle2 = 656117399, Climb = 656114359 },
+            }
+            local animacionActualActiva = nil
+            local misAnimacionesOriginales = nil
+
+            local function clearAllAnimations()
+                local char = LocalPlayer.Character
+                if not char then return end
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then return end
+                pcall(function()
+                    for _, track in pairs(hum:GetPlayingAnimationTracks()) do
+                        track:Stop(0)
+                    end
+                    local animator = hum:FindFirstChildOfClass("Animator")
+                    if animator then
+                        for _, track in pairs(animator:GetPlayingAnimationTracks()) do
+                            track:Stop(0)
+                        end
+                    end
+                end)
+            end
+
+            local function applyCustomAnims(customData)
+                if not customData then return end
+                clearAllAnimations()
+                local char = LocalPlayer.Character
+                if not char then return end
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                if not hum then return end
+                local animate = char:FindFirstChild("Animate")
+                if not animate then return end
+
+                if not misAnimacionesOriginales then
+                    local function getAnim(folder, name)
+                        local f = animate:FindFirstChild(folder)
+                        if not f then return nil end
+                        local anim = f:FindFirstChild(name)
+                        if anim and anim:IsA("Animation") then
+                            local idStr = anim.AnimationId:match("%d+")
+                            return idStr and tonumber(idStr) or nil
+                        end
+                        return nil
+                    end
+                    misAnimacionesOriginales = {
+                        Idle = getAnim("idle", "Animation1") or 507766666,
+                        Idle2 = getAnim("idle", "Animation2") or 507766951,
+                        Walk = getAnim("walk", "WalkAnim") or 507777826,
+                        Run = getAnim("run", "RunAnim") or 507767714,
+                        Jump = getAnim("jump", "JumpAnim") or 507765000,
+                        Climb = getAnim("climb", "ClimbAnim") or 507765644,
+                        Fall = getAnim("fall", "FallAnim") or 507767968,
+                        Swim = getAnim("swim", "Swim") or 507784897,
+                        SwimIdle = getAnim("swimidle", "SwimIdle") or 507785072,
+                    }
+                end
+
+                local function updateAnimation(folderName, animName, animId)
+                    if not animId then return end
+                    local folder = animate:FindFirstChild(folderName)
+                    if not folder then return end
+                    local anim = folder:FindFirstChild(animName)
+                    if anim and anim:IsA("Animation") then
+                        anim.AnimationId = "rbxassetid://" .. tostring(animId)
+                    end
+                end
+
+                updateAnimation("idle", "Animation1", customData.Idle)
+                updateAnimation("idle", "Animation2", customData.Idle2 or customData.Idle)
+                updateAnimation("walk", "WalkAnim", customData.Walk)
+                updateAnimation("run", "RunAnim", customData.Run)
+                updateAnimation("jump", "JumpAnim", customData.Jump)
+                updateAnimation("climb", "ClimbAnim", customData.Climb)
+                updateAnimation("fall", "FallAnim", customData.Fall)
+                updateAnimation("swim", "Swim", customData.Swim)
+                updateAnimation("swimidle", "SwimIdle", customData.SwimIdle or customData.Swim)
+            end
+
+            task.spawn(function()
+                while true do
+                    task.wait(1.5)
+                    pcall(function()
+                        if animacionActualActiva then
+                            local char = LocalPlayer.Character
+                            if char then
+                                local animate = char:FindFirstChild("Animate")
+                                if animate then
+                                    local idleFolder = animate:FindFirstChild("idle")
+                                    if idleFolder then
+                                        local anim1 = idleFolder:FindFirstChild("Animation1")
+                                        if anim1 and animacionActualActiva.Idle then
+                                            local currentId = anim1.AnimationId:match("%d+")
+                                            if currentId ~= tostring(animacionActualActiva.Idle) then
+                                                applyCustomAnims(animacionActualActiva)
+                                            end
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end)
+                end
+            end)
+
+            local animList = {"Ninguno"}
+            for name, _ in pairs(animationData) do
+                table.insert(animList, name)
+            end
+            table.sort(animList)
+
+            emotesTab:Section({ Title = "Paquetes Completos" })
+            local selectedBundleCompleto = "Ninguno"
+            emotesTab:Dropdown({
+                Title = "Elegir Paquete",
+                Desc = "Elige un set completo de animaciones de movimiento.",
+                Values = animList,
+                Value = "Ninguno",
+                Callback = function(Value)
+                    selectedBundleCompleto = Value
+                end
+            })
+
+            local function restoreDefaultAnims()
+                local defaultAnims = misAnimacionesOriginales or {
+                    Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
+                    Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
+                }
+                animacionActualActiva = nil
+                applyCustomAnims(defaultAnims)
+            end
+
+            emotesTab:Toggle({
+                Title = "Activar Paquete",
+                Desc = "ON = aplica el paquete elegido. OFF = restaura animaciones default.",
+                Default = false,
+                Callback = function(state)
+                    task.spawn(function()
+                        if state then
+                            if selectedBundleCompleto == "Ninguno" or not animationData[selectedBundleCompleto] then
+                                pcall(function()
+                                    if r and r.Notify then r:Notify({ Title = "Animaciones", Content = "Elige un paquete primero.", Duration = 2 }) end
+                                end)
+                                return
+                            end
+                            animacionActualActiva = animationData[selectedBundleCompleto]
+                            applyCustomAnims(animacionActualActiva)
+                        else
+                            restoreDefaultAnims()
+                        end
+                    end)
+                end
+            })
+
+            emotesTab:Toggle({
+                Title = "Forzar Default",
+                Desc = "Restaura animaciones originales del avatar.",
+                Default = false,
+                Callback = function(state)
+                    if state then
+                        task.spawn(function()
+                            restoreDefaultAnims()
+                        end)
+                    end
+                end
+            })
+
+            emotesTab:Section({ Title = "Mezclador de Animaciones" })
+            local mixParts = {
+                Idle = "Ninguno", Walk = "Ninguno", Run = "Ninguno",
+                Jump = "Ninguno", Fall = "Ninguno", Climb = "Ninguno"
+            }
+            emotesTab:Dropdown({ Title = "Reposo", Desc = "Animacion de idle.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Idle = Value end })
+            emotesTab:Dropdown({ Title = "Caminar", Desc = "Animacion al caminar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Walk = Value end })
+            emotesTab:Dropdown({ Title = "Correr", Desc = "Animacion al correr.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Run = Value end })
+            emotesTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Jump = Value end })
+            emotesTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
+            emotesTab:Dropdown({ Title = "Escalar", Desc = "Animacion al escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
+
+            emotesTab:Toggle({
+                Title = "Activar Mezcla",
+                Desc = "ON = aplica la mezcla. OFF = restaura default.",
+                Default = false,
+                Callback = function(state)
+                    task.spawn(function()
+                        if not state then
+                            restoreDefaultAnims()
+                            return
+                        end
+                        local customMix = {}
+                        if mixParts.Idle ~= "Ninguno" and animationData[mixParts.Idle] then
+                            customMix.Idle = animationData[mixParts.Idle].Idle
+                            customMix.Idle2 = animationData[mixParts.Idle].Idle2
+                        end
+                        if mixParts.Walk ~= "Ninguno" and animationData[mixParts.Walk] then customMix.Walk = animationData[mixParts.Walk].Walk end
+                        if mixParts.Run ~= "Ninguno" and animationData[mixParts.Run] then customMix.Run = animationData[mixParts.Run].Run end
+                        if mixParts.Jump ~= "Ninguno" and animationData[mixParts.Jump] then customMix.Jump = animationData[mixParts.Jump].Jump end
+                        if mixParts.Fall ~= "Ninguno" and animationData[mixParts.Fall] then customMix.Fall = animationData[mixParts.Fall].Fall end
+                        if mixParts.Climb ~= "Ninguno" and animationData[mixParts.Climb] then customMix.Climb = animationData[mixParts.Climb].Climb end
+                        local hasValues = false
+                        for _, v in pairs(customMix) do if v then hasValues = true break end end
+                        if hasValues then
+                            animacionActualActiva = customMix
+                            applyCustomAnims(animacionActualActiva)
+                        end
+                    end)
+                end
+            })
+        end
+
         Tk=extraSection:Tab({[ "Title" ]=P.Tabs.Settings ; [ "Icon" ]= "solar:settings-bold" })
         MkTab=extraSection:Tab({[ "Title" ]= "Misc" ; [ "Icon" ]= "lucide:layout-grid" })
         Yk=Ok
