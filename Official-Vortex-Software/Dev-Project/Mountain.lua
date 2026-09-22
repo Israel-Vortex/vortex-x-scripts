@@ -157,6 +157,14 @@ do
 	end
 end
 
+local function VXSNotify(title, content, duration)
+	pcall(function()
+		if VortexNotify and VortexNotify.Show then
+			VortexNotify.Show(tostring(title or "Vortex X Sage"), tostring(content or ""), tonumber(duration) or 2.5)
+		end
+	end)
+end
+
 -- Redirigir WindUI Notify -> VortexNotify
 pcall(function()
     if WindUI and type(WindUI.Notify) == "function" then
@@ -407,11 +415,7 @@ if not WindUI then
     return
 end
 
-WindUI:Notify({
-    Title = "Login VortexHub",
-    Content = "Login VortexHub",
-    Duration = 2
-})
+VXSNotify("Login VortexHub", "Login VortexHub", 2)
 task.wait(0.4)
 
 WindUI:AddTheme({
