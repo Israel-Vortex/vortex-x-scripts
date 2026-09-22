@@ -405,6 +405,14 @@ do
 	end
 end
 
+local function VXSNotify(title, content, duration)
+	pcall(function()
+		if VortexNotify and VortexNotify.Show then
+			VortexNotify.Show(tostring(title or "Vortex X Sage"), tostring(content or ""), tonumber(duration) or 2.5)
+		end
+	end)
+end
+
 local function createFloatingBtn(name, startPos, internalId)
 	local F = ((getgenv and getgenv()) or _G).__VXFab
 	local iconMap = {
@@ -500,11 +508,7 @@ end
 local LocalPlayer = player
 
 pcall(function()
-WindUI:Notify({
-    Title = "Login VortexHub",
-    Content = "Login VortexHub",
-    Duration = 2
-})
+VXSNotify("Login VortexHub", "Login VortexHub", 2)
 end)
 task.wait(0.4)
 
@@ -600,11 +604,7 @@ pcall(function() Window:OnClose(function() end) end)
 -- ==========================================
 local function sendNotification(text)
     pcall(function()
-        WindUI:Notify({
-            Title = "Vortex X Sage",
-            Content = tostring(text),
-            Duration = 2.5
-        })
+        VXSNotify("Vortex X Sage", "", 2.5)
     end)
 end
 
@@ -2440,7 +2440,7 @@ task.spawn(function()
 
                 if currentBagAmount >= maxBagCapacity then
                     isBusy = true
-                    WindUI:Notify({ Title = "Auto Farm", Content = "¡Bolsa llena (" .. currentBagAmount .. "/" .. maxBagCapacity .. ")!", Duration = 2 })
+                    VXSNotify("Auto Farm", "¡Bolsa llena (", 2)
                     currentBagAmount = 0
                     isBusy = false
                 end
@@ -4040,11 +4040,7 @@ Tabs.Config:Button({
                 AllConfigsDropdown:Refresh(ConfigManager:AllConfigs())
             end
         end)
-        WindUI:Notify({
-            Title = ok and "Config Guardada" or "Config",
-            Content = ok and ("Guardada '" .. tostring(ConfigName) .. "'") or "No se pudo guardar la config",
-            Duration = 3
-        })
+        VXSNotify("Vortex X Sage", "", 3)
     end
 })
 
@@ -4063,11 +4059,7 @@ Tabs.Config:Button({
                 end
             end
         end)
-        WindUI:Notify({
-            Title = ok and "Config Cargada" or "Config",
-            Content = ok and ("Cargada '" .. tostring(ConfigName) .. "'") or "No se pudo cargar la config",
-            Duration = 3
-        })
+        VXSNotify("Vortex X Sage", "", 3)
     end
 })
 
