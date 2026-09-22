@@ -168,6 +168,16 @@ do
 	end
 end
 
+
+-- Notificaciones solo VXS (nunca WindUI visual)
+local function VXSNotify(title, content, duration)
+    pcall(function()
+        if VortexNotify and VortexNotify.Show then
+            VortexNotify.Show(tostring(title or "Vortex X Sage"), tostring(content or ""), tonumber(duration) or 2.5)
+        end
+    end)
+end
+
 -- Redirigir WindUI Notify -> VortexNotify
 pcall(function()
     if WindUI and type(WindUI.Notify) == "function" then
@@ -403,6 +413,12 @@ local PlayersRef = _safeCloneref(Players)
 -- ==========================================
 -- WIND UI SETUP & LOGIN NOTIFICATION
 -- ==========================================
+pcall(function()
+    if VortexNotify and VortexNotify.Show then
+        VortexNotify.Show("Login VortexHub", "Login VortexHub", 2)
+    end
+end)
+
 local WindUI
 do
     local urls = {
@@ -426,11 +442,50 @@ if not WindUI then
     return
 end
 
-WindUI:Notify({
-    Title = "Login VortexHub",
-    Content = "Login VortexHub",
-    Duration = 2
-})
+-- Forzar notificaciones VXS (sin UI de WindUI)
+pcall(function()
+    WindUI.Notify = function(_, opts)
+        opts = type(opts) == "table" and opts or {}
+        VXSNotify(opts.Title or opts.title or "Vortex X Sage", opts.Content or opts.content or opts.Text or "", opts.Duration or opts.duration or 2.5)
+    end
+end)
+
+-- Solo VortexNotify (nunca UI de WindUI)
+pcall(function()
+    WindUI.Notify = function(_, opts)
+        opts = type(opts) == "table" and opts or { Content = tostring(opts or "") }
+        if VortexNotify and VortexNotify.Show then
+            VortexNotify.Show(
+                tostring(opts.Title or opts.title or "Vortex X Sage"),
+                tostring(opts.Content or opts.content or opts.Text or opts.text or ""),
+                tonumber(opts.Duration or opts.duration) or 2.5
+            )
+        end
+    end
+end)
+
+pcall(function()
+    if VortexNotify and VortexNotify.Show then
+        
+    end
+end)
+
+-- NUNCA usar UI de notificaciones de WindUI: siempre VortexNotify
+pcall(function()
+    if WindUI then
+        WindUI.Notify = function(_, opts)
+            opts = type(opts) == "table" and opts or {}
+            local title = opts.Title or opts.title or "Vortex X Sage"
+            local content = opts.Content or opts.content or opts.Text or opts.text or ""
+            local dur = opts.Duration or opts.duration or 2.5
+            if VortexNotify and VortexNotify.Show then
+                VortexNotify.Show(tostring(title), tostring(content), tonumber(dur) or 2.5)
+            end
+        end
+    end
+end)
+
+-- Login ya mostrado arriba con VortexNotify
 
 task.wait(0.4)
 
@@ -577,7 +632,7 @@ local function showBottomMessage(msg)
         if VortexNotify and VortexNotify.Show then
             VortexNotify.Show("Vortex X Sage", tostring(msg or ""), 2.2)
         elseif vortexNotify then
-            vortexNotify("Vortex X Sage", tostring(msg or ""), 2.2)
+            VortexNotify.Show("Vortex X Sage", tostring(msg or ""), 2.2)
         end
     end)
 end
@@ -1054,6 +1109,481 @@ emotesTab:Button({
 })
 
 
+do -- [SCOPE] Custom
+-- ==========================================
+-- CUSTOM TAB (Kill Sounds + Sky) — mejorada
+-- ==========================================
+local CustomTab = extraSection:Tab({ Title = "Custom", Icon = "sparkles", ShowTabTitle = true, Border = true })
+
+CustomTab:Paragraph({
+    Title = "Personalizacion VXS",
+    Desc = "Kill sounds solo al morir ENEMIGOS (team detect). Sky custom reemplaza el cielo del mapa. Usa presets o tu propio asset ID.",
+})
+
+local KILL_SOUND_PRESETS = {
+    { name = "Classic Oof", id = "178130506" },
+    { name = "Vine Boom", id = "9126213842" },
+    { name = "Bruh", id = "5102382888" },
+    { name = "Metal Pipe", id = "6751740585" },
+    { name = "Discord Notif", id = "5418189333" },
+    { name = "Roblox Death", id = "2801263" },
+    { name = "Bass Hit", id = "12222216" },
+    { name = "Splat", id = "130791264" },
+    { name = "Impact", id = "9114224475" },
+}
+
+local SKY_PRESETS = {
+    { name = "Ninguno (mapa)", id = "" },
+    { name = "Sunset Warm", id = "323493360" },
+    { name = "Tropic Day", id = "169210149", faces = {
+        Up = "169210149", Lf = "169210133", Bk = "169210090",
+        Ft = "169210121", Dn = "169210108", Rt = "169210143",
+    }},
+    { name = "Pink / Synth", id = "323494035", faces = {
+        Up = "323493360", Lf = "323494252", Bk = "323494035",
+        Ft = "323494130", Dn = "323494368", Rt = "323494067",
+    }},
+    { name = "Night Stars", id = "196263721", faces = {
+        Up = "196263782", Lf = "196263721", Bk = "196263721",
+        Ft = "196263721", Dn = "196263643", Rt = "196263721",
+    }},
+    { name = "Clear Blue", id = "149397684" },
+}
+
+local customOpts = {
+    presetSoundsEnabled = false,
+    customSoundEnabled = false,
+    randomPreset = false,
+    selectedPresetId = KILL_SOUND_PRESETS[1].id,
+    selectedPresetName = KILL_SOUND_PRESETS[1].name,
+    customSoundId = "",
+    volume = 1.5,
+    customSkyEnabled = false,
+    customSkyId = "",
+    skyPresetId = "",
+    originalSky = nil,
+}
+
+local function playKillSound(soundId)
+    soundId = tostring(soundId or ""):gsub("%D", "")
+    if soundId == "" then return end
+    pcall(function()
+        local s = Instance.new("Sound")
+        s.Name = "VortexKillSound"
+        s.SoundId = "rbxassetid://" .. soundId
+        s.Volume = math.clamp(tonumber(customOpts.volume) or 1.5, 0.1, 3)
+        s.PlayOnRemove = false
+        s.Parent = workspace.CurrentCamera or workspace
+        s:Play()
+        s.Ended:Connect(function()
+            pcall(function() s:Destroy() end)
+        end)
+        task.delay(12, function()
+            pcall(function() if s then s:Destroy() end end)
+        end)
+    end)
+end
+
+local function resolveKillSoundId()
+    if customOpts.customSoundEnabled and customOpts.customSoundId ~= "" then
+        return customOpts.customSoundId
+    end
+    if not customOpts.presetSoundsEnabled then
+        return nil
+    end
+    if customOpts.randomPreset and #KILL_SOUND_PRESETS > 0 then
+        local pr = KILL_SOUND_PRESETS[math.random(1, #KILL_SOUND_PRESETS)]
+        return pr.id
+    end
+    return customOpts.selectedPresetId
+end
+
+local function onEnemyDied()
+    if not customOpts.presetSoundsEnabled and not customOpts.customSoundEnabled then
+        return
+    end
+    local id = resolveKillSoundId()
+    if id then
+        playKillSound(id)
+    end
+end
+
+-- Rastrear enemigos en vivo (isEnemy) para que al morir siga contando aunque el team se limpie
+local knownEnemy = {}
+task.spawn(function()
+    while true do
+        pcall(function()
+            if typeof(refreshIdentity) == "function" then refreshIdentity() end
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer then
+                    if typeof(isEnemy) == "function" and isEnemy(plr) then
+                        knownEnemy[plr] = true
+                    elseif typeof(isAlly) == "function" and isAlly(plr) then
+                        knownEnemy[plr] = false
+                    end
+                end
+            end
+        end)
+        task.wait(0.4)
+    end
+end)
+
+local function wasEnemyPlayer(plr)
+    if not plr or plr == LocalPlayer then return false end
+    if knownEnemy[plr] == true then return true end
+    if typeof(isEnemy) == "function" and isEnemy(plr) then return true end
+    local ok, res = pcall(function()
+        local myG = LocalPlayer:GetAttribute("Game")
+        local myT = LocalPlayer:GetAttribute("Team")
+        local pG = plr:GetAttribute("Game")
+        local pT = plr:GetAttribute("Team")
+        if myG ~= nil and myT ~= nil and pG ~= nil and pT ~= nil then
+            return pG == myG and pT ~= myT
+        end
+        if LocalPlayer.Team and plr.Team then
+            return LocalPlayer.Team ~= plr.Team
+        end
+        return false
+    end)
+    return ok and res == true
+end
+
+local hookedHumans = {}
+local function hookPlayerDeath(plr)
+    if not plr or plr == LocalPlayer then return end
+    local function attach(char)
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid") or char:WaitForChild("Humanoid", 5)
+        if not hum then return end
+        if hookedHumans[hum] then return end
+        hookedHumans[hum] = true
+        hum.Died:Connect(function()
+            local enemy = false
+            pcall(function()
+                if typeof(isEnemy) == "function" and isEnemy(plr) then
+                    enemy = true
+                elseif wasEnemyPlayer(plr) then
+                    enemy = true
+                end
+            end)
+            if enemy then
+                onEnemyDied()
+            end
+            knownEnemy[plr] = nil
+        end)
+    end
+    if plr.Character then attach(plr.Character) end
+    plr.CharacterAdded:Connect(attach)
+end
+
+for _, plr in ipairs(Players:GetPlayers()) do
+    hookPlayerDeath(plr)
+end
+Players.PlayerAdded:Connect(hookPlayerDeath)
+
+local presetNames = {}
+for _, pr in ipairs(KILL_SOUND_PRESETS) do
+    table.insert(presetNames, pr.name)
+end
+
+local skyPresetNames = {}
+for _, sk in ipairs(SKY_PRESETS) do
+    table.insert(skyPresetNames, sk.name)
+end
+
+-- ---------- UI ----------
+CustomTab:Paragraph({
+    Title = "Personalizacion VXS",
+    Desc = "Kill sounds al eliminar enemigos (detect team) y cielo custom. Solo tu escuchas los sonidos.",
+})
+
+CustomTab:Section({ Title = "Kill Sounds" })
+
+CustomTab:Toggle({
+    Flag = "Custom_Preset_Kill_Sounds",
+    Title = "Sonidos predefinidos",
+    Desc = "Al morir un ENEMIGO, reproduce el sonido de la lista.",
+    Value = false,
+    Callback = function(state)
+        customOpts.presetSoundsEnabled = state and true or false
+        if state then
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Kill Sound", "Predefinidos ON", 1.5)
+                end
+            end)
+        end
+    end,
+})
+
+CustomTab:Dropdown({
+    Flag = "Custom_Preset_Kill_Sound_List",
+    Title = "Elegir sonido",
+    Desc = "Preset que se usara cuando mueran enemigos.",
+    Values = presetNames,
+    Value = presetNames[1],
+    Callback = function(v)
+        local name = tostring(v or "")
+        for _, pr in ipairs(KILL_SOUND_PRESETS) do
+            if pr.name == name then
+                customOpts.selectedPresetId = pr.id
+                customOpts.selectedPresetName = pr.name
+                break
+            end
+        end
+    end,
+})
+
+CustomTab:Toggle({
+    Flag = "Custom_Random_Preset",
+    Title = "Sonido aleatorio",
+    Desc = "Con predefinidos ON, elige un sonido random de la lista en cada kill.",
+    Value = false,
+    Callback = function(state)
+        customOpts.randomPreset = state and true or false
+    end,
+})
+
+CustomTab:Toggle({
+    Flag = "Custom_Kill_Sound_Toggle",
+    Title = "Sonido custom (ID)",
+    Desc = "Prioridad sobre predefinidos. Usa el asset id de abajo.",
+    Value = false,
+    Callback = function(state)
+        customOpts.customSoundEnabled = state and true or false
+        if state then
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Kill Sound", "Custom ID ON", 1.5)
+                end
+            end)
+        end
+    end,
+})
+
+CustomTab:Input({
+    Flag = "Custom_Kill_Sound_ID",
+    Title = "ID de audio custom",
+    Desc = "Solo numeros del asset (Create > Audio).",
+    Value = "",
+    Placeholder = "ej: 178130506",
+    Callback = function(v)
+        customOpts.customSoundId = tostring(v or ""):gsub("%D", "")
+    end,
+})
+
+CustomTab:Slider({
+    Flag = "Custom_Kill_Volume",
+    Title = "Volumen",
+    Desc = "Volumen del kill sound (1.0 = normal).",
+    Step = 0.1,
+    Value = { Min = 0.2, Max = 3.0, Default = 1.5 },
+    Callback = function(v)
+        customOpts.volume = tonumber(v) or 1.5
+    end,
+})
+
+CustomTab:Button({
+    Title = "Probar sonido actual",
+    Desc = "Reproduce custom (si esta ON) o el preset seleccionado.",
+    Callback = function()
+        local id = resolveKillSoundId()
+        if not id and customOpts.selectedPresetId then
+            id = customOpts.selectedPresetId
+        end
+        if id then
+            playKillSound(id)
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Kill Sound", "Reproduciendo...", 1.2)
+                end
+            end)
+        else
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Kill Sound", "Elige un sonido o ID", 2)
+                end
+            end)
+        end
+    end,
+})
+
+CustomTab:Divider()
+
+CustomTab:Section({ Title = "Sky / Cielo" })
+
+local function applyCustomSky(assetId, faces)
+    assetId = tostring(assetId or ""):gsub("%D", "")
+    if assetId == "" and not faces then return false end
+    pcall(function()
+        if not customOpts.originalSky then
+            local existing = Lighting:FindFirstChildOfClass("Sky")
+            if existing then
+                customOpts.originalSky = existing:Clone()
+            else
+                customOpts.originalSky = false
+            end
+        end
+        for _, child in ipairs(Lighting:GetChildren()) do
+            if child:IsA("Sky") then
+                child:Destroy()
+            end
+        end
+        local sky = Instance.new("Sky")
+        sky.Name = "VortexCustomSky"
+        if type(faces) == "table" then
+            local function face(key, fallback)
+                local v = faces[key] or fallback or assetId
+                return "rbxassetid://" .. tostring(v):gsub("%D", "")
+            end
+            sky.SkyboxBk = face("Bk", assetId)
+            sky.SkyboxDn = face("Dn", assetId)
+            sky.SkyboxFt = face("Ft", assetId)
+            sky.SkyboxLf = face("Lf", assetId)
+            sky.SkyboxRt = face("Rt", assetId)
+            sky.SkyboxUp = face("Up", assetId)
+        else
+            local id = "rbxassetid://" .. assetId
+            sky.SkyboxBk = id
+            sky.SkyboxDn = id
+            sky.SkyboxFt = id
+            sky.SkyboxLf = id
+            sky.SkyboxRt = id
+            sky.SkyboxUp = id
+        end
+        sky.Parent = Lighting
+    end)
+    return true
+end
+
+local function restoreSky()
+    pcall(function()
+        for _, child in ipairs(Lighting:GetChildren()) do
+            if child:IsA("Sky") then
+                child:Destroy()
+            end
+        end
+        if customOpts.originalSky and typeof(customOpts.originalSky) == "Instance" then
+            customOpts.originalSky.Parent = Lighting
+        end
+        customOpts.originalSky = nil
+    end)
+end
+
+local function applySkyFromOpts()
+    local id = customOpts.customSkyId
+    local faces = nil
+    if id == "" then
+        id = customOpts.skyPresetId or ""
+        faces = customOpts.skyPresetFaces
+    end
+    if id ~= "" or faces then
+        return applyCustomSky(id, faces)
+    end
+    return false
+end
+
+CustomTab:Toggle({
+    Flag = "Custom_Sky_Toggle",
+    Title = "Activar sky custom",
+    Desc = "Reemplaza el cielo del mapa por el preset o ID.",
+    Value = false,
+    Callback = function(state)
+        customOpts.customSkyEnabled = state and true or false
+        if state then
+            if applySkyFromOpts() then
+                pcall(function()
+                    if VortexNotify and VortexNotify.Show then
+                        VortexNotify.Show("Sky", "Sky custom activo", 1.5)
+                    end
+                end)
+            end
+        else
+            restoreSky()
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Sky", "Sky del mapa", 1.5)
+                end
+            end)
+        end
+    end,
+})
+
+CustomTab:Dropdown({
+    Flag = "Custom_Sky_Preset",
+    Title = "Preset de cielo",
+    Desc = "Cielos listos. Se usa si no hay ID custom.",
+    Values = skyPresetNames,
+    Value = skyPresetNames[1],
+    Callback = function(v)
+        local name = tostring(v or "")
+        for _, sk in ipairs(SKY_PRESETS) do
+            if sk.name == name then
+                customOpts.skyPresetId = sk.id or ""
+                if customOpts.customSkyEnabled then
+                    if customOpts.skyPresetId == "" and customOpts.customSkyId == "" then
+                        restoreSky()
+                    else
+                        applySkyFromOpts()
+                    end
+                end
+                break
+            end
+        end
+    end,
+})
+
+CustomTab:Input({
+    Flag = "Custom_Sky_ID",
+    Title = "ID de Sky / Skybox",
+    Desc = "Asset id de imagen. Tiene prioridad sobre el preset.",
+    Value = "",
+    Placeholder = "ej: 323493360",
+    Callback = function(v)
+        customOpts.customSkyId = tostring(v or ""):gsub("%D", "")
+        if customOpts.customSkyEnabled then
+            applySkyFromOpts()
+        end
+    end,
+})
+
+CustomTab:Button({
+    Title = "Aplicar sky",
+    Desc = "Aplica preset o ID ahora.",
+    Callback = function()
+        if applySkyFromOpts() then
+            customOpts.customSkyEnabled = true
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Sky", "Sky aplicado", 2)
+                end
+            end)
+        else
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Sky", "Pon un preset o ID", 2)
+                end
+            end)
+        end
+    end,
+})
+
+CustomTab:Button({
+    Title = "Restaurar sky del mapa",
+    Desc = "Quita el cielo custom.",
+    Callback = function()
+        customOpts.customSkyEnabled = false
+        restoreSky()
+        pcall(function()
+            if VortexNotify and VortexNotify.Show then
+                VortexNotify.Show("Sky", "Sky restaurado", 2)
+            end
+        end)
+    end,
+})
+
+end -- [SCOPE] Custom
+
 local ConfigTab = extraSection:Tab({ Title = "Config", Icon = "settings", ShowTabTitle = true, Border = true })
 
 ConfigTab:Toggle({
@@ -1125,11 +1655,11 @@ ConfigTab:Button({
     Callback = function()
         Window.CurrentConfig = ConfigManager:Config(ConfigName)
         if Window.CurrentConfig:Save() then
-            WindUI:Notify({
-                Title = "Config Saved",
-                Content = "Config '" .. ConfigName .. "' saved",
-                Icon = "check",
-            })
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Config Saved", "Config '" .. ConfigName .. "' saved", 2)
+                end
+            end)
         end
 
         AllConfigsDropdown:Refresh(ConfigManager:AllConfigs())
@@ -1146,11 +1676,11 @@ ConfigTab:Button({
     Callback = function()
         Window.CurrentConfig = ConfigManager:CreateConfig(ConfigName)
         if Window.CurrentConfig:Load() then
-            WindUI:Notify({
-                Title = "Config Loaded",
-                Content = "Config '" .. ConfigName .. "' loaded",
-                Icon = "refresh-cw",
-            })
+            pcall(function()
+                if VortexNotify and VortexNotify.Show then
+                    VortexNotify.Show("Config Loaded", "Config '" .. ConfigName .. "' loaded", 2)
+                end
+            end)
         end
     end,
 })
@@ -1539,11 +2069,11 @@ local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
 	setGhostBubbleVisual(invisState.isInvisible)
 
-    WindUI:Notify({
-        Title = "Vortex X Sage",
-        Content = "Ghost Mode: " .. (invisState.isInvisible and "ACTIVATED" or "DEACTIVATED"),
-        Duration = 2
-    })
+    pcall(function()
+        if VortexNotify and VortexNotify.Show then
+            VortexNotify.Show("Vortex X Sage", "Ghost Mode: " .. (invisState.isInvisible and "ACTIVATED" or "DEACTIVATED"), 2)
+        end
+    end)
 
     if invisState.isInvisible then
         local realChar = LocalPlayer.Character
@@ -1656,8 +2186,6 @@ local function executeDesyncLogic()
     pcall(function()
         if VortexNotify and VortexNotify.Show then
             VortexNotify.Show("Vortex X Sage", "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"), 2)
-        elseif WindUI then
-            WindUI:Notify({ Title = "Vortex X Sage", Content = "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"), Duration = 2 })
         end
     end)
 
@@ -4679,7 +5207,7 @@ pcall(function()
     if WindUI and type(WindUI) == "table" then
         WindUI.Notify = function(_, opts)
             opts = opts or {}
-            vortexNotify(opts.Title or opts.title, opts.Content or opts.content or opts.Text, opts.Duration or opts.duration)
+            VortexNotify.Show(opts.Title or opts.title, opts.Content or opts.content or opts.Text, opts.Duration or opts.duration)
         end
     end
 end)
