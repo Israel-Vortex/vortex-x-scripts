@@ -598,8 +598,14 @@ local function getFlyMoveDir(cam, hum)
 		end
 	end
 
-	-- Fallback Humanoid.MoveDirection (movil / stick)
-	if move.Magnitude < 0.08 and hum and hum.MoveDirection.Magnitude > 0.05 then
+	-- Mobile / stick: siempre sumar MoveDirection + pitch de camara
+	if hum and hum.MoveDirection.Magnitude > 0.05 then
+		local md = hum.MoveDirection
+		local lookY = cam.CFrame.LookVector.Y
+		move = move + Vector3.new(md.X, lookY * md.Magnitude, md.Z)
+	end
+	-- Legacy flat fallback kept for older paths
+	if false and move.Magnitude < 0.08 and hum and hum.MoveDirection.Magnitude > 0.05 then
 		local md = hum.MoveDirection
 		local flatLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
 		if flatLook.Magnitude > 0.05 then
@@ -2344,32 +2350,50 @@ animTab:Dropdown({
     end
 })
 
-animTab:Button({
-    Title = "Aplicar Paquete Completo",
-    Desc = "Aplica todas las animaciones del paquete seleccionado.",
-    Callback = function()
-        if selectedBundleCompleto == "Ninguno" then return end
+local function restoreDefaultAnimsSD()
+    local defaultAnims = misAnimacionesOriginales or {
+        Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
+        Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
+    }
+    animacionActualActiva = nil
+    applyCustomAnims(defaultAnims)
+end
+
+animTab:Toggle({
+    Flag = "Activar_Paquete",
+    Title = "Activar Paquete",
+    Desc = "ON = aplica el paquete. OFF = restaura default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
-            showBottomMessage("Aplicando paquete: " .. selectedBundleCompleto)
-            animacionActualActiva = animationData[selectedBundleCompleto]
-            applyCustomAnims(animacionActualActiva)
+            if state then
+                if selectedBundleCompleto == "Ninguno" or not animationData[selectedBundleCompleto] then
+                    showBottomMessage("Elige un paquete primero.")
+                    return
+                end
+                showBottomMessage("Paquete ON: " .. selectedBundleCompleto)
+                animacionActualActiva = animationData[selectedBundleCompleto]
+                applyCustomAnims(animacionActualActiva)
+            else
+                restoreDefaultAnimsSD()
+                showBottomMessage("Paquete OFF · default")
+            end
         end)
     end
 })
 
-animTab:Button({
-    Title = "Restaurar Default",
-    Desc = "Vuelve a las animaciones originales del juego.",
-    Callback = function()
-        task.spawn(function()
-            local defaultAnims = misAnimacionesOriginales or {
-                Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
-                Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
-            }
-            animacionActualActiva = nil
-            applyCustomAnims(defaultAnims)
-            showBottomMessage("Animaciones de tu avatar restauradas.")
-        end)
+animTab:Toggle({
+    Flag = "Forzar_Default",
+    Title = "Forzar Default",
+    Desc = "Restaura animaciones originales del avatar.",
+    Default = false,
+    Callback = function(state)
+        if state then
+            task.spawn(function()
+                restoreDefaultAnimsSD()
+                showBottomMessage("Animaciones default restauradas.")
+            end)
+        end
     end
 })
 
@@ -2387,13 +2411,19 @@ animTab:Dropdown({ Title = "Saltar", Desc = "Animacion al saltar.", Values = ani
 animTab:Dropdown({ Title = "Caer", Desc = "Animacion al caer en el aire.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Fall = Value end })
 animTab:Dropdown({ Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
 
-animTab:Button({
-    Title = "Combinar y Aplicar",
-    Desc = "Mezcla las animaciones elegidas arriba y las aplica.",
-    Callback = function()
+animTab:Toggle({
+    Flag = "Activar_Mezcla",
+    Title = "Activar Mezcla",
+    Desc = "ON = aplica mezcla. OFF = restaura default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
+            if not state then
+                restoreDefaultAnimsSD()
+                showBottomMessage("Mezcla OFF · default")
+                return
+            end
             local customMix = {}
-
             if mixParts.Idle ~= "Ninguno" and animationData[mixParts.Idle] then
                 customMix.Idle = animationData[mixParts.Idle].Idle
                 customMix.Idle2 = animationData[mixParts.Idle].Idle2
@@ -2413,18 +2443,16 @@ animTab:Button({
             if mixParts.Climb ~= "Ninguno" and animationData[mixParts.Climb] then
                 customMix.Climb = animationData[mixParts.Climb].Climb
             end
-
             local hasValues = false
             for _, v in pairs(customMix) do
                 if v then hasValues = true break end
             end
-
             if hasValues then
-                showBottomMessage("Aplicando combinación de animaciones...")
+                showBottomMessage("Mezcla ON")
                 animacionActualActiva = customMix
                 applyCustomAnims(animacionActualActiva)
             else
-                showBottomMessage("Selecciona al menos una animación para combinar.")
+                showBottomMessage("Selecciona al menos una animación.")
             end
         end)
     end
