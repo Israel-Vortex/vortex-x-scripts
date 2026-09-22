@@ -1740,8 +1740,7 @@ ConfigTab:Button({
 -- BANNABLE TAB (DENTRO DEL CONTENEDOR POPULAR)
 -- ==========================================
 getgenv().CONFIG_BANNABLE = {
-    INVIS_OFFSET_Y = 100,
-    DESYNC_HEIGHT = 50
+    INVIS_OFFSET_Y = 80
 }
 
 getgenv().invisState = getgenv().invisState or {
@@ -1750,15 +1749,6 @@ getgenv().invisState = getgenv().invisState or {
     fakeChar = nil,
     platform = nil,
     seat = nil
-}
-
-getgenv().desyncState = getgenv().desyncState or {
-    isDesynced = false,
-    realChar = nil,
-    fakeChar = nil,
-    platform = nil,
-    syncConnection = nil,
-    animCache = {}
 }
 
 local function setCharacterTransparency(char, transparency)
@@ -2028,9 +2018,8 @@ end
 -- 2 columnas al medio del borde derecho
 local BX_OUT, BX_IN = -10, -58
 local BGAP = 46
-local bubbleDesync, bubbleDesyncHit = createBubbleButton("BubbleDesync", "refresh-cw", -BGAP, BX_OUT)
-local bubbleGhost, bubbleGhostHit = createBubbleButton("BubbleGhost", "ghost", 0, BX_OUT)
-local bubbleKillAll, bubbleKillAllHit = createBubbleButton("BubbleKillAll", "swords", BGAP, BX_OUT)
+local bubbleGhost, bubbleGhostHit = createBubbleButton("BubbleGhost", "ghost", -BGAP / 2, BX_OUT)
+local bubbleKillAll, bubbleKillAllHit = createBubbleButton("BubbleKillAll", "swords", BGAP / 2, BX_OUT)
 local bubbleSilentAim, bubbleSilentAimHit = createBubbleButton("BubbleSilentAim", "crosshair", -BGAP / 2, BX_IN)
 local bubbleAutoShoot, bubbleAutoShootHit = createBubbleButton("BubbleAutoShoot", "target", BGAP / 2, BX_IN)
 
@@ -2067,14 +2056,6 @@ bannableTab:Toggle({
 })
 
 bannableTab:Toggle({
-    Flag = "Show_Bubble_Desync_DSY",
-    Title = "Show Bubble Desync (DSY)",
-    Desc = "Muestra u oculta el botón flotante.",
-    Default = false,
-    Callback = function(val) bubbleDesync.Visible = val end
-})
-
-bannableTab:Toggle({
     Flag = "Show_Bubble_Kill_All_KAL",
     Title = "Show Bubble Kill All (KAL)",
     Desc = "Muestra u oculta el botón flotante de Kill All.",
@@ -2099,180 +2080,55 @@ bannableTab:Toggle({
 })
 
 bannableTab:Divider()
-bannableTab:Paragraph({ Title = "PC Keybinds (Ghost, Desync & Kill All)", Desc = "Atajos de teclado en PC para Ghost, Desync y Kill All." })
+bannableTab:Paragraph({ Title = "PC Keybinds (Ghost & Kill All)", Desc = "Atajos de teclado en PC para Ghost y Kill All." })
 
--- Ghost Mode (version clasica: clone/seat, SIN vuelo)
+-- Ghost Mode (clone visible + real body under seat). SIN Desync.
 local function setGhostBubbleVisual(on)
-        pcall(function()
-                local ic = bubbleGhost and bubbleGhost:FindFirstChild("Icon")
-                local st = bubbleGhost and bubbleGhost:FindFirstChild("Stroke")
-                if on then
-                        if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
-                        if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
-                else
-                        if ic then ic.ImageColor3 = FAB_GOLD end
-                        if st then st.Color = FAB_GOLD; st.Transparency = 0.45 end
-                end
-        end)
+    pcall(function()
+        local ic = bubbleGhost and bubbleGhost:FindFirstChild("Icon")
+        local st = bubbleGhost and bubbleGhost:FindFirstChild("Stroke")
+        if on then
+            if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
+            if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
+        else
+            if ic then ic.ImageColor3 = FAB_GOLD end
+            if st then st.Color = FAB_GOLD; st.Transparency = 0.45 end
+        end
+    end)
 end
 
-local function getCloneWorldCF(fakeChar)
-    if not fakeChar or not fakeChar.Parent then return nil end
-    local fhrp = fakeChar:FindFirstChild("HumanoidRootPart")
-    if fhrp then
-        return fhrp.CFrame
+local function getSafeGroundY(pos, excludeList)
+    local params = RaycastParams.new()
+    params.FilterType = Enum.RaycastFilterType.Exclude
+    local filter = { LocalPlayer.Character }
+    if excludeList then
+        for _, inst in ipairs(excludeList) do
+            if inst then table.insert(filter, inst) end
+        end
     end
-    local ok, piv = pcall(function() return fakeChar:GetPivot() end)
-    if ok and piv then return piv end
-    return nil
+    if invisState.platform then table.insert(filter, invisState.platform) end
+    if invisState.seat then table.insert(filter, invisState.seat) end
+    if invisState.fakeChar then table.insert(filter, invisState.fakeChar) end
+    if invisState.realChar then table.insert(filter, invisState.realChar) end
+    params.FilterDescendantsInstances = filter
+    local origin = Vector3.new(pos.X, pos.Y + 80, pos.Z)
+    local result = workspace:Raycast(origin, Vector3.new(0, -400, 0), params)
+    if result then
+        return result.Position.Y + 3.5
+    end
+    -- no floor found: keep original Y + small lift (never send to void)
+    return pos.Y + 4
 end
 
--- Ghost OFF / Desync OFF: vuelve el body REAL donde estaba el clon
--- ORDEN CRITICO: TP real ANTES de destruir seat/plataforma (si no, cae al void y "desaparece")
-local function returnRealToClone(realChar, fakeChar, destroyHelpers)
-    local cloneCF = getCloneWorldCF(fakeChar)
-    local pos = nil
-    local look = Vector3.new(0, 0, -1)
-    if cloneCF then
-        pos = cloneCF.Position
-        look = cloneCF.LookVector
-    elseif fakeChar and fakeChar.Parent then
-        local ok, piv = pcall(function() return fakeChar:GetPivot() end)
-        if ok and piv then
-            pos = piv.Position
-            look = piv.LookVector
-        end
+local function destroyGhostHelpers()
+    if invisState.seat then
+        pcall(function() invisState.seat:Destroy() end)
+        invisState.seat = nil
     end
-
-    if not realChar or not realChar.Parent then
-        -- Sin body real: al menos destruir helpers y clon
-        if type(destroyHelpers) == "function" then pcall(destroyHelpers) end
-        return
+    if invisState.platform then
+        pcall(function() invisState.platform:Destroy() end)
+        invisState.platform = nil
     end
-
-    local hrp = realChar:FindFirstChild("HumanoidRootPart")
-    local hum = realChar:FindFirstChildOfClass("Humanoid") or realChar:FindFirstChild("Humanoid")
-
-    -- 1) Des-sentar / soltar sin destruir nada aun
-    pcall(function()
-        if hum then
-            hum.Sit = false
-            hum.PlatformStand = false
-        end
-    end)
-
-    if hrp then
-        pcall(function()
-            hrp.Anchored = true
-            hrp.AssemblyLinearVelocity = Vector3.zero
-            hrp.AssemblyAngularVelocity = Vector3.zero
-        end)
-    end
-
-    -- 2) Calcular destino seguro (cerca del clon)
-    local destPos
-    if pos then
-        local safeY = pos.Y + 3.5
-        pcall(function()
-            local params = RaycastParams.new()
-            params.FilterType = Enum.RaycastFilterType.Exclude
-            local filter = { realChar }
-            if fakeChar then table.insert(filter, fakeChar) end
-            if invisState and invisState.platform then table.insert(filter, invisState.platform) end
-            if invisState and invisState.seat then table.insert(filter, invisState.seat) end
-            if desyncState and desyncState.platform then table.insert(filter, desyncState.platform) end
-            params.FilterDescendantsInstances = filter
-            local origin = Vector3.new(pos.X, pos.Y + 8, pos.Z)
-            local hit = workspace:Raycast(origin, Vector3.new(0, -22, 0), params)
-            if hit then
-                safeY = hit.Position.Y + 3.2
-            end
-        end)
-        if safeY < pos.Y - 6 then safeY = pos.Y + 3.5 end
-        if safeY > pos.Y + 10 then safeY = pos.Y + 3.5 end
-        destPos = Vector3.new(pos.X, safeY, pos.Z)
-    else
-        -- fallback: un poco arriba de donde este el real ahora
-        if hrp then
-            destPos = hrp.Position + Vector3.new(0, 5, 0)
-        end
-    end
-
-    local flat = Vector3.new(look.X, 0, look.Z)
-    if flat.Magnitude < 0.05 then
-        flat = Vector3.new(0, 0, -1)
-    else
-        flat = flat.Unit
-    end
-
-    -- 3) TP del REAL mientras seat/plataforma AUN existen (evita caer al void)
-    if destPos and hrp then
-        pcall(function()
-            local cf = CFrame.new(destPos, destPos + flat)
-            hrp.CFrame = cf
-            realChar:PivotTo(cf)
-            hrp.AssemblyLinearVelocity = Vector3.zero
-            hrp.AssemblyAngularVelocity = Vector3.zero
-        end)
-    end
-
-    -- 4) Visibilidad + control al jugador REAL antes de borrar helpers
-    setCharacterTransparency(realChar, 0)
-    pcall(function()
-        LocalPlayer.Character = realChar
-    end)
-    task.wait(0.06)
-    pcall(function()
-        local cam = workspace.CurrentCamera
-        if cam and hum then
-            cam.CameraType = Enum.CameraType.Custom
-            cam.CameraSubject = hum
-        elseif cam and hrp then
-            cam.CameraSubject = hrp
-        end
-    end)
-
-    -- 5) Ahora si: destruir seat / plataforma / techo
-    if type(destroyHelpers) == "function" then
-        pcall(destroyHelpers)
-    end
-
-    task.wait(0.05)
-
-    -- 6) Reafirmar posicion y soltar ancla
-    if destPos and hrp and hrp.Parent then
-        pcall(function()
-            local cf = CFrame.new(destPos, destPos + flat)
-            hrp.CFrame = cf
-            hrp.Anchored = false
-            hrp.AssemblyLinearVelocity = Vector3.zero
-            hrp.AssemblyAngularVelocity = Vector3.zero
-        end)
-    elseif hrp and hrp.Parent then
-        pcall(function() hrp.Anchored = false end)
-    end
-
-    if hum and hum.Parent then
-        pcall(function()
-            hum.Sit = false
-            hum.PlatformStand = false
-            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
-            task.wait()
-            hum:ChangeState(Enum.HumanoidStateType.Running)
-        end)
-    end
-
-    -- Asegurar camara otra vez
-    pcall(function()
-        local cam = workspace.CurrentCamera
-        if cam and hum and hum.Parent then
-            cam.CameraType = Enum.CameraType.Custom
-            cam.CameraSubject = hum
-        end
-        if LocalPlayer.Character ~= realChar and realChar.Parent then
-            LocalPlayer.Character = realChar
-        end
-    end)
 end
 
 local function executeGhostLogic()
@@ -2286,21 +2142,31 @@ local function executeGhostLogic()
     end)
 
     if invisState.isInvisible then
+        -- ========== ON ==========
         local realChar = LocalPlayer.Character
-        if not realChar then invisState.isInvisible = false; setGhostBubbleVisual(false) return end
+        if not realChar then
+            invisState.isInvisible = false
+            setGhostBubbleVisual(false)
+            return
+        end
         local hrp = realChar:FindFirstChild("HumanoidRootPart")
-        local realHumanoid = realChar:FindFirstChild("Humanoid")
-        if not hrp or not realHumanoid then invisState.isInvisible = false; setGhostBubbleVisual(false) return end
+        local realHumanoid = realChar:FindFirstChildOfClass("Humanoid")
+        if not hrp or not realHumanoid then
+            invisState.isInvisible = false
+            setGhostBubbleVisual(false)
+            return
+        end
 
         invisState.realChar = realChar
         local savedCFrame = realChar:GetPivot()
-        local safePos = savedCFrame.Position - Vector3.new(0, CONFIG_BANNABLE.INVIS_OFFSET_Y, 0)
+        local offsetY = (CONFIG_BANNABLE and CONFIG_BANNABLE.INVIS_OFFSET_Y) or 80
+        local safePos = savedCFrame.Position - Vector3.new(0, offsetY, 0)
 
         local safePlatform = Instance.new("Part")
         safePlatform.Name = _gameLikeName()
         safePlatform.Anchored = true
-        safePlatform.Size = Vector3.new(40, 2, 40)
-        safePlatform.CFrame = CFrame.new(safePos) - Vector3.new(0, 3, 0)
+        safePlatform.Size = Vector3.new(50, 3, 50)
+        safePlatform.CFrame = CFrame.new(safePos - Vector3.new(0, 2, 0))
         safePlatform.Transparency = 1
         safePlatform.CanCollide = true
         safePlatform.Parent = workspace
@@ -2321,16 +2187,19 @@ local function executeGhostLogic()
         fakeChar.Name = _gameLikeName()
         for _, v in ipairs(fakeChar:GetDescendants()) do
             if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then
-                v:Destroy()
+                pcall(function() v:Destroy() end)
             end
         end
         fakeChar.Parent = workspace
         fakeChar:PivotTo(savedCFrame)
         invisState.fakeChar = fakeChar
 
-        -- Body real al seat (debajo)
+        -- Body real al seat (debajo), anclado momentaneamente
         pcall(function()
+            hrp.Anchored = true
             hrp.CFrame = seat.CFrame + Vector3.new(0, 2.5, 0)
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.Anchored = false
         end)
         task.wait(0.05)
         pcall(function() seat:Sit(realHumanoid) end)
@@ -2339,34 +2208,136 @@ local function executeGhostLogic()
         local fh = fakeChar:FindFirstChildOfClass("Humanoid")
         pcall(function()
             local cam = workspace.CurrentCamera
-            if cam and fh then
+            if cam then
                 cam.CameraType = Enum.CameraType.Custom
-                cam.CameraSubject = fh
+                cam.CameraSubject = fh or fakeChar:FindFirstChild("HumanoidRootPart")
             end
         end)
         setCharacterTransparency(fakeChar, 0.5)
         setCharacterTransparency(realChar, 1)
     else
+        -- ========== OFF (orden critico: NO destruir seat antes del TP) ==========
         local realChar = invisState.realChar
         local fakeChar = invisState.fakeChar
 
-        -- Si por alguna razon se perdio la ref del real, intentar el Character actual
-        if (not realChar or not realChar.Parent) and LocalPlayer.Character and LocalPlayer.Character ~= fakeChar then
-            realChar = LocalPlayer.Character
+        if (not realChar or not realChar.Parent) then
+            -- intentar recuperar real desde workspace (no el clon)
+            for _, c in ipairs(workspace:GetChildren()) do
+                if c:IsA("Model") and c ~= fakeChar and c:FindFirstChildOfClass("Humanoid") and c:FindFirstChild("HumanoidRootPart") then
+                    if c.Name == LocalPlayer.Name or (LocalPlayer.Character and c ~= LocalPlayer.Character) then
+                        -- skip generic
+                    end
+                end
+            end
+            if LocalPlayer.Character and LocalPlayer.Character ~= fakeChar and LocalPlayer.Character.Parent then
+                realChar = LocalPlayer.Character
+            end
         end
 
-        returnRealToClone(realChar, fakeChar, function()
-            if invisState.seat then
-                pcall(function() invisState.seat:Destroy() end)
-                invisState.seat = nil
+        local destPos = nil
+        local look = Vector3.new(0, 0, -1)
+        if fakeChar and fakeChar.Parent then
+            local fhrp = fakeChar:FindFirstChild("HumanoidRootPart")
+            if fhrp then
+                destPos = fhrp.Position
+                look = fhrp.CFrame.LookVector
+            else
+                local ok, piv = pcall(function() return fakeChar:GetPivot() end)
+                if ok and piv then
+                    destPos = piv.Position
+                    look = piv.LookVector
+                end
             end
-            if invisState.platform then
-                pcall(function() invisState.platform:Destroy() end)
-                invisState.platform = nil
-            end
-        end)
+        end
 
-        -- Destruir clon DESPUES de devolver el control
+        local hum = realChar and realChar:FindFirstChildOfClass("Humanoid")
+        local hrp = realChar and realChar:FindFirstChild("HumanoidRootPart")
+
+        -- 1) Desmontar del seat SIN destruirlo
+        if hum then
+            pcall(function()
+                hum.Sit = false
+                hum.PlatformStand = false
+                if hum.SeatPart then
+                    hum.Sit = false
+                end
+            end)
+        end
+        task.wait(0.05)
+
+        -- 2) Anclar y TP al destino del clon (Y seguro)
+        if hrp and hrp.Parent then
+            pcall(function()
+                hrp.Anchored = true
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end)
+            if destPos then
+                local safeY = getSafeGroundY(destPos, { fakeChar })
+                -- si el rayo falla muy bajo (void), usa Y del clon
+                if safeY < destPos.Y - 40 then
+                    safeY = destPos.Y + 3
+                end
+                destPos = Vector3.new(destPos.X, safeY, destPos.Z)
+            elseif hrp then
+                destPos = hrp.Position + Vector3.new(0, 8, 0)
+            end
+            local flat = Vector3.new(look.X, 0, look.Z)
+            if flat.Magnitude < 0.05 then flat = Vector3.new(0, 0, -1) else flat = flat.Unit end
+            if destPos then
+                local cf = CFrame.new(destPos, destPos + flat)
+                pcall(function()
+                    hrp.CFrame = cf
+                    realChar:PivotTo(cf)
+                end)
+            end
+        end
+
+        -- 3) Control al body REAL + camara ANTES de borrar helpers
+        if realChar and realChar.Parent then
+            setCharacterTransparency(realChar, 0)
+            pcall(function() LocalPlayer.Character = realChar end)
+            task.wait(0.08)
+            pcall(function()
+                local cam = workspace.CurrentCamera
+                if cam then
+                    cam.CameraType = Enum.CameraType.Custom
+                    if hum then cam.CameraSubject = hum
+                    elseif hrp then cam.CameraSubject = hrp end
+                end
+            end)
+        end
+
+        -- 4) Destruir seat / plataforma (ya no estamos sentados)
+        destroyGhostHelpers()
+        task.wait(0.05)
+
+        -- 5) Soltar ancla y reafirmar posicion
+        if hrp and hrp.Parent and destPos then
+            local flat = Vector3.new(look.X, 0, look.Z)
+            if flat.Magnitude < 0.05 then flat = Vector3.new(0, 0, -1) else flat = flat.Unit end
+            local cf = CFrame.new(destPos, destPos + flat)
+            pcall(function()
+                hrp.CFrame = cf
+                hrp.Anchored = false
+                hrp.AssemblyLinearVelocity = Vector3.zero
+                hrp.AssemblyAngularVelocity = Vector3.zero
+            end)
+        elseif hrp and hrp.Parent then
+            pcall(function() hrp.Anchored = false end)
+        end
+
+        if hum and hum.Parent then
+            pcall(function()
+                hum.Sit = false
+                hum.PlatformStand = false
+                hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                task.wait()
+                hum:ChangeState(Enum.HumanoidStateType.Running)
+            end)
+        end
+
+        -- 6) Destruir clon
         if fakeChar and fakeChar.Parent then
             pcall(function()
                 if LocalPlayer.Character == fakeChar and realChar and realChar.Parent then
@@ -2375,175 +2346,24 @@ local function executeGhostLogic()
                 fakeChar:Destroy()
             end)
         end
+
+        -- 7) Camara final
+        pcall(function()
+            if realChar and realChar.Parent then
+                LocalPlayer.Character = realChar
+            end
+            local cam = workspace.CurrentCamera
+            local rh = realChar and realChar:FindFirstChildOfClass("Humanoid")
+            if cam and rh then
+                cam.CameraType = Enum.CameraType.Custom
+                cam.CameraSubject = rh
+            end
+        end)
+
         invisState.fakeChar = nil
         invisState.realChar = nil
     end
 end
-
-local function executeDesyncLogic()
-    desyncState.isDesynced = not desyncState.isDesynced
-
-    pcall(function()
-        if VortexNotify and VortexNotify.Show then
-            VortexNotify.Show("Vortex X Sage", "Desync Mode: " .. (desyncState.isDesynced and "ACTIVATED" or "DEACTIVATED"), 2)
-        end
-    end)
-
-    if desyncState.isDesynced then
-        local realChar = LocalPlayer.Character
-        if not realChar then
-            desyncState.isDesynced = false
-            return
-        end
-        local hrp = realChar:FindFirstChild("HumanoidRootPart")
-        local realHumanoid = realChar:FindFirstChildOfClass("Humanoid")
-        if not hrp or not realHumanoid then
-            desyncState.isDesynced = false
-            return
-        end
-
-        desyncState.realChar = realChar
-        local savedCFrame = realChar:GetPivot()
-
-        local height = (CONFIG_BANNABLE and CONFIG_BANNABLE.DESYNC_HEIGHT) or 50
-        local platform = Instance.new("Part")
-        platform.Name = _gameLikeName()
-        platform.Size = Vector3.new(2048, 5, 2048)
-        platform.CFrame = CFrame.new(savedCFrame.Position.X, savedCFrame.Position.Y + height, savedCFrame.Position.Z)
-        platform.Anchored = true
-        platform.Transparency = 1
-        platform.CanCollide = true
-        platform.Parent = workspace
-        desyncState.platform = platform
-
-        realChar.Archivable = true
-        local fakeChar = realChar:Clone()
-        fakeChar.Name = _gameLikeName()
-        for _, v in ipairs(fakeChar:GetDescendants()) do
-            if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then
-                v:Destroy()
-            end
-        end
-        fakeChar.Parent = workspace
-        fakeChar:PivotTo(savedCFrame)
-        desyncState.fakeChar = fakeChar
-
-        local fakeHrp = fakeChar:FindFirstChild("HumanoidRootPart")
-        local fakeHumanoid = fakeChar:FindFirstChildOfClass("Humanoid")
-        if fakeHrp then
-            fakeHrp.Anchored = false
-            fakeHrp.CanCollide = true
-            fakeHrp.AssemblyLinearVelocity = Vector3.zero
-            fakeHrp.AssemblyAngularVelocity = Vector3.zero
-        end
-        for _, part in ipairs(fakeChar:GetDescendants()) do
-            if part:IsA("BasePart") then
-                part.CanCollide = (part == fakeHrp) or part.Name == "Head" or (part.Name:find("Torso") ~= nil)
-            end
-        end
-        if fakeHumanoid then
-            fakeHumanoid.PlatformStand = false
-            fakeHumanoid.Sit = false
-            fakeHumanoid.WalkSpeed = realHumanoid.WalkSpeed
-            fakeHumanoid.JumpPower = realHumanoid.JumpPower
-            pcall(function()
-                if fakeHumanoid.UseJumpPower ~= nil then
-                    fakeHumanoid.UseJumpPower = true
-                end
-            end)
-        end
-
-        setCharacterTransparency(realChar, 1)
-        setCharacterTransparency(fakeChar, 0)
-        pcall(function()
-            hrp.CFrame = CFrame.new(savedCFrame.Position.X, platform.Position.Y + (platform.Size.Y / 2) + 3, savedCFrame.Position.Z)
-            realHumanoid.PlatformStand = true
-        end)
-
-        LocalPlayer.Character = fakeChar
-        task.wait(0.05)
-        pcall(function()
-            local cam = workspace.CurrentCamera
-            if cam then
-                cam.CameraType = Enum.CameraType.Custom
-                if fakeHumanoid then
-                    cam.CameraSubject = fakeHumanoid
-                elseif fakeHrp then
-                    cam.CameraSubject = fakeHrp
-                end
-            end
-        end)
-
-        if desyncState.syncConnection then
-            pcall(function() desyncState.syncConnection:Disconnect() end)
-            desyncState.syncConnection = nil
-        end
-        desyncState.syncConnection = RunService.RenderStepped:Connect(function()
-            if not desyncState.isDesynced then return end
-            local fc = desyncState.fakeChar
-            local rc = desyncState.realChar
-            if not fc or not fc.Parent then return end
-            pcall(function()
-                if LocalPlayer.Character ~= fc then
-                    LocalPlayer.Character = fc
-                end
-                local cam = workspace.CurrentCamera
-                if not cam then return end
-                cam.CameraType = Enum.CameraType.Custom
-                local fh = fc:FindFirstChildOfClass("Humanoid")
-                local fhrp = fc:FindFirstChild("HumanoidRootPart")
-                if fh and cam.CameraSubject ~= fh then
-                    cam.CameraSubject = fh
-                elseif fhrp and (not fh) and cam.CameraSubject ~= fhrp then
-                    cam.CameraSubject = fhrp
-                end
-                if rc and rc.Parent and desyncState.platform and desyncState.platform.Parent then
-                    local rhrp = rc:FindFirstChild("HumanoidRootPart")
-                    local plat = desyncState.platform
-                    if rhrp then
-                        local target = Vector3.new(
-                            (fhrp and fhrp.Position.X) or rhrp.Position.X,
-                            plat.Position.Y + (plat.Size.Y / 2) + 3,
-                            (fhrp and fhrp.Position.Z) or rhrp.Position.Z
-                        )
-                        if (rhrp.Position - target).Magnitude > 8 then
-                            rhrp.CFrame = CFrame.new(target)
-                        end
-                        rhrp.AssemblyLinearVelocity = Vector3.zero
-                    end
-                end
-            end)
-        end)
-    else
-        if desyncState.syncConnection then
-            pcall(function() desyncState.syncConnection:Disconnect() end)
-            desyncState.syncConnection = nil
-        end
-
-        local realChar = desyncState.realChar
-        local fakeChar = desyncState.fakeChar
-
-        returnRealToClone(realChar, fakeChar, function()
-            if desyncState.platform then
-                pcall(function() desyncState.platform:Destroy() end)
-                desyncState.platform = nil
-            end
-        end)
-
-        if fakeChar and fakeChar.Parent then
-            pcall(function()
-                if LocalPlayer.Character == fakeChar and realChar and realChar.Parent then
-                    LocalPlayer.Character = realChar
-                end
-                fakeChar:Destroy()
-            end)
-        end
-        desyncState.fakeChar = nil
-        desyncState.realChar = nil
-        desyncState.animCache = {}
-    end
-end
-
 
 bannableTab:Keybind({
     Title = "Activate Ghost Mode (Invisibility)",
@@ -2552,21 +2372,9 @@ bannableTab:Keybind({
     Callback = function() executeGhostLogic() end
 })
 
-bannableTab:Keybind({
-    Title = "Activate Desync Mode",
-    Desc = "Tecla para alternar Desync",
-    Key = "J",
-    Callback = function() executeDesyncLogic() end
-})
-
 bubbleGhostHit.MouseButton1Click:Connect(function()
     if editBubblesState then return end
     executeGhostLogic()
-end)
-
-bubbleDesyncHit.MouseButton1Click:Connect(function()
-    if editBubblesState then return end
-    executeDesyncLogic()
 end)
 
 -- =================================================================
