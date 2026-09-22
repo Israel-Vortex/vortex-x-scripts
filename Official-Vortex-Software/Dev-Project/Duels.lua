@@ -25,147 +25,147 @@ local player = LocalPlayer
 -- ==========================================
 local VortexNotify = {}
 do
-	local TweenService = game:GetService("TweenService")
-	local CoreGui = game:GetService("CoreGui")
-	local currentFrame = nil
-	local currentToken = 0
-	local WIDTH, HEIGHT = 260, 58
+        local TweenService = game:GetService("TweenService")
+        local CoreGui = game:GetService("CoreGui")
+        local currentFrame = nil
+        local currentToken = 0
+        local WIDTH, HEIGHT = 260, 58
 
-	local function getHost()
-		local host
-		pcall(function()
-			if gethui then host = gethui() end
-		end)
-		if not host then
-			host = CoreGui
-		end
-		local gui = host:FindFirstChild("VortexNotifyHost")
-		if not gui then
-			gui = Instance.new("ScreenGui")
-			gui.Name = "VortexNotifyHost"
-			gui.ResetOnSpawn = false
-			gui.IgnoreGuiInset = true
-			gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-			pcall(function()
-				if syn and syn.protect_gui then syn.protect_gui(gui) end
-			end)
-			gui.Parent = host
-		end
-		return gui
-	end
+        local function getHost()
+                local host
+                pcall(function()
+                        if gethui then host = gethui() end
+                end)
+                if not host then
+                        host = CoreGui
+                end
+                local gui = host:FindFirstChild("VortexNotifyHost")
+                if not gui then
+                        gui = Instance.new("ScreenGui")
+                        gui.Name = "VortexNotifyHost"
+                        gui.ResetOnSpawn = false
+                        gui.IgnoreGuiInset = true
+                        gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+                        pcall(function()
+                                if syn and syn.protect_gui then syn.protect_gui(gui) end
+                        end)
+                        gui.Parent = host
+                end
+                return gui
+        end
 
-	local function dismiss(frame, instant)
-		if not frame then return end
-		pcall(function()
-			if instant then
-				frame:Destroy()
-				return
-			end
-			local tw = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				Position = UDim2.new(1, 40, 0, 16),
-				BackgroundTransparency = 1,
-			})
-			tw:Play()
-			task.delay(0.28, function()
-				pcall(function() frame:Destroy() end)
-			end)
-		end)
-	end
+        local function dismiss(frame, instant)
+                if not frame then return end
+                pcall(function()
+                        if instant then
+                                frame:Destroy()
+                                return
+                        end
+                        local tw = TweenService:Create(frame, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+                                Position = UDim2.new(1, 40, 0, 16),
+                                BackgroundTransparency = 1,
+                        })
+                        tw:Play()
+                        task.delay(0.28, function()
+                                pcall(function() frame:Destroy() end)
+                        end)
+                end)
+        end
 
-	function VortexNotify.Show(title, text, duration)
-		duration = tonumber(duration) or 2.5
-		title = tostring(title or "Vortex X Sage")
-		text = tostring(text or "")
+        function VortexNotify.Show(title, text, duration)
+                duration = tonumber(duration) or 2.5
+                title = tostring(title or "Vortex X Sage")
+                text = tostring(text or "")
 
-		-- Quitar la anterior al instante
-		if currentFrame then
-			local old = currentFrame
-			currentFrame = nil
-			dismiss(old, true)
-		end
+                -- Quitar la anterior al instante
+                if currentFrame then
+                        local old = currentFrame
+                        currentFrame = nil
+                        dismiss(old, true)
+                end
 
-		currentToken = currentToken + 1
-		local token = currentToken
+                currentToken = currentToken + 1
+                local token = currentToken
 
-		local gui = getHost()
-		local frame = Instance.new("Frame")
-		frame.Name = "VN"
-		frame.AnchorPoint = Vector2.new(1, 0)
-		frame.Size = UDim2.fromOffset(WIDTH, HEIGHT)
-		frame.Position = UDim2.new(1, 20, 0, 16)
-		frame.BackgroundColor3 = Color3.fromRGB(18, 14, 8)
-		frame.BackgroundTransparency = 0.35
-		frame.BorderSizePixel = 0
-		frame.Parent = gui
-		currentFrame = frame
+                local gui = getHost()
+                local frame = Instance.new("Frame")
+                frame.Name = "VN"
+                frame.AnchorPoint = Vector2.new(1, 0)
+                frame.Size = UDim2.fromOffset(WIDTH, HEIGHT)
+                frame.Position = UDim2.new(1, 20, 0, 16)
+                frame.BackgroundColor3 = Color3.fromRGB(18, 14, 8)
+                frame.BackgroundTransparency = 0.35
+                frame.BorderSizePixel = 0
+                frame.Parent = gui
+                currentFrame = frame
 
-		local corner = Instance.new("UICorner")
-		corner.CornerRadius = UDim.new(0, 10)
-		corner.Parent = frame
+                local corner = Instance.new("UICorner")
+                corner.CornerRadius = UDim.new(0, 10)
+                corner.Parent = frame
 
-		local stroke = Instance.new("UIStroke")
-		stroke.Color = Color3.fromRGB(255, 200, 55)
-		stroke.Thickness = 1.2
-		stroke.Transparency = 0.35
-		stroke.Parent = frame
+                local stroke = Instance.new("UIStroke")
+                stroke.Color = Color3.fromRGB(255, 200, 55)
+                stroke.Thickness = 1.2
+                stroke.Transparency = 0.35
+                stroke.Parent = frame
 
-		local accent = Instance.new("Frame")
-		accent.Size = UDim2.new(0, 3, 1, -12)
-		accent.Position = UDim2.new(0, 6, 0, 6)
-		accent.BackgroundColor3 = Color3.fromRGB(255, 195, 45)
-		accent.BackgroundTransparency = 0.15
-		accent.BorderSizePixel = 0
-		accent.Parent = frame
-		Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
+                local accent = Instance.new("Frame")
+                accent.Size = UDim2.new(0, 3, 1, -12)
+                accent.Position = UDim2.new(0, 6, 0, 6)
+                accent.BackgroundColor3 = Color3.fromRGB(255, 195, 45)
+                accent.BackgroundTransparency = 0.15
+                accent.BorderSizePixel = 0
+                accent.Parent = frame
+                Instance.new("UICorner", accent).CornerRadius = UDim.new(1, 0)
 
-		local titleL = Instance.new("TextLabel")
-		titleL.BackgroundTransparency = 1
-		titleL.Position = UDim2.new(0, 14, 0, 6)
-		titleL.Size = UDim2.new(1, -22, 0, 18)
-		titleL.Font = Enum.Font.GothamBold
-		titleL.TextSize = 13
-		titleL.TextXAlignment = Enum.TextXAlignment.Left
-		titleL.TextColor3 = Color3.fromRGB(255, 220, 90)
-		titleL.Text = title
-		titleL.Parent = frame
+                local titleL = Instance.new("TextLabel")
+                titleL.BackgroundTransparency = 1
+                titleL.Position = UDim2.new(0, 14, 0, 6)
+                titleL.Size = UDim2.new(1, -22, 0, 18)
+                titleL.Font = Enum.Font.GothamBold
+                titleL.TextSize = 13
+                titleL.TextXAlignment = Enum.TextXAlignment.Left
+                titleL.TextColor3 = Color3.fromRGB(255, 220, 90)
+                titleL.Text = title
+                titleL.Parent = frame
 
-		local bodyL = Instance.new("TextLabel")
-		bodyL.BackgroundTransparency = 1
-		bodyL.Position = UDim2.new(0, 14, 0, 26)
-		bodyL.Size = UDim2.new(1, -22, 0, 28)
-		bodyL.Font = Enum.Font.Gotham
-		bodyL.TextSize = 12
-		bodyL.TextXAlignment = Enum.TextXAlignment.Left
-		bodyL.TextYAlignment = Enum.TextYAlignment.Top
-		bodyL.TextWrapped = true
-		bodyL.TextColor3 = Color3.fromRGB(230, 220, 190)
-		bodyL.TextTransparency = 0.1
-		bodyL.Text = text
-		bodyL.Parent = frame
+                local bodyL = Instance.new("TextLabel")
+                bodyL.BackgroundTransparency = 1
+                bodyL.Position = UDim2.new(0, 14, 0, 26)
+                bodyL.Size = UDim2.new(1, -22, 0, 28)
+                bodyL.Font = Enum.Font.Gotham
+                bodyL.TextSize = 12
+                bodyL.TextXAlignment = Enum.TextXAlignment.Left
+                bodyL.TextYAlignment = Enum.TextYAlignment.Top
+                bodyL.TextWrapped = true
+                bodyL.TextColor3 = Color3.fromRGB(230, 220, 190)
+                bodyL.TextTransparency = 0.1
+                bodyL.Text = text
+                bodyL.Parent = frame
 
-		TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-			Position = UDim2.new(1, -16, 0, 16)
-		}):Play()
+                TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
+                        Position = UDim2.new(1, -16, 0, 16)
+                }):Play()
 
-		task.delay(duration, function()
-			if token ~= currentToken then return end
-			if currentFrame ~= frame then return end
-			currentFrame = nil
-			local tw = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-				Position = UDim2.new(1, 40, 0, 16),
-				BackgroundTransparency = 1
-			})
-			tw:Play()
-			pcall(function()
-				titleL.TextTransparency = 1
-				bodyL.TextTransparency = 1
-				stroke.Transparency = 1
-				accent.BackgroundTransparency = 1
-			end)
-			tw.Completed:Wait()
-			pcall(function() frame:Destroy() end)
-		end)
-	end
+                task.delay(duration, function()
+                        if token ~= currentToken then return end
+                        if currentFrame ~= frame then return end
+                        currentFrame = nil
+                        local tw = TweenService:Create(frame, TweenInfo.new(0.35, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
+                                Position = UDim2.new(1, 40, 0, 16),
+                                BackgroundTransparency = 1
+                        })
+                        tw:Play()
+                        pcall(function()
+                                titleL.TextTransparency = 1
+                                bodyL.TextTransparency = 1
+                                stroke.Transparency = 1
+                                accent.BackgroundTransparency = 1
+                        end)
+                        tw.Completed:Wait()
+                        pcall(function() frame:Destroy() end)
+                end)
+        end
 end
 
 
@@ -466,7 +466,7 @@ end)
 
 pcall(function()
     if VortexNotify and VortexNotify.Show then
-        
+
     end
 end)
 
@@ -487,7 +487,7 @@ end)
 
 -- Login ya mostrado arriba con VortexNotify
 
-task.wait(0.4)
+task.wait(0.15)
 
 WindUI:AddTheme({
     Name = "VortexGoldSolid",
@@ -578,11 +578,11 @@ Window:SetToggleKey(Enum.KeyCode.K)
 Window:OnClose(function() end)
 
 -- Deja que WindUI termine de montar la ventana antes de crear tabs/toggles
-task.wait(0.35)
+task.wait(0.12)
 local UI_READY = false
 task.defer(function()
     task.wait(0.15)
-    
+
 -- ==========================================
 -- AUTO CONFIG SAVE/LOAD (Duels)
 -- Guarda toggles/sliders/dropdowns (Flags) y restaura al entrar
@@ -851,7 +851,7 @@ InfoTab:Toggle({
 -- ========== EMOTES / ANIMACIONES ==========
 -- (misma sección Extra, arriba de Config)
 -- =====================================
-local emotesTab = extraSection:Tab({ Title = "Emotes", Icon = "person-standing", ShowTabTitle = true, Border = true })
+local emotesTab = extraSection:Tab({ Title = "Animaciones", Icon = "person-standing", ShowTabTitle = true, Border = true })
 
 local animationData = {
     ["Old School"] = { Walk = 10921244891, Run = 10921240218, Jump = 10921242013, Fall = 10921241244, SwimIdle = 10921244018, Swim = 10921243048, Idle = 10921230744, Idle2 = 10921232093, Climb = 10921229866 },
@@ -1016,32 +1016,50 @@ emotesTab:Dropdown({
     end
 })
 
-emotesTab:Button({
-    Title = "Aplicar Paquete Completo",
-    Desc = "Aplica todas las animaciones del paquete seleccionado.",
-    Callback = function()
-        if selectedBundleCompleto == "Ninguno" then return end
+local function restoreDefaultAnims()
+    local defaultAnims = misAnimacionesOriginales or {
+        Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
+        Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
+    }
+    animacionActualActiva = nil
+    applyCustomAnims(defaultAnims)
+end
+
+emotesTab:Toggle({
+    Flag = "Activar_Paquete",
+    Title = "Activar Paquete",
+    Desc = "ON = aplica el paquete elegido. OFF = restaura animaciones default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
-            showBottomMessage("Aplicando paquete: " .. selectedBundleCompleto)
-            animacionActualActiva = animationData[selectedBundleCompleto]
-            applyCustomAnims(animacionActualActiva)
+            if state then
+                if selectedBundleCompleto == "Ninguno" or not animationData[selectedBundleCompleto] then
+                    showBottomMessage("Elige un paquete primero.")
+                    return
+                end
+                showBottomMessage("Paquete ON: " .. selectedBundleCompleto)
+                animacionActualActiva = animationData[selectedBundleCompleto]
+                applyCustomAnims(animacionActualActiva)
+            else
+                restoreDefaultAnims()
+                showBottomMessage("Paquete OFF · default restaurado")
+            end
         end)
     end
 })
 
-emotesTab:Button({
-    Title = "Restaurar Default",
-    Desc = "Vuelve a las animaciones originales del juego.",
-    Callback = function()
-        task.spawn(function()
-            local defaultAnims = misAnimacionesOriginales or {
-                Idle = 507766666, Idle2 = 507766951, Walk = 507777826, Run = 507767714,
-                Jump = 507765000, Climb = 507765644, Fall = 507767968, Swim = 507784897, SwimIdle = 507785072
-            }
-            animacionActualActiva = nil
-            applyCustomAnims(defaultAnims)
-            showBottomMessage("Animaciones de tu avatar restauradas.")
-        end)
+emotesTab:Toggle({
+    Flag = "Restaurar_Default",
+    Title = "Forzar Default",
+    Desc = "Activalo para restaurar animaciones originales del avatar.",
+    Default = false,
+    Callback = function(state)
+        if state then
+            task.spawn(function()
+                restoreDefaultAnims()
+                showBottomMessage("Animaciones default restauradas.")
+            end)
+        end
     end
 })
 
@@ -1065,13 +1083,19 @@ emotesTab:Dropdown({ Flag = "Caer",
 emotesTab:Dropdown({ Flag = "Escalar",
     Title = "Escalar", Desc = "Animacion al trepar o escalar.", Values = animList, Value = "Ninguno", Callback = function(Value) mixParts.Climb = Value end })
 
-emotesTab:Button({
-    Title = "Combinar y Aplicar",
-    Desc = "Mezcla las animaciones elegidas arriba y las aplica.",
-    Callback = function()
+emotesTab:Toggle({
+    Flag = "Activar_Mezcla",
+    Title = "Activar Mezcla",
+    Desc = "ON = aplica la mezcla de animaciones elegidas. OFF = restaura default.",
+    Default = false,
+    Callback = function(state)
         task.spawn(function()
+            if not state then
+                restoreDefaultAnims()
+                showBottomMessage("Mezcla OFF · default restaurado")
+                return
+            end
             local customMix = {}
-
             if mixParts.Idle ~= "Ninguno" and animationData[mixParts.Idle] then
                 customMix.Idle = animationData[mixParts.Idle].Idle
                 customMix.Idle2 = animationData[mixParts.Idle].Idle2
@@ -1091,18 +1115,16 @@ emotesTab:Button({
             if mixParts.Climb ~= "Ninguno" and animationData[mixParts.Climb] then
                 customMix.Climb = animationData[mixParts.Climb].Climb
             end
-
             local hasValues = false
             for _, v in pairs(customMix) do
                 if v then hasValues = true break end
             end
-
             if hasValues then
-                showBottomMessage("Aplicando combinación de animaciones...")
+                showBottomMessage("Mezcla ON")
                 animacionActualActiva = customMix
                 applyCustomAnims(animacionActualActiva)
             else
-                showBottomMessage("Selecciona al menos una animación para combinar.")
+                showBottomMessage("Selecciona al menos una animación.")
             end
         end)
     end
@@ -1121,25 +1143,37 @@ CustomTab:Paragraph({
 })
 
 local KILL_SOUND_PRESETS = {
+    { name = "Rana Risa", id = "79915713233835" },
     { name = "Classic Oof", id = "178130506" },
-    { name = "Vine Boom", id = "9126213842" },
-    { name = "Bruh", id = "5102382888" },
-    { name = "Metal Pipe", id = "6751740585" },
-    { name = "Discord Notif", id = "5418189333" },
+    { name = "Vine Boom Loud", id = "9126213842" },
+    { name = "Metal Pipe Drop", id = "6751740585" },
+    { name = "Bruh Instant", id = "5102382888" },
+    { name = "Screaming Goat", id = "138081540" },
+    { name = "Fart Reverb", id = "166475212" },
+    { name = "Taco Bell", id = "7862023346" },
+    { name = "Windows Error", id = "137754940" },
+    { name = "Among Us", id = "5951902376" },
+    { name = "Minecraft Death", id = "536427742" },
+    { name = "Cartoon Fall", id = "131961136" },
+    { name = "Explosion Boom", id = "138079971" },
+    { name = "Bonk Bat", id = "5019417492" },
+    { name = "Discord Join", id = "5418189333" },
+    { name = "Bass Drop", id = "12222216" },
     { name = "Roblox Death", id = "2801263" },
-    { name = "Bass Hit", id = "12222216" },
-    { name = "Splat", id = "130791264" },
-    { name = "Impact", id = "9114224475" },
+    { name = "Splat Wet", id = "130791264" },
 }
 
 local SKY_PRESETS = {
     { name = "Ninguno (mapa)", id = "" },
-    { name = "Sunset Warm", id = "323493360" },
+    { name = "Sunset Warm", id = "323493360", faces = {
+        Up = "323493360", Lf = "323494252", Bk = "323494035",
+        Ft = "323494130", Dn = "323494368", Rt = "323494067",
+    }},
     { name = "Tropic Day", id = "169210149", faces = {
         Up = "169210149", Lf = "169210133", Bk = "169210090",
         Ft = "169210121", Dn = "169210108", Rt = "169210143",
     }},
-    { name = "Pink / Synth", id = "323494035", faces = {
+    { name = "Pink Synthwave", id = "323494035", faces = {
         Up = "323493360", Lf = "323494252", Bk = "323494035",
         Ft = "323494130", Dn = "323494368", Rt = "323494067",
     }},
@@ -1147,7 +1181,21 @@ local SKY_PRESETS = {
         Up = "196263782", Lf = "196263721", Bk = "196263721",
         Ft = "196263721", Dn = "196263643", Rt = "196263721",
     }},
+    { name = "Blood Moon", id = "159454277" },
+    { name = "Void Black", id = "159454286" },
+    { name = "Nebula Purple", id = "159454299" },
+    { name = "Toxic Green", id = "150939036" },
+    { name = "Ice World", id = "591058823" },
+    { name = "Hell Red", id = "159454277" },
+    { name = "Galaxy Blue", id = "159454299" },
+    { name = "Storm Gray", id = "6444884337" },
     { name = "Clear Blue", id = "149397684" },
+    { name = "Space Deep", id = "159454286" },
+    { name = "Golden Hour", id = "323493360" },
+    { name = "Cyber Night", id = "196263721", faces = {
+        Up = "196263782", Lf = "196263721", Bk = "196263721",
+        Ft = "196263721", Dn = "196263643", Rt = "196263721",
+    }},
 }
 
 local customOpts = {
@@ -1276,10 +1324,12 @@ local function hookPlayerDeath(plr)
     plr.CharacterAdded:Connect(attach)
 end
 
-for _, plr in ipairs(Players:GetPlayers()) do
-    hookPlayerDeath(plr)
-end
-Players.PlayerAdded:Connect(hookPlayerDeath)
+task.defer(function()
+    for _, plr in ipairs(Players:GetPlayers()) do
+        hookPlayerDeath(plr)
+    end
+    Players.PlayerAdded:Connect(hookPlayerDeath)
+end)
 
 local presetNames = {}
 for _, pr in ipairs(KILL_SOUND_PRESETS) do
@@ -1292,11 +1342,6 @@ for _, sk in ipairs(SKY_PRESETS) do
 end
 
 -- ---------- UI ----------
-CustomTab:Paragraph({
-    Title = "Personalizacion VXS",
-    Desc = "Kill sounds al eliminar enemigos (detect team) y cielo custom. Solo tu escuchas los sonidos.",
-})
-
 CustomTab:Section({ Title = "Kill Sounds" })
 
 CustomTab:Toggle({
@@ -1630,7 +1675,13 @@ local ConfigNameInput = ConfigTab:Input({
 
 ConfigTab:Space()
 
-local AllConfigs = ConfigManager:AllConfigs()
+local AllConfigs = {}
+pcall(function()
+    if ConfigManager and ConfigManager.AllConfigs then
+        AllConfigs = ConfigManager:AllConfigs() or {}
+    end
+end)
+if type(AllConfigs) ~= "table" then AllConfigs = {} end
 local DefaultValue = table.find(AllConfigs, ConfigName) and ConfigName or nil
 
 local AllConfigsDropdown = ConfigTab:Dropdown({
@@ -1824,38 +1875,38 @@ end)
 local _VortexIcons, _VortexIconReady = nil, false
 local _VortexIconQueue = {}
 task.spawn(function()
-	local ok, res = pcall(function()
-		return loadstring(game:HttpGet("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"))()
-	end)
-	if ok and type(res) == "table" then
-		_VortexIcons = res
-		_VortexIconReady = true
-		for _, q in ipairs(_VortexIconQueue) do
-			pcall(function()
-				local entry = _VortexIcons["48px"] and _VortexIcons["48px"][q.name]
-				if entry and q.img and q.img.Parent then
-					q.img.Image = "rbxassetid://" .. tostring(entry[1])
-					q.img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
-					q.img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
-				end
-			end)
-		end
-		table.clear(_VortexIconQueue)
-	end
+        local ok, res = pcall(function()
+                return loadstring(game:HttpGet("https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/refs/heads/main/icons.lua"))()
+        end)
+        if ok and type(res) == "table" then
+                _VortexIcons = res
+                _VortexIconReady = true
+                for _, q in ipairs(_VortexIconQueue) do
+                        pcall(function()
+                                local entry = _VortexIcons["48px"] and _VortexIcons["48px"][q.name]
+                                if entry and q.img and q.img.Parent then
+                                        q.img.Image = "rbxassetid://" .. tostring(entry[1])
+                                        q.img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+                                        q.img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+                                end
+                        end)
+                end
+                table.clear(_VortexIconQueue)
+        end
 end)
 
 local function applyLucideIcon(img, iconName)
-	if not img then return end
-	iconName = tostring(iconName or "zap")
-	local atlas = _VortexIcons and _VortexIcons["48px"]
-	if _VortexIconReady and atlas and atlas[iconName] then
-		local entry = atlas[iconName]
-		img.Image = "rbxassetid://" .. tostring(entry[1])
-		img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
-		img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
-	else
-		table.insert(_VortexIconQueue, { img = img, name = iconName })
-	end
+        if not img then return end
+        iconName = tostring(iconName or "zap")
+        local atlas = _VortexIcons and _VortexIcons["48px"]
+        if _VortexIconReady and atlas and atlas[iconName] then
+                local entry = atlas[iconName]
+                img.Image = "rbxassetid://" .. tostring(entry[1])
+                img.ImageRectSize = Vector2.new(entry[2][1], entry[2][2])
+                img.ImageRectOffset = Vector2.new(entry[3][1], entry[3][2])
+        else
+                table.insert(_VortexIconQueue, { img = img, name = iconName })
+        end
 end
 
 local FAB_GOLD = Color3.fromRGB(255, 200, 55)
@@ -1863,70 +1914,70 @@ local FAB_GLASS = Color3.fromRGB(8, 12, 20)
 local FAB_GLASS_T = 0.35
 
 local function createVaporStyleFab(parent, cfg)
-	cfg = cfg or {}
-	local BTN_SZ = math.floor(tonumber(cfg.Size) or 48)
-	local ICO_SZ = math.floor(BTN_SZ * 0.42)
-	local Fab = Instance.new("Frame")
-	Fab.Name = cfg.Name or "VortexFab"
-	Fab.Size = UDim2.fromOffset(BTN_SZ, BTN_SZ)
-	Fab.Position = cfg.Position or UDim2.new(1, -70, 0, 40)
-	Fab.AnchorPoint = cfg.AnchorPoint or Vector2.new(1, 0)
-	Fab.BackgroundColor3 = FAB_GLASS
-	Fab.BackgroundTransparency = FAB_GLASS_T
-	Fab.BorderSizePixel = 0
-	Fab.Visible = cfg.Visible == true
-	Fab.ZIndex = cfg.ZIndex or 100
-	Fab.Parent = parent
-	Instance.new("UICorner", Fab).CornerRadius = UDim.new(0, 10)
+        cfg = cfg or {}
+        local BTN_SZ = math.floor(tonumber(cfg.Size) or 48)
+        local ICO_SZ = math.floor(BTN_SZ * 0.42)
+        local Fab = Instance.new("Frame")
+        Fab.Name = cfg.Name or "VortexFab"
+        Fab.Size = UDim2.fromOffset(BTN_SZ, BTN_SZ)
+        Fab.Position = cfg.Position or UDim2.new(1, -70, 0, 40)
+        Fab.AnchorPoint = cfg.AnchorPoint or Vector2.new(1, 0)
+        Fab.BackgroundColor3 = FAB_GLASS
+        Fab.BackgroundTransparency = FAB_GLASS_T
+        Fab.BorderSizePixel = 0
+        Fab.Visible = cfg.Visible == true
+        Fab.ZIndex = cfg.ZIndex or 100
+        Fab.Parent = parent
+        Instance.new("UICorner", Fab).CornerRadius = UDim.new(0, 10)
 
-	local fabStroke = Instance.new("UIStroke")
-	fabStroke.Name = "Stroke"
-	fabStroke.Color = FAB_GOLD
-	fabStroke.Thickness = 1.5
-	fabStroke.Transparency = 0.45
-	fabStroke.Parent = Fab
+        local fabStroke = Instance.new("UIStroke")
+        fabStroke.Name = "Stroke"
+        fabStroke.Color = FAB_GOLD
+        fabStroke.Thickness = 1.5
+        fabStroke.Transparency = 0.45
+        fabStroke.Parent = Fab
 
-	local FabGlow = Instance.new("Frame")
-	FabGlow.Name = "Glow"
-	FabGlow.Size = UDim2.fromScale(1, 1)
-	FabGlow.BackgroundColor3 = FAB_GOLD
-	FabGlow.BackgroundTransparency = 0.92
-	FabGlow.BorderSizePixel = 0
-	FabGlow.ZIndex = Fab.ZIndex
-	FabGlow.Parent = Fab
-	Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(0, 10)
+        local FabGlow = Instance.new("Frame")
+        FabGlow.Name = "Glow"
+        FabGlow.Size = UDim2.fromScale(1, 1)
+        FabGlow.BackgroundColor3 = FAB_GOLD
+        FabGlow.BackgroundTransparency = 0.92
+        FabGlow.BorderSizePixel = 0
+        FabGlow.ZIndex = Fab.ZIndex
+        FabGlow.Parent = Fab
+        Instance.new("UICorner", FabGlow).CornerRadius = UDim.new(0, 10)
 
-	local fabIco = Instance.new("ImageLabel")
-	fabIco.Name = "Icon"
-	fabIco.BackgroundTransparency = 1
-	fabIco.AnchorPoint = Vector2.new(0.5, 0.5)
-	fabIco.Position = UDim2.fromScale(0.5, 0.5)
-	fabIco.Size = UDim2.fromOffset(ICO_SZ, ICO_SZ)
-	fabIco.ImageColor3 = FAB_GOLD
-	fabIco.ZIndex = Fab.ZIndex + 2
-	fabIco.Parent = Fab
-	applyLucideIcon(fabIco, cfg.Icon or "zap")
+        local fabIco = Instance.new("ImageLabel")
+        fabIco.Name = "Icon"
+        fabIco.BackgroundTransparency = 1
+        fabIco.AnchorPoint = Vector2.new(0.5, 0.5)
+        fabIco.Position = UDim2.fromScale(0.5, 0.5)
+        fabIco.Size = UDim2.fromOffset(ICO_SZ, ICO_SZ)
+        fabIco.ImageColor3 = FAB_GOLD
+        fabIco.ZIndex = Fab.ZIndex + 2
+        fabIco.Parent = Fab
+        applyLucideIcon(fabIco, cfg.Icon or "zap")
 
-	local FabBtn = Instance.new("TextButton")
-	FabBtn.Name = "Hit"
-	FabBtn.Size = UDim2.fromScale(1, 1)
-	FabBtn.BackgroundTransparency = 1
-	FabBtn.Text = ""
-	FabBtn.ZIndex = Fab.ZIndex + 3
-	FabBtn.Parent = Fab
+        local FabBtn = Instance.new("TextButton")
+        FabBtn.Name = "Hit"
+        FabBtn.Size = UDim2.fromScale(1, 1)
+        FabBtn.BackgroundTransparency = 1
+        FabBtn.Text = ""
+        FabBtn.ZIndex = Fab.ZIndex + 3
+        FabBtn.Parent = Fab
 
-	FabBtn.MouseEnter:Connect(function()
-		TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = 0.18 }):Play()
-		TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.2 }):Play()
-		TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.85 }):Play()
-	end)
-	FabBtn.MouseLeave:Connect(function()
-		TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = FAB_GLASS_T }):Play()
-		TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.45 }):Play()
-		TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.92 }):Play()
-	end)
+        FabBtn.MouseEnter:Connect(function()
+                TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = 0.18 }):Play()
+                TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.2 }):Play()
+                TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.85 }):Play()
+        end)
+        FabBtn.MouseLeave:Connect(function()
+                TweenService:Create(Fab, TweenInfo.new(0.15), { BackgroundTransparency = FAB_GLASS_T }):Play()
+                TweenService:Create(fabStroke, TweenInfo.new(0.15), { Transparency = 0.45 }):Play()
+                TweenService:Create(FabGlow, TweenInfo.new(0.15), { BackgroundTransparency = 0.92 }):Play()
+        end)
 
-	return Fab, FabBtn, fabIco, fabStroke
+        return Fab, FabBtn, fabIco, fabStroke
 end
 
 local bubblesContainer = Instance.new("Frame")
@@ -1941,37 +1992,37 @@ local bubbleSize = 42
 local allBubbleFabs = {}
 
 local function applyBubbleSize(sz)
-	bubbleSize = math.clamp(math.floor(sz), 28, 64)
-	for _, fab in ipairs(allBubbleFabs) do
-		if fab and fab.Parent then
-			fab.Size = UDim2.fromOffset(bubbleSize, bubbleSize)
-			local ic = fab:FindFirstChild("Icon")
-			if ic then
-				local ico = math.floor(bubbleSize * 0.42)
-				ic.Size = UDim2.fromOffset(ico, ico)
-			end
-		end
-	end
+        bubbleSize = math.clamp(math.floor(sz), 28, 64)
+        for _, fab in ipairs(allBubbleFabs) do
+                if fab and fab.Parent then
+                        fab.Size = UDim2.fromOffset(bubbleSize, bubbleSize)
+                        local ic = fab:FindFirstChild("Icon")
+                        if ic then
+                                local ico = math.floor(bubbleSize * 0.42)
+                                ic.Size = UDim2.fromOffset(ico, ico)
+                        end
+                end
+        end
 end
 
 local function createBubbleButton(name, iconName, rowY, posXOffset)
-	posXOffset = posXOffset or -10
-	-- rowY = offset desde el centro vertical del borde derecho
-	local Fab, FabBtn = createVaporStyleFab(bubblesContainer, {
-		Name = name,
-		Icon = iconName,
-		Size = bubbleSize,
-		Position = UDim2.new(1, posXOffset, 0.5, rowY),
-		AnchorPoint = Vector2.new(1, 0.5),
-		Visible = false,
-		ZIndex = 100,
-	})
-	-- drag on whole fab when edit mode
-	makeDraggable(FabBtn, Fab, function()
-		return editBubblesState == true
-	end)
-	table.insert(allBubbleFabs, Fab)
-	return Fab, FabBtn
+        posXOffset = posXOffset or -10
+        -- rowY = offset desde el centro vertical del borde derecho
+        local Fab, FabBtn = createVaporStyleFab(bubblesContainer, {
+                Name = name,
+                Icon = iconName,
+                Size = bubbleSize,
+                Position = UDim2.new(1, posXOffset, 0.5, rowY),
+                AnchorPoint = Vector2.new(1, 0.5),
+                Visible = false,
+                ZIndex = 100,
+        })
+        -- drag on whole fab when edit mode
+        makeDraggable(FabBtn, Fab, function()
+                return editBubblesState == true
+        end)
+        table.insert(allBubbleFabs, Fab)
+        return Fab, FabBtn
 end
 
 -- 2 columnas al medio del borde derecho
@@ -2052,22 +2103,181 @@ bannableTab:Paragraph({ Title = "PC Keybinds (Ghost, Desync & Kill All)", Desc =
 
 -- Ghost Mode (version clasica: clone/seat, SIN vuelo)
 local function setGhostBubbleVisual(on)
-	pcall(function()
-		local ic = bubbleGhost and bubbleGhost:FindFirstChild("Icon")
-		local st = bubbleGhost and bubbleGhost:FindFirstChild("Stroke")
-		if on then
-			if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
-			if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
-		else
-			if ic then ic.ImageColor3 = FAB_GOLD end
-			if st then st.Color = FAB_GOLD; st.Transparency = 0.45 end
-		end
-	end)
+        pcall(function()
+                local ic = bubbleGhost and bubbleGhost:FindFirstChild("Icon")
+                local st = bubbleGhost and bubbleGhost:FindFirstChild("Stroke")
+                if on then
+                        if ic then ic.ImageColor3 = Color3.fromRGB(120, 200, 255) end
+                        if st then st.Color = Color3.fromRGB(120, 200, 255); st.Transparency = 0.15 end
+                else
+                        if ic then ic.ImageColor3 = FAB_GOLD end
+                        if st then st.Color = FAB_GOLD; st.Transparency = 0.45 end
+                end
+        end)
+end
+
+local function getCloneWorldCF(fakeChar)
+    if not fakeChar or not fakeChar.Parent then return nil end
+    local fhrp = fakeChar:FindFirstChild("HumanoidRootPart")
+    if fhrp then
+        return fhrp.CFrame
+    end
+    local ok, piv = pcall(function() return fakeChar:GetPivot() end)
+    if ok and piv then return piv end
+    return nil
+end
+
+-- Ghost OFF / Desync OFF: vuelve el body REAL donde estaba el clon
+-- ORDEN CRITICO: TP real ANTES de destruir seat/plataforma (si no, cae al void y "desaparece")
+local function returnRealToClone(realChar, fakeChar, destroyHelpers)
+    local cloneCF = getCloneWorldCF(fakeChar)
+    local pos = nil
+    local look = Vector3.new(0, 0, -1)
+    if cloneCF then
+        pos = cloneCF.Position
+        look = cloneCF.LookVector
+    elseif fakeChar and fakeChar.Parent then
+        local ok, piv = pcall(function() return fakeChar:GetPivot() end)
+        if ok and piv then
+            pos = piv.Position
+            look = piv.LookVector
+        end
+    end
+
+    if not realChar or not realChar.Parent then
+        -- Sin body real: al menos destruir helpers y clon
+        if type(destroyHelpers) == "function" then pcall(destroyHelpers) end
+        return
+    end
+
+    local hrp = realChar:FindFirstChild("HumanoidRootPart")
+    local hum = realChar:FindFirstChildOfClass("Humanoid") or realChar:FindFirstChild("Humanoid")
+
+    -- 1) Des-sentar / soltar sin destruir nada aun
+    pcall(function()
+        if hum then
+            hum.Sit = false
+            hum.PlatformStand = false
+        end
+    end)
+
+    if hrp then
+        pcall(function()
+            hrp.Anchored = true
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+        end)
+    end
+
+    -- 2) Calcular destino seguro (cerca del clon)
+    local destPos
+    if pos then
+        local safeY = pos.Y + 3.5
+        pcall(function()
+            local params = RaycastParams.new()
+            params.FilterType = Enum.RaycastFilterType.Exclude
+            local filter = { realChar }
+            if fakeChar then table.insert(filter, fakeChar) end
+            if invisState and invisState.platform then table.insert(filter, invisState.platform) end
+            if invisState and invisState.seat then table.insert(filter, invisState.seat) end
+            if desyncState and desyncState.platform then table.insert(filter, desyncState.platform) end
+            params.FilterDescendantsInstances = filter
+            local origin = Vector3.new(pos.X, pos.Y + 8, pos.Z)
+            local hit = workspace:Raycast(origin, Vector3.new(0, -22, 0), params)
+            if hit then
+                safeY = hit.Position.Y + 3.2
+            end
+        end)
+        if safeY < pos.Y - 6 then safeY = pos.Y + 3.5 end
+        if safeY > pos.Y + 10 then safeY = pos.Y + 3.5 end
+        destPos = Vector3.new(pos.X, safeY, pos.Z)
+    else
+        -- fallback: un poco arriba de donde este el real ahora
+        if hrp then
+            destPos = hrp.Position + Vector3.new(0, 5, 0)
+        end
+    end
+
+    local flat = Vector3.new(look.X, 0, look.Z)
+    if flat.Magnitude < 0.05 then
+        flat = Vector3.new(0, 0, -1)
+    else
+        flat = flat.Unit
+    end
+
+    -- 3) TP del REAL mientras seat/plataforma AUN existen (evita caer al void)
+    if destPos and hrp then
+        pcall(function()
+            local cf = CFrame.new(destPos, destPos + flat)
+            hrp.CFrame = cf
+            realChar:PivotTo(cf)
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+        end)
+    end
+
+    -- 4) Visibilidad + control al jugador REAL antes de borrar helpers
+    setCharacterTransparency(realChar, 0)
+    pcall(function()
+        LocalPlayer.Character = realChar
+    end)
+    task.wait(0.06)
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        if cam and hum then
+            cam.CameraType = Enum.CameraType.Custom
+            cam.CameraSubject = hum
+        elseif cam and hrp then
+            cam.CameraSubject = hrp
+        end
+    end)
+
+    -- 5) Ahora si: destruir seat / plataforma / techo
+    if type(destroyHelpers) == "function" then
+        pcall(destroyHelpers)
+    end
+
+    task.wait(0.05)
+
+    -- 6) Reafirmar posicion y soltar ancla
+    if destPos and hrp and hrp.Parent then
+        pcall(function()
+            local cf = CFrame.new(destPos, destPos + flat)
+            hrp.CFrame = cf
+            hrp.Anchored = false
+            hrp.AssemblyLinearVelocity = Vector3.zero
+            hrp.AssemblyAngularVelocity = Vector3.zero
+        end)
+    elseif hrp and hrp.Parent then
+        pcall(function() hrp.Anchored = false end)
+    end
+
+    if hum and hum.Parent then
+        pcall(function()
+            hum.Sit = false
+            hum.PlatformStand = false
+            hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+            task.wait()
+            hum:ChangeState(Enum.HumanoidStateType.Running)
+        end)
+    end
+
+    -- Asegurar camara otra vez
+    pcall(function()
+        local cam = workspace.CurrentCamera
+        if cam and hum and hum.Parent then
+            cam.CameraType = Enum.CameraType.Custom
+            cam.CameraSubject = hum
+        end
+        if LocalPlayer.Character ~= realChar and realChar.Parent then
+            LocalPlayer.Character = realChar
+        end
+    end)
 end
 
 local function executeGhostLogic()
     invisState.isInvisible = not invisState.isInvisible
-	setGhostBubbleVisual(invisState.isInvisible)
+    setGhostBubbleVisual(invisState.isInvisible)
 
     pcall(function()
         if VortexNotify and VortexNotify.Show then
@@ -2084,7 +2294,6 @@ local function executeGhostLogic()
 
         invisState.realChar = realChar
         local savedCFrame = realChar:GetPivot()
-
         local safePos = savedCFrame.Position - Vector3.new(0, CONFIG_BANNABLE.INVIS_OFFSET_Y, 0)
 
         local safePlatform = Instance.new("Part")
@@ -2093,6 +2302,7 @@ local function executeGhostLogic()
         safePlatform.Size = Vector3.new(40, 2, 40)
         safePlatform.CFrame = CFrame.new(safePos) - Vector3.new(0, 3, 0)
         safePlatform.Transparency = 1
+        safePlatform.CanCollide = true
         safePlatform.Parent = workspace
         invisState.platform = safePlatform
 
@@ -2102,13 +2312,13 @@ local function executeGhostLogic()
         seat.Size = Vector3.new(2, 1, 2)
         seat.CFrame = CFrame.new(safePos)
         seat.Transparency = 1
+        seat.CanCollide = true
         seat.Parent = workspace
         invisState.seat = seat
 
         realChar.Archivable = true
         local fakeChar = realChar:Clone()
         fakeChar.Name = _gameLikeName()
-
         for _, v in ipairs(fakeChar:GetDescendants()) do
             if (v:IsA("LocalScript") or v:IsA("Script")) and v.Name ~= "Animate" then
                 v:Destroy()
@@ -2118,64 +2328,54 @@ local function executeGhostLogic()
         fakeChar:PivotTo(savedCFrame)
         invisState.fakeChar = fakeChar
 
-        realChar:PivotTo(seat.CFrame + Vector3.new(0, 3, 0))
+        -- Body real al seat (debajo)
+        pcall(function()
+            hrp.CFrame = seat.CFrame + Vector3.new(0, 2.5, 0)
+        end)
         task.wait(0.05)
-        seat:Sit(realHumanoid)
+        pcall(function() seat:Sit(realHumanoid) end)
 
         LocalPlayer.Character = fakeChar
-        workspace.CurrentCamera.CameraSubject = fakeChar:FindFirstChild("Humanoid")
-
+        local fh = fakeChar:FindFirstChildOfClass("Humanoid")
+        pcall(function()
+            local cam = workspace.CurrentCamera
+            if cam and fh then
+                cam.CameraType = Enum.CameraType.Custom
+                cam.CameraSubject = fh
+            end
+        end)
         setCharacterTransparency(fakeChar, 0.5)
         setCharacterTransparency(realChar, 1)
     else
         local realChar = invisState.realChar
         local fakeChar = invisState.fakeChar
 
-        local targetCFrame = nil
-        if fakeChar and fakeChar.PrimaryPart then
-            targetCFrame = fakeChar:GetPivot()
+        -- Si por alguna razon se perdio la ref del real, intentar el Character actual
+        if (not realChar or not realChar.Parent) and LocalPlayer.Character and LocalPlayer.Character ~= fakeChar then
+            realChar = LocalPlayer.Character
         end
 
-        if realChar then
-            local hrp = realChar:FindFirstChild("HumanoidRootPart")
-            local realHumanoid = realChar:FindFirstChild("Humanoid")
-
-            if realHumanoid then
-                realHumanoid.Sit = false
+        returnRealToClone(realChar, fakeChar, function()
+            if invisState.seat then
+                pcall(function() invisState.seat:Destroy() end)
+                invisState.seat = nil
             end
-            task.wait(0.05)
-
-            if hrp then
-                hrp.Anchored = true
-                hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-                hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+            if invisState.platform then
+                pcall(function() invisState.platform:Destroy() end)
+                invisState.platform = nil
             end
+        end)
 
-            if targetCFrame then
-                realChar:PivotTo(targetCFrame + Vector3.new(0, 3, 0))
-            end
-
-            setCharacterTransparency(realChar, 0)
-
-            LocalPlayer.Character = realChar
-            if realHumanoid then
-                workspace.CurrentCamera.CameraSubject = realHumanoid
-            end
-
-            task.wait(0.05)
-            if hrp then
-                hrp.Anchored = false
-            end
+        -- Destruir clon DESPUES de devolver el control
+        if fakeChar and fakeChar.Parent then
+            pcall(function()
+                if LocalPlayer.Character == fakeChar and realChar and realChar.Parent then
+                    LocalPlayer.Character = realChar
+                end
+                fakeChar:Destroy()
+            end)
         end
-
-        if invisState.seat then invisState.seat:Destroy(); invisState.seat = nil end
-        if invisState.platform then invisState.platform:Destroy(); invisState.platform = nil end
-
-        if fakeChar then
-            fakeChar:Destroy()
-            invisState.fakeChar = nil
-        end
-
+        invisState.fakeChar = nil
         invisState.realChar = nil
     end
 end
@@ -2190,7 +2390,6 @@ local function executeDesyncLogic()
     end)
 
     if desyncState.isDesynced then
-        -- Igual que Ghost: controlas el CLON + camara en el clon
         local realChar = LocalPlayer.Character
         if not realChar then
             desyncState.isDesynced = false
@@ -2206,7 +2405,6 @@ local function executeDesyncLogic()
         desyncState.realChar = realChar
         local savedCFrame = realChar:GetPivot()
 
-        -- Plataforma alta: cuerpo real (server) queda arriba
         local height = (CONFIG_BANNABLE and CONFIG_BANNABLE.DESYNC_HEIGHT) or 50
         local platform = Instance.new("Part")
         platform.Name = _gameLikeName()
@@ -2218,7 +2416,6 @@ local function executeDesyncLogic()
         platform.Parent = workspace
         desyncState.platform = platform
 
-        -- Clon visible en el suelo (lo controlas tu)
         realChar.Archivable = true
         local fakeChar = realChar:Clone()
         fakeChar.Name = _gameLikeName()
@@ -2241,7 +2438,7 @@ local function executeDesyncLogic()
         end
         for _, part in ipairs(fakeChar:GetDescendants()) do
             if part:IsA("BasePart") then
-                part.CanCollide = (part == fakeHrp) or part.Name == "Head" or part.Name:find("Torso") ~= nil
+                part.CanCollide = (part == fakeHrp) or part.Name == "Head" or (part.Name:find("Torso") ~= nil)
             end
         end
         if fakeHumanoid then
@@ -2256,15 +2453,13 @@ local function executeDesyncLogic()
             end)
         end
 
-        -- Cuerpo real arriba e invisible
         setCharacterTransparency(realChar, 1)
         setCharacterTransparency(fakeChar, 0)
-        hrp.CFrame = CFrame.new(savedCFrame.Position.X, platform.Position.Y + (platform.Size.Y / 2) + 3, savedCFrame.Position.Z)
         pcall(function()
+            hrp.CFrame = CFrame.new(savedCFrame.Position.X, platform.Position.Y + (platform.Size.Y / 2) + 3, savedCFrame.Position.Z)
             realHumanoid.PlatformStand = true
         end)
 
-        -- CLAVE (como Ghost): Character = clon -> control + camara en el clon
         LocalPlayer.Character = fakeChar
         task.wait(0.05)
         pcall(function()
@@ -2279,7 +2474,6 @@ local function executeDesyncLogic()
             end
         end)
 
-        -- Mantener camara y Character en el clon (por si el juego los resetea)
         if desyncState.syncConnection then
             pcall(function() desyncState.syncConnection:Disconnect() end)
             desyncState.syncConnection = nil
@@ -2303,7 +2497,6 @@ local function executeDesyncLogic()
                 elseif fhrp and (not fh) and cam.CameraSubject ~= fhrp then
                     cam.CameraSubject = fhrp
                 end
-                -- Mantener cuerpo real arriba
                 if rc and rc.Parent and desyncState.platform and desyncState.platform.Parent then
                     local rhrp = rc:FindFirstChild("HumanoidRootPart")
                     local plat = desyncState.platform
@@ -2322,57 +2515,30 @@ local function executeDesyncLogic()
             end)
         end)
     else
-        -- Desactivar: volver al personaje real
         if desyncState.syncConnection then
             pcall(function() desyncState.syncConnection:Disconnect() end)
             desyncState.syncConnection = nil
         end
 
-        local realChar = desyncState.realChar or LocalPlayer.Character
+        local realChar = desyncState.realChar
         local fakeChar = desyncState.fakeChar
-        local returnCFrame = nil
+
+        returnRealToClone(realChar, fakeChar, function()
+            if desyncState.platform then
+                pcall(function() desyncState.platform:Destroy() end)
+                desyncState.platform = nil
+            end
+        end)
+
         if fakeChar and fakeChar.Parent then
-            pcall(function() returnCFrame = fakeChar:GetPivot() end)
-        end
-
-        if realChar and realChar.Parent then
-            local hrp = realChar:FindFirstChild("HumanoidRootPart")
-            local realHumanoid = realChar:FindFirstChildOfClass("Humanoid")
             pcall(function()
-                if realHumanoid then
-                    realHumanoid.PlatformStand = false
-                    realHumanoid.Sit = false
+                if LocalPlayer.Character == fakeChar and realChar and realChar.Parent then
+                    LocalPlayer.Character = realChar
                 end
+                fakeChar:Destroy()
             end)
-            if returnCFrame then
-                pcall(function() realChar:PivotTo(returnCFrame) end)
-            end
-            setCharacterTransparency(realChar, 0)
-            LocalPlayer.Character = realChar
-            task.wait(0.05)
-            pcall(function()
-                local cam = workspace.CurrentCamera
-                if cam and realHumanoid then
-                    cam.CameraType = Enum.CameraType.Custom
-                    cam.CameraSubject = realHumanoid
-                end
-            end)
-            if hrp then
-                pcall(function()
-                    hrp.Anchored = false
-                    hrp.AssemblyLinearVelocity = Vector3.zero
-                end)
-            end
         end
-
-        if desyncState.platform then
-            pcall(function() desyncState.platform:Destroy() end)
-            desyncState.platform = nil
-        end
-        if fakeChar then
-            pcall(function() fakeChar:Destroy() end)
-            desyncState.fakeChar = nil
-        end
+        desyncState.fakeChar = nil
         desyncState.realChar = nil
         desyncState.animCache = {}
     end
@@ -2419,145 +2585,145 @@ Tabs.Farm = farmTab
 -- =====================================
 local PLATFORM_ROWS = { "Right Platforms", "Left Platforms" }
 local PAD_TABLE = {
-	["Right Platforms"] = {
-		["1v1"] = { zone = "PadZone1", Main = "Pad1", Alt = "Pad2" },
-		["2v2"] = { zone = "PadZone2", Main = "Pad1", Alt = "Pad2" },
-		["3v3"] = { zone = "PadZone3", Main = "Pad1", Alt = "Pad2" },
-		["4v4"] = { zone = "PadZone4", Main = "Pad1", Alt = "Pad2" },
-	},
-	["Left Platforms"] = {
-		["1v1"] = { zone = "PadZone5", Main = "Pad1", Alt = "Pad2" },
-		["2v2"] = { zone = "PadZone6", Main = "Pad1", Alt = "Pad2" },
-		["3v3"] = { zone = "PadZone7", Main = "Pad1", Alt = "Pad2" },
-		["4v4"] = { zone = "PadZone8", Main = "Pad1", Alt = "Pad2" },
-	},
+        ["Right Platforms"] = {
+                ["1v1"] = { zone = "PadZone1", Main = "Pad1", Alt = "Pad2" },
+                ["2v2"] = { zone = "PadZone2", Main = "Pad1", Alt = "Pad2" },
+                ["3v3"] = { zone = "PadZone3", Main = "Pad1", Alt = "Pad2" },
+                ["4v4"] = { zone = "PadZone4", Main = "Pad1", Alt = "Pad2" },
+        },
+        ["Left Platforms"] = {
+                ["1v1"] = { zone = "PadZone5", Main = "Pad1", Alt = "Pad2" },
+                ["2v2"] = { zone = "PadZone6", Main = "Pad1", Alt = "Pad2" },
+                ["3v3"] = { zone = "PadZone7", Main = "Pad1", Alt = "Pad2" },
+                ["4v4"] = { zone = "PadZone8", Main = "Pad1", Alt = "Pad2" },
+        },
 }
 local AutoTP = {
-	Main = false,
-	Alt = false,
-	DuelType = "1v1",
-	PlatformRow = "Right Platforms",
-	EventFarm = false,
-	_lastMove = 0,
+        Main = false,
+        Alt = false,
+        DuelType = "1v1",
+        PlatformRow = "Right Platforms",
+        EventFarm = false,
+        _lastMove = 0,
 }
 
 local function getPadPart(role)
-	local row = PAD_TABLE[AutoTP.PlatformRow] and AutoTP.PlatformRow or "Right Platforms"
-	local duel = PAD_TABLE[row][AutoTP.DuelType] and AutoTP.DuelType or "1v1"
-	local entry = PAD_TABLE[row][duel]
-	if not entry then return nil end
-	local padZones = workspace:FindFirstChild("PadZones")
-	local zone = padZones and padZones:FindFirstChild(entry.zone)
-	local container = zone and zone:FindFirstChild(entry[role] or entry.Main)
-	local pad = container and container:FindFirstChild("Pad")
-	return (pad and pad:IsA("BasePart")) and pad or nil
+        local row = PAD_TABLE[AutoTP.PlatformRow] and AutoTP.PlatformRow or "Right Platforms"
+        local duel = PAD_TABLE[row][AutoTP.DuelType] and AutoTP.DuelType or "1v1"
+        local entry = PAD_TABLE[row][duel]
+        if not entry then return nil end
+        local padZones = workspace:FindFirstChild("PadZones")
+        local zone = padZones and padZones:FindFirstChild(entry.zone)
+        local container = zone and zone:FindFirstChild(entry[role] or entry.Main)
+        local pad = container and container:FindFirstChild("Pad")
+        return (pad and pad:IsA("BasePart")) and pad or nil
 end
 
 local function isOnPad(role)
-	local pad = getPadPart(role)
-	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if not (pad and hrp) then return false end
-	local lp = pad.CFrame:PointToObjectSpace(hrp.Position)
-	local half = pad.Size / 2
-	return math.abs(lp.X) <= half.X + 0.5 and math.abs(lp.Z) <= half.Z + 0.5
-		and lp.Y >= -(half.Y + 6) and lp.Y <= (half.Y + 14)
+        local pad = getPadPart(role)
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not (pad and hrp) then return false end
+        local lp = pad.CFrame:PointToObjectSpace(hrp.Position)
+        local half = pad.Size / 2
+        return math.abs(lp.X) <= half.X + 0.5 and math.abs(lp.Z) <= half.Z + 0.5
+                and lp.Y >= -(half.Y + 6) and lp.Y <= (half.Y + 14)
 end
 
 local function teleportToPad(role)
-	if role == "Main" and not AutoTP.Main then return end
-	if role == "Alt" and not AutoTP.Alt then return end
-	local pad = getPadPart(role)
-	if not pad or isOnPad(role) then return end
-	if os.clock() - AutoTP._lastMove < 0.5 then return end
-	AutoTP._lastMove = os.clock()
-	local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-	local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-	if hum then pcall(function() hum:MoveTo(pad.Position) end) end
-	if hrp then
-		pcall(function()
-			hrp.CFrame = pad.CFrame + Vector3.new(0, 3, 0)
-		end)
-	end
+        if role == "Main" and not AutoTP.Main then return end
+        if role == "Alt" and not AutoTP.Alt then return end
+        local pad = getPadPart(role)
+        if not pad or isOnPad(role) then return end
+        if os.clock() - AutoTP._lastMove < 0.5 then return end
+        AutoTP._lastMove = os.clock()
+        local hum = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if hum then pcall(function() hum:MoveTo(pad.Position) end) end
+        if hrp then
+                pcall(function()
+                        hrp.CFrame = pad.CFrame + Vector3.new(0, 3, 0)
+                end)
+        end
 end
 
 task.spawn(function()
-	while task.wait(0.5) do
-		if AutoTP.Main then teleportToPad("Main") end
-		if AutoTP.Alt then teleportToPad("Alt") end
-	end
+        while task.wait(0.5) do
+                if AutoTP.Main then teleportToPad("Main") end
+                if AutoTP.Alt then teleportToPad("Alt") end
+        end
 end)
 
 Tabs.Farm:Section({ Title = "Auto Teleport (Pads)" })
 Tabs.Farm:Toggle({
-	Flag = "Auto_Teleport_Main",
+        Flag = "Auto_Teleport_Main",
     Title = "Auto Teleport Main",
-	Desc = "Va al pad principal segun duel type y fila.",
-	Value = false,
-	Callback = function(state)
-		AutoTP.Main = state
-		if state then AutoTP.Alt = false end
-		showBottomMessage(state and "Auto TP Main: ON" or "Auto TP Main: OFF")
-	end,
+        Desc = "Va al pad principal segun duel type y fila.",
+        Value = false,
+        Callback = function(state)
+                AutoTP.Main = state
+                if state then AutoTP.Alt = false end
+                showBottomMessage(state and "Auto TP Main: ON" or "Auto TP Main: OFF")
+        end,
 })
 Tabs.Farm:Toggle({
-	Flag = "Auto_Teleport_Alt",
+        Flag = "Auto_Teleport_Alt",
     Title = "Auto Teleport Alt",
-	Desc = "Va al pad alterno (solo uno a la vez).",
-	Value = false,
-	Callback = function(state)
-		AutoTP.Alt = state
-		if state then AutoTP.Main = false end
-		showBottomMessage(state and "Auto TP Alt: ON" or "Auto TP Alt: OFF")
-	end,
+        Desc = "Va al pad alterno (solo uno a la vez).",
+        Value = false,
+        Callback = function(state)
+                AutoTP.Alt = state
+                if state then AutoTP.Main = false end
+                showBottomMessage(state and "Auto TP Alt: ON" or "Auto TP Alt: OFF")
+        end,
 })
 Tabs.Farm:Dropdown({
-	Flag = "Duel_Type",
+        Flag = "Duel_Type",
     Title = "Duel Type",
-	Desc = "Tipo de duelo del pad al que te teletransporta (1v1 a 4v4).",
-	Values = { "1v1", "2v2", "3v3", "4v4" },
-	Value = "1v1",
-	Callback = function(value)
-		AutoTP.DuelType = value or "1v1"
-	end,
+        Desc = "Tipo de duelo del pad al que te teletransporta (1v1 a 4v4).",
+        Values = { "1v1", "2v2", "3v3", "4v4" },
+        Value = "1v1",
+        Callback = function(value)
+                AutoTP.DuelType = value or "1v1"
+        end,
 })
 Tabs.Farm:Dropdown({
-	Flag = "Platform_Row",
+        Flag = "Platform_Row",
     Title = "Platform Row",
-	Desc = "Fila de plataformas (izquierda o derecha) para el Auto TP.",
-	Values = PLATFORM_ROWS,
-	Value = "Right Platforms",
-	Callback = function(value)
-		AutoTP.PlatformRow = value or "Right Platforms"
-	end,
+        Desc = "Fila de plataformas (izquierda o derecha) para el Auto TP.",
+        Values = PLATFORM_ROWS,
+        Value = "Right Platforms",
+        Callback = function(value)
+                AutoTP.PlatformRow = value or "Right Platforms"
+        end,
 })
 Tabs.Farm:Toggle({
-	Flag = "Event_Farm_Spawnables",
+        Flag = "Event_Farm_Spawnables",
     Title = "Event Farm (Spawnables)",
-	Desc = "Toca drops del evento automaticamente.",
-	Value = false,
-	Callback = function(state)
-		AutoTP.EventFarm = state
-		if state then
-			task.spawn(function()
-				while AutoTP.EventFarm do
-					local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-					local spawnables = workspace:FindFirstChild("SpawnablesClient")
-					if hrp and spawnables and firetouchinterest then
-						for _, spawn in ipairs(spawnables:GetChildren()) do
-							local touch = spawn:FindFirstChild("Touch", true)
-							if touch and touch:IsA("BasePart") then
-								pcall(function()
-									firetouchinterest(hrp, touch, 0)
-									firetouchinterest(hrp, touch, 1)
-								end)
-							end
-						end
-					end
-					task.wait(0.45)
-				end
-			end)
-		end
-	end,
+        Desc = "Toca drops del evento automaticamente.",
+        Value = false,
+        Callback = function(state)
+                AutoTP.EventFarm = state
+                if state then
+                        task.spawn(function()
+                                while AutoTP.EventFarm do
+                                        local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+                                        local spawnables = workspace:FindFirstChild("SpawnablesClient")
+                                        if hrp and spawnables and firetouchinterest then
+                                                for _, spawn in ipairs(spawnables:GetChildren()) do
+                                                        local touch = spawn:FindFirstChild("Touch", true)
+                                                        if touch and touch:IsA("BasePart") then
+                                                                pcall(function()
+                                                                        firetouchinterest(hrp, touch, 0)
+                                                                        firetouchinterest(hrp, touch, 1)
+                                                                end)
+                                                        end
+                                                end
+                                        end
+                                        task.wait(0.45)
+                                end
+                        end)
+                end
+        end,
 })
 
 
@@ -2624,6 +2790,12 @@ local function stopFlyMovers()
     if hum then
         pcall(function()
             hum.PlatformStand = false
+            if not moveSpeedEnabled then
+                hum.WalkSpeed = 16
+            else
+                setProtectedWalkSpeed(hum, moveSpeedValue)
+            end
+            hum.JumpPower = 50
             hum:ChangeState(Enum.HumanoidStateType.GettingUp)
         end)
     end
@@ -2656,6 +2828,130 @@ movementTab:Paragraph({
     Title = "Aviso",
     Desc = "Speed usa spoof de WalkSpeed. Fly e Inf Jump usan nombres random. Aun asi el server puede detectar movimiento raro."
 })
+
+-- Movimiento Tela: va donde apunta el joystick pero con inclinacion/strafe exagerado
+local telaEnabled = false
+local telaSpeed = 42
+local telaLean = 0
+local telaConn = nil
+local telaRenderConn = nil
+
+local function stopTela()
+    if telaConn then
+        pcall(function() telaConn:Disconnect() end)
+        telaConn = nil
+    end
+    if telaRenderConn then
+        pcall(function() telaRenderConn:Disconnect() end)
+        telaRenderConn = nil
+    end
+    telaLean = 0
+    pcall(function()
+        local char = LocalPlayer.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and root.Parent then
+            -- no forzar CFrame raro al apagar
+        end
+    end)
+end
+
+local function startTela()
+    stopTela()
+    -- Heartbeat: empuje fuerte hacia MoveDirection (joystick)
+    telaConn = RunService.Heartbeat:Connect(function(dt)
+        if not telaEnabled then return end
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not hum or not root or hum.Health <= 0 then return end
+        if hum.Sit or hum.PlatformStand then return end
+
+        local move = hum.MoveDirection
+        if move.Magnitude < 0.05 then
+            -- frenado suave
+            local vel = root.AssemblyLinearVelocity
+            root.AssemblyLinearVelocity = Vector3.new(vel.X * 0.86, vel.Y, vel.Z * 0.86)
+            telaLean = telaLean * 0.85
+            return
+        end
+
+        local dir = move.Unit
+        local target = dir * telaSpeed
+        local vel = root.AssemblyLinearVelocity
+        local blend = math.clamp(dt * 16, 0, 1)
+        -- empuje agresivo (se siente que "tira" mucho)
+        local nx = vel.X + (target.X - vel.X) * blend
+        local nz = vel.Z + (target.Z - vel.Z) * blend
+        -- boost extra para que se note el desplazamiento
+        nx = nx + dir.X * (telaSpeed * 0.12)
+        nz = nz + dir.Z * (telaSpeed * 0.12)
+        root.AssemblyLinearVelocity = Vector3.new(nx, vel.Y, nz)
+
+        -- lean lateral: cruza el vector de movimiento con up para inclinarse de lado
+        local side = dir:Cross(Vector3.yAxis)
+        if side.Magnitude > 0.01 then
+            side = side.Unit
+            local sideAmt = math.clamp(dir:Dot(root.CFrame.RightVector), -1, 1)
+            telaLean = telaLean + (sideAmt - telaLean) * math.clamp(dt * 10, 0, 1)
+        else
+            telaLean = telaLean * 0.9
+        end
+    end)
+
+    -- Render: inclina el personaje hacia un lado mientras avanza (look hacia el joystick)
+    telaRenderConn = RunService.RenderStepped:Connect(function(dt)
+        if not telaEnabled then return end
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not hum or not root or hum.Health <= 0 then return end
+        if hum.Sit or hum.PlatformStand then return end
+
+        local move = hum.MoveDirection
+        if move.Magnitude < 0.08 then return end
+
+        local dir = Vector3.new(move.X, 0, move.Z)
+        if dir.Magnitude < 0.05 then return end
+        dir = dir.Unit
+
+        -- mira hacia donde apunta el joystick
+        local lookCF = CFrame.new(root.Position, root.Position + dir)
+        -- inclina el torso visualmente (roll) hacia el lado del strafe
+        local leanAngle = math.rad(-18 * telaLean) -- se ve cargado a un lado
+        local tilt = CFrame.Angles(math.rad(-6), 0, leanAngle) -- leve hacia adelante + roll
+        root.CFrame = lookCF * tilt
+    end)
+end
+
+movementTab:Toggle({
+    Flag = "Movimiento_Tela",
+    Title = "Movimiento Tela",
+    Desc = "Vas donde apunta el joystick con empuje fuerte e inclinacion lateral (estilo tela).",
+    Default = false,
+    Callback = function(state)
+        telaEnabled = state and true or false
+        if state then
+            startTela()
+            showBottomMessage("Movimiento Tela: ON")
+        else
+            stopTela()
+            showBottomMessage("Movimiento Tela: OFF")
+        end
+    end
+})
+
+movementTab:Slider({
+    Flag = "Velocidad_Tela",
+    Title = "Velocidad Tela",
+    Desc = "Que tan fuerte empuja el movimiento tela.",
+    Value = { Min = 24, Max = 80, Default = 42 },
+    Callback = function(v)
+        telaSpeed = tonumber(v) or 42
+    end
+})
+
 
 movementTab:Toggle({
     Flag = "Velocidad_Speed",
@@ -2696,7 +2992,7 @@ movementTab:Slider({
 movementTab:Toggle({
     Flag = "Vuelo_Fly",
     Title = "Vuelo (Fly)",
-    Desc = "Te permite volar libremente por el mapa.",
+    Desc = "Vuela libre (PC: WASD + Space/Ctrl | Movil: joystick + mira).",
     Default = false,
     Callback = function(state)
         moveFlyEnabled = state
@@ -2822,59 +3118,165 @@ movementTab:Toggle({
     end
 })
 
--- Loop movimiento
-task.spawn(function()
-    while true do
-        task.wait(0.05)
-        pcall(function()
-            if moveSpeedEnabled then
-                local hum = moveGetHum()
-                if hum and hum.WalkSpeed ~= moveSpeedValue then
-                    setProtectedWalkSpeed(hum, moveSpeedValue)
-                end
+-- Loop movimiento (PC + Movil joystick)
+-- Helpers fly movil: ControlModule + MoveDirection + teclado
+local function getFlyControlsModule()
+    if _G.__VXS_FlyControls then return _G.__VXS_FlyControls end
+    pcall(function()
+        local ps = LocalPlayer:FindFirstChild("PlayerScripts")
+        local pm = ps and ps:FindFirstChild("PlayerModule")
+        if pm then
+            local mod = require(pm)
+            if mod and mod.GetControls then
+                _G.__VXS_FlyControls = mod:GetControls()
             end
-            if moveFlyEnabled then
-                local root = moveGetRoot()
-                local hum = moveGetHum()
-                if root then
-                    if not moveFlyBV or moveFlyBV.Parent ~= root then
-                        startFlyMovers()
-                    end
-                    if hum then
-                        pcall(function() hum.PlatformStand = true end)
-                    end
-                    local cam = workspace.CurrentCamera
-                    if cam and moveFlyBV then
-                        local dir = Vector3.zero
-                        if not UserInputService:GetFocusedTextBox() then
-                            if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir += cam.CFrame.LookVector end
-                            if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir -= cam.CFrame.LookVector end
-                            if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir -= cam.CFrame.RightVector end
-                            if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir += cam.CFrame.RightVector end
-                            if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir += Vector3.yAxis end
-                            if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then
-                                dir -= Vector3.yAxis
-                            end
-                        end
-                        if dir.Magnitude > 0.1 then
-                            moveFlyBV.Velocity = dir.Unit * moveFlySpeed
-                        else
-                            moveFlyBV.Velocity = Vector3.zero
-                        end
-                        if moveFlyBG then
-                            local flat = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
-                            if flat.Magnitude > 0.05 then
-                                moveFlyBG.CFrame = CFrame.new(root.Position, root.Position + flat)
-                            end
-                        end
-                    end
+        end
+    end)
+    return _G.__VXS_FlyControls
+end
+
+local function getFlyMoveDir(cam, hum)
+    local move = Vector3.zero
+    if not cam then return move end
+    local look = cam.CFrame.LookVector
+    local right = cam.CFrame.RightVector
+    local flatLook = Vector3.new(look.X, 0, look.Z)
+    if flatLook.Magnitude > 0.01 then flatLook = flatLook.Unit else flatLook = Vector3.new(0, 0, -1) end
+    local flatRight = Vector3.new(right.X, 0, right.Z)
+    if flatRight.Magnitude > 0.01 then flatRight = flatRight.Unit else flatRight = Vector3.new(1, 0, 0) end
+
+    -- 1) ControlModule GetMoveVector (joystick movil + stick PC)
+    -- GetMoveVector: X=strafe, Z=forward (negativo = adelante en muchos builds)
+    local gotCtrl = false
+    local ctrl = getFlyControlsModule()
+    if ctrl then
+        pcall(function()
+            local mv = ctrl:GetMoveVector()
+            if mv and typeof(mv) == "Vector3" and mv.Magnitude > 0.05 then
+                gotCtrl = true
+                -- Camara relativa (incluye pitch para subir/bajar mirando)
+                local world = (right * mv.X) + (look * -mv.Z)
+                -- Si el vector es muy horizontal, fuerza un poco de Y segun pitch
+                if math.abs(mv.Z) > 0.08 then
+                    world = world + Vector3.yAxis * (look.Y * -mv.Z)
                 end
+                move = move + world
             end
         end)
     end
+
+    -- 2) Humanoid.MoveDirection (mundo) — clave en movil cuando ControlModule falla
+    if hum and hum.MoveDirection.Magnitude > 0.05 then
+        local md = hum.MoveDirection
+        -- Proyecta el avance horizontal y suma pitch de camara
+        local horiz = Vector3.new(md.X, 0, md.Z)
+        if horiz.Magnitude > 0.05 then
+            local withPitch = horiz.Unit + Vector3.yAxis * (look.Y * 0.9)
+            if not gotCtrl then
+                move = move + withPitch
+            else
+                -- refuerzo suave si el control ya aporto algo
+                move = move + withPitch * 0.35
+            end
+        end
+    end
+
+    -- 3) Teclado / gamepad
+    if not UserInputService:GetFocusedTextBox() then
+        local k = Vector3.zero
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then k = k + look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then k = k - look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then k = k - right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then k = k + right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) or UserInputService:IsKeyDown(Enum.KeyCode.ButtonA) then
+            k = k + Vector3.yAxis
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl)
+            or UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+            or UserInputService:IsKeyDown(Enum.KeyCode.ButtonL2)
+            or UserInputService:IsKeyDown(Enum.KeyCode.ButtonB) then
+            k = k - Vector3.yAxis
+        end
+        if UserInputService:IsKeyDown(Enum.KeyCode.ButtonR2) then
+            k = k + Vector3.yAxis
+        end
+        if k.Magnitude > 0.05 then
+            move = move + k
+        end
+    end
+
+    if move.Magnitude > 1e-3 then
+        return move.Unit
+    end
+    return Vector3.zero
+end
+
+if moveConns.__flyHb then
+    pcall(function() moveConns.__flyHb:Disconnect() end)
+    moveConns.__flyHb = nil
+end
+moveConns.__flyHb = RunService.Heartbeat:Connect(function()
+    pcall(function()
+        if moveSpeedEnabled then
+            local hum = moveGetHum()
+            if hum and math.abs(hum.WalkSpeed - moveSpeedValue) > 0.5 then
+                setProtectedWalkSpeed(hum, moveSpeedValue)
+            end
+        end
+        if not moveFlyEnabled then return end
+        local root = moveGetRoot()
+        local hum = moveGetHum()
+        if not root then return end
+        if not moveFlyBV or moveFlyBV.Parent ~= root then
+            startFlyMovers()
+        end
+        if not moveFlyBV then return end
+        if hum then
+            -- Movil: NO PlatformStand ni WalkSpeed 0 (anulan joystick / MoveDirection)
+            pcall(function()
+                hum.PlatformStand = false
+                hum.AutoRotate = false
+                if hum.WalkSpeed < 16 then
+                    hum.WalkSpeed = 16
+                end
+                -- Evita estados que congelan MoveDirection en algunos executors moviles
+                local st = hum:GetState()
+                if st == Enum.HumanoidStateType.Seated or st == Enum.HumanoidStateType.Physics then
+                    hum:ChangeState(Enum.HumanoidStateType.Freefall)
+                end
+            end)
+        end
+        local cam = workspace.CurrentCamera
+        if not cam then return end
+        local dir = getFlyMoveDir(cam, hum)
+        if dir.Magnitude > 0.05 then
+            moveFlyBV.Velocity = dir * moveFlySpeed
+        else
+            -- hover suave (no caer)
+            local v = moveFlyBV.Velocity
+            moveFlyBV.Velocity = Vector3.new(v.X * 0.82, math.max(v.Y * 0.88, 1.5), v.Z * 0.82)
+        end
+        if moveFlyBG and moveFlyBG.Parent == root then
+            local look = cam.CFrame.LookVector
+            local flat = Vector3.new(look.X, 0, look.Z)
+            if flat.Magnitude > 0.05 then
+                -- Inclina un poco segun pitch (se ve natural en movil)
+                local pitch = math.clamp(look.Y, -0.55, 0.55)
+                moveFlyBG.CFrame = CFrame.new(root.Position, root.Position + flat.Unit) * CFrame.Angles(pitch * 0.35, 0, 0)
+            end
+        end
+    end)
 end)
 
+-- Salto movil: si fly activo, impulso hacia arriba; si no, inf jump normal
 table.insert(moveConns, UserInputService.JumpRequest:Connect(function()
+    if moveFlyEnabled and moveFlyBV then
+        pcall(function()
+            local v = moveFlyBV.Velocity
+            moveFlyBV.Velocity = Vector3.new(v.X, math.max(v.Y, 0) + moveFlySpeed * 0.85, v.Z)
+        end)
+        return
+    end
     if not moveInfJumpEnabled then return end
     local hum = moveGetHum()
     if hum then
@@ -3944,25 +4346,25 @@ local enemyOutlineColor = Color3.fromRGB(255, 190, 40)
 local allyOutlineColor = Color3.fromRGB(0, 255, 128)
 local professionalEspDrawings = {}
 local SKELETON_BONES = {
-	{"Head", "UpperTorso"},
-	{"UpperTorso", "LowerTorso"},
-	{"UpperTorso", "LeftUpperArm"},
-	{"LeftUpperArm", "LeftLowerArm"},
-	{"LeftLowerArm", "LeftHand"},
-	{"UpperTorso", "RightUpperArm"},
-	{"RightUpperArm", "RightLowerArm"},
-	{"RightLowerArm", "RightHand"},
-	{"LowerTorso", "LeftUpperLeg"},
-	{"LeftUpperLeg", "LeftLowerLeg"},
-	{"LeftLowerLeg", "LeftFoot"},
-	{"LowerTorso", "RightUpperLeg"},
-	{"RightUpperLeg", "RightLowerLeg"},
-	{"RightLowerLeg", "RightFoot"},
-	{"Head", "Torso"},
-	{"Torso", "Left Arm"},
-	{"Torso", "Right Arm"},
-	{"Torso", "Left Leg"},
-	{"Torso", "Right Leg"},
+        {"Head", "UpperTorso"},
+        {"UpperTorso", "LowerTorso"},
+        {"UpperTorso", "LeftUpperArm"},
+        {"LeftUpperArm", "LeftLowerArm"},
+        {"LeftLowerArm", "LeftHand"},
+        {"UpperTorso", "RightUpperArm"},
+        {"RightUpperArm", "RightLowerArm"},
+        {"RightLowerArm", "RightHand"},
+        {"LowerTorso", "LeftUpperLeg"},
+        {"LeftUpperLeg", "LeftLowerLeg"},
+        {"LeftLowerLeg", "LeftFoot"},
+        {"LowerTorso", "RightUpperLeg"},
+        {"RightUpperLeg", "RightLowerLeg"},
+        {"RightLowerLeg", "RightFoot"},
+        {"Head", "Torso"},
+        {"Torso", "Left Arm"},
+        {"Torso", "Right Arm"},
+        {"Torso", "Left Leg"},
+        {"Torso", "Right Leg"},
 }
 
 
